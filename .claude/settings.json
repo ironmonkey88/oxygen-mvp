@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh oxygen-mvp *)",
+      "Bash(scp *)",
+      "Bash(date)",
+      "Bash(date *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(ls *)",
+      "Bash(lsof *)",
+      "Bash(jq *)",
+      "Bash(curl *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -q 'ssh oxygen-mvp'; then in_progress=$(grep -c '\\[~\\]' /Users/gordonwong/claude-projects/oxygen-mvp/TASKS.md 2>/dev/null || echo 0); if [ \"$in_progress\" -eq 0 ]; then echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"additionalContext\": \"TASK WARNING: You are about to run an EC2 command but there is no in-progress task ([~]) in TASKS.md. Create or mark a task [~] in TASKS.md before proceeding with EC2 work.\"}}'; else echo '{}'; fi; else echo '{}'; fi",
+            "statusMessage": "Checking task status..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"additionalContext\": \"LOGGING REMINDER: Before ending this session, verify LOG.md and TASKS.md are current. Log format: HH:MM ET timestamp. Check: (1) any completed tasks marked [x] in TASKS.md, (2) decisions/blockers added to LOG.md, (3) Current Status and Last Updated fields updated.\"}}'",
+            "statusMessage": "Checking log compliance..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.python-version
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/.user.yml
+
+# DuckDB
+data/*.duckdb
+data/*.duckdb.wal
+data/raw/
+
+# Parquet
+*.parquet
+
+# Environment
+.env
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Oxygen
+.oxy/
