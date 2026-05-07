@@ -157,7 +157,7 @@
 
 | Date | Blocker | Status | Resolution |
 |------|---------|--------|------------|
-| 2026-05-07 18:28 ET | Port 80 AWS SG rule added — portal publicly live at http://18.224.151.49 | Resolved | Gordon added inbound HTTP rule in AWS console |
+| 2026-05-07 18:28 ET | Port 80 not open in AWS security group — portal unreachable from public internet | Resolved | Gordon added inbound HTTP rule (port 80, 0.0.0.0/0) in AWS console |
 
 ---
 
@@ -168,7 +168,7 @@
 - [x] GitHub repo initialized and connected
 - [x] dlt pipeline ingesting Somerville 311 data — 1,168,959 rows loaded
 - [x] Data model designed — schema.sql written, ERD generated
-- [x] nginx installed, portal deployed at http://18.224.151.49 (port 80 pending AWS SG rule)
+- [x] nginx installed, portal live and verified at http://18.224.151.49
 - [x] Portal designed and fonts self-hosted (DM Serif Display, DM Mono, Instrument Sans)
 - [x] Portal verified live in browser at http://18.224.151.49
 - [ ] dbt bronze model in place
