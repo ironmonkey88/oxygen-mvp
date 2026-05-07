@@ -7,8 +7,8 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Portal deployed on EC2 — ready to initialize dbt and build models
-**Last Updated:** 2026-05-07 18:25 ET (Session 4 — Claude Code)
+**Phase:** Portal live at http://18.224.151.49 — ready to initialize dbt and build models
+**Last Updated:** 2026-05-07 18:28 ET (Session 4 — Claude Code)
 
 ---
 
@@ -53,9 +53,9 @@
 - nginx as portal server: static root + `/docs` alias + `/chat` proxy to Oxygen on port 3000
 - Fonts self-hosted in `portal/fonts/` — no external CDN dependency
 
-**Blockers:** Port 80 not yet open in AWS security group — Gordon needs to add inbound HTTP rule in AWS console (Type: HTTP, Port: 80, Source: 0.0.0.0/0)
+**Blockers:** None
 
-**Next Action:** Gordon opens port 80 → confirm `http://18.224.151.49` loads in browser; then initialize dbt project on EC2 and build bronze model
+**Next Action:** Initialize dbt project on EC2 and build bronze model
 
 ---
 
@@ -157,7 +157,7 @@
 
 | Date | Blocker | Status | Resolution |
 |------|---------|--------|------------|
-| — | — | — | — |
+| 2026-05-07 18:28 ET | Port 80 AWS SG rule added — portal publicly live at http://18.224.151.49 | Resolved | Gordon added inbound HTTP rule in AWS console |
 
 ---
 
