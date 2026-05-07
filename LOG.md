@@ -45,9 +45,15 @@
 - GitHub repo: `git@github.com:ironmonkey88/oxygen-mvp.git` — private, owner `ironmonkey88`
 - EC2 clones from GitHub as single source of truth; local Mac is authoring environment
 
-**Blockers:** None
+- Installed nginx 1.24.0 on EC2, enabled and started as system service
+- Deployed portal (`portal/index.html`) to `/var/www/somerville/` — live at `http://18.224.151.49` (pending port 80 open in AWS security group)
+- Created placeholder pages at `/erd` and `/tasks`
+- Configured nginx: portal at root, `/docs` aliased to dbt docs output, `/chat` proxied to Oxygen on port 3000
+- `curl http://localhost` confirmed returning portal HTML
 
-**Next Action:** Initialize dbt project on EC2, build bronze and gold models using confirmed column names
+**Blockers:** Port 80 not yet open in AWS security group — Gordon needs to add inbound HTTP rule in AWS console
+
+**Next Action:** Gordon opens port 80 in AWS console → confirm `http://18.224.151.49` loads in browser; then initialize dbt project on EC2
 
 ---
 
@@ -139,6 +145,7 @@
 | 2026-05-07 | Naming standards: snake_case, _dt, is_, pct_, _count | Consistent with dbt community conventions |
 | 2026-05-07 | docs/schema.sql is DDL source of truth | ERD generated from DDL, not edited directly |
 | 2026-05-07 | GitHub repo: git@github.com:ironmonkey88/oxygen-mvp.git — private | Single source of truth; EC2 clones from GitHub, local Mac is authoring environment |
+| 2026-05-07 18:17 ET | nginx deployed as portal server on port 80 | Serves static portal, proxies /chat to Oxygen port 3000, aliases /docs to dbt output |
 
 ---
 
@@ -157,6 +164,7 @@
 - [x] GitHub repo initialized and connected
 - [x] dlt pipeline ingesting Somerville 311 data — 1,168,959 rows loaded
 - [x] Data model designed — schema.sql written, ERD generated
+- [x] nginx installed, portal deployed at http://18.224.151.49 (port 80 pending AWS SG rule)
 - [ ] dbt bronze model in place
 - [ ] dbt gold models in place
 - [ ] Admin DQ framework in place

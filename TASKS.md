@@ -59,7 +59,14 @@
 - [ ] Add dbt tests: accepted_values on status, classification, origin
 
 ### Docs
-- [ ] Create `docs/schema.sql` — DDL source of truth (already written, needs committing)
+- [x] Create `docs/schema.sql` — DDL source of truth (already written, needs committing)
+
+### Portal
+- [x] Install nginx on EC2
+- [x] Deploy portal index.html at port 80
+- [ ] Add /tasks route — rendered TASKS.md
+- [ ] Add /erd route — ERD SVG from schema.sql
+- [ ] Add /docs route — dbt docs generate output
 
 ### Semantic Layer (Airlayer)
 - [ ] Review Airlayer docs: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
