@@ -27,41 +27,45 @@
 - [x] Profile API: confirmed access, volume per year, classification breakdown, date format
 - [x] Write `dlt/somerville_311_pipeline.py` — filesystem destination, Parquet partitioned by year, replace disposition
 - [x] Run pipeline and confirm Parquet files land in `~/oxygen-mvp/data/raw/`
-- [x] Verify row count — 1,168,959 of 1,168,959 loaded (zero gap after fixing year boundary logic)
-
-### Transformation (dbt)
-- [x] Initialize dbt project (`dbt init`) in `dbt/` directory
-- [x] Configure `dbt_project.yml` — schemas: bronze, silver, gold, admin
-- [x] Configure `~/.dbt/profiles.yml` on EC2
-- [x] Write Bronze model: `models/bronze/raw_311_requests.sql` — view over Parquet via `read_parquet()`
-- [x] Run `dbt run` and confirm Bronze model builds
-- [x] Run `dbt test` — arrival checks only at Bronze
+- [x] Verify row count — 1,168,959 of 1,168,959 loaded
 
 ### Data Profiling & Quality (dbt — admin schema)
-- [~] Query raw Parquet files on EC2 and extract full column list with types and sample values
-- [ ] Create admin schema in `dbt_project.yml`
+- [ ] Query raw Parquet files on EC2 and extract full column list with types and sample values
+- [ ] Create `admin` schema in `dbt_project.yml`
 - [ ] Write `admin/fct_data_profile.sql` — column-level profiling, observational only
 - [ ] Write `admin/dim_data_quality_test.sql` — one row per defined test
-- [ ] Write `admin/fct_test_run.sql` — one row per test per run, sourced from raw_dbt_results
-- [ ] Write `dlt/load_dbt_results.py` — loads `dbt/target/run_results.json` into raw_dbt_results in DuckDB
+- [ ] Write `admin/fct_test_run.sql` — one row per test per run, sourced from `raw_dbt_results`
+- [ ] Write `dlt/load_dbt_results.py` — loads `dbt/target/run_results.json` into `raw_dbt_results` in DuckDB
 - [ ] Write `run.sh` — single entry point, correct run order, captures dbt test exit code without halting
 - [ ] Auto-generate baselines on first run — `certified_by = 'system'`
 - [ ] Confirm baseline comparisons fail dbt run on drift beyond tolerance
 
+### Transformation (dbt — bronze schema)
+- [ ] Initialize dbt project (`dbt init`) in `dbt/` directory
+- [ ] Configure `dbt_project.yml` with all four schemas: bronze, silver, gold, admin
+- [ ] Configure `~/.dbt/profiles.yml` on EC2
+- [ ] Write `bronze/raw_311_requests.sql` — exact mirror, columns derived from actual Parquet data
+- [ ] Run `dbt run --select bronze` and confirm model builds
+- [ ] Run `dbt test --select bronze` — arrival checks only
+
 ### Transformation (dbt — gold schema)
-- [x] Initialize dbt project (`dbt init`) in `dbt/` directory
-- [x] Configure `dbt_project.yml` with all four schemas: bronze, silver, gold, admin
-- [x] Write `bronze/raw_311_requests.sql` — exact mirror, columns derived from actual Parquet data
 - [ ] Write `gold/dim_date.sql` — standard date spine
 - [ ] Write `gold/dim_request_type.sql` — sourced from actual column values
 - [ ] Write `gold/dim_status.sql` — sourced from actual column values
-- [ ] Write `gold/fct_311_requests.sql` — location fields denormalized, no dim_location yet
+- [ ] Write `gold/dim_origin.sql` — sourced from actual column values
+- [ ] Write `gold/fct_311_requests.sql` — location fields denormalized, no `dim_location` yet
+- [ ] Run `dbt run --select gold` and confirm all models build
+- [ ] Add dbt tests: unique + not_null on all surrogate keys
+- [ ] Add dbt tests: accepted_values on status, classification, origin
+
+### Docs
+- [ ] Create `docs/schema.sql` — DDL source of truth (already written, needs committing)
 
 ### Semantic Layer (Airlayer)
 - [ ] Review Airlayer docs: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
 - [ ] Create `semantic/somerville_311.sem.yml`
-- [ ] Define initial views and dimensions (request type, status, opened date, neighborhood)
-- [ ] Define initial measures (total requests, open requests)
+- [ ] Define initial views and dimensions (request type, status, opened date, ward)
+- [ ] Define initial measures (total requests, open requests, avg days open)
 - [ ] Confirm Airlayer loads without errors in Oxygen
 
 ### Answer Agent
@@ -99,11 +103,7 @@
   - [ ] Cast types
   - [ ] Deduplicate
   - [ ] Redact PII fields (names, contact info)
-- [ ] Write Gold models:
-  - [ ] `models/gold/fct_311_requests.sql` — fact table, location denormalized
-  - [ ] `models/gold/dim_date.sql` — date spine
-  - [ ] `models/gold/dim_request_type.sql`
-  - [ ] `models/gold/dim_status.sql`
+- [ ] Promote location to `gold/dim_location.sql`
 - [ ] Add dbt tests: unique keys and non-null checks on Silver
 - [ ] Add dbt tests: business rule validation on Gold
 - [ ] Update Airlayer to point to Gold layer
