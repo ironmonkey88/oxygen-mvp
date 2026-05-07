@@ -170,6 +170,7 @@
 - [x] Data model designed — schema.sql written, ERD generated
 - [x] nginx installed, portal deployed at http://18.224.151.49 (port 80 pending AWS SG rule)
 - [x] Portal designed and fonts self-hosted (DM Serif Display, DM Mono, Instrument Sans)
+- [x] Portal verified live in browser at http://18.224.151.49
 - [ ] dbt bronze model in place
 - [ ] dbt gold models in place
 - [ ] Admin DQ framework in place

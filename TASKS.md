@@ -63,7 +63,7 @@
 
 ### Portal
 - [x] Install nginx on EC2
-- [x] Deploy portal index.html at port 80
+- [x] Deploy portal index.html at port 80 — verified live at http://18.224.151.49
 - [ ] Add /tasks route — rendered TASKS.md
 - [ ] Add /erd route — ERD SVG from schema.sql
 - [ ] Add /docs route — dbt docs generate output
