@@ -14,6 +14,30 @@
 
 ## Session Log
 
+### Session 4 (cont.) — 2026-05-07 17:47 ET
+
+**Accomplishments:**
+- Created `.gitignore` — excludes `.venv`, `dbt/target`, `data/*.duckdb`, `data/raw`, `*.parquet`, `*.pem`, `.oxy/`
+- Initialized git repo locally and pushed to `https://github.com/ironmonkey88/oxygen-mvp.git` (main branch)
+- Generated ed25519 SSH key on EC2 (`~/.ssh/github_ec2`), added to GitHub as `oxygen-mvp-ec2`
+- Backed up EC2 `~/oxygen-mvp` → `~/oxygen-mvp-backup`, cloned repo fresh, restored `.venv`, `data/`, and `dlt/*.py`
+- Updated `ARCHITECTURE.md` to reference `docs/schema.sql` as DDL source of truth
+- Re-ingested all years (2015–2026) with `$select` on all 22 columns — sparse columns (survey + dept tags) now captured
+- Confirmed `union_by_name=true` required for DuckDB glob reads across years with sparse columns
+
+**Decisions Made:**
+- GitHub repo: `git@github.com:ironmonkey88/oxygen-mvp.git` — private, owner `ironmonkey88`
+- EC2 clones from GitHub as single source of truth; local Mac is authoring environment
+- `docs/` folder created for human-readable artifacts; `schema.sql` will be first entry
+- Dept tag columns (8 numeric flags) kept as flat booleans on fact table — multi-tag rows exist, no clean dim key
+- Survey columns (`accuracy`, `courtesy`, `ease`, `overallexperience`) kept on fact table — sparse strings
+
+**Blockers:** `schema.sql` not yet created — `docs/schema.sql` reference in ARCHITECTURE.md is forward-looking
+
+**Next Action:** Write gold dbt models (dim_date, dim_request_type, dim_status, fct_311_requests) — columns now confirmed
+
+---
+
 ### Session 4 — 2026-05-07 17:00 ET
 
 **Accomplishments:**
@@ -137,6 +161,11 @@
 | 2026-05-07 17:16 ET | run.sh is the sole pipeline entry point | Enforces correct run order (dlt → dbt run → dbt test → load_dbt_results → dbt run admin); prevents partial runs |
 | 2026-05-07 17:16 ET | Gold schema: fct_311_requests (location denormalized), dim_date, dim_request_type, dim_status | Location denormalized at MVP 1 for query simplicity; dim_location deferred to MVP 3 |
 | 2026-05-07 17:16 ET | Naming standards: snake_case, _dt dates, is_ booleans, pct_ percentages, _count counts | Consistent with dbt community conventions and CLAUDE.md standards |
+| 2026-05-07 17:47 ET | GitHub repo: https://github.com/ironmonkey88/oxygen-mvp.git — private, owner ironmonkey88 | Single source of truth; EC2 clones from GitHub, local Mac is authoring environment |
+| 2026-05-07 17:47 ET | docs/ folder created for human-readable artifacts; schema.sql is first planned entry | Separates generated/machine artifacts from human-readable design docs |
+| 2026-05-07 17:47 ET | Dept tag columns kept as flat booleans on fact table — not normalized to dim | Multi-tag rows exist (up to 3); no clean 1:1 dim key. Only 4,187 of 1.17M rows have tags. |
+| 2026-05-07 17:47 ET | Survey columns kept on fact table — sparse, not dim candidates | accuracy/courtesy/ease/overallexperience are sparse Likert strings; no referential integrity |
+| 2026-05-07 17:47 ET | union_by_name=true required for all DuckDB glob reads across Parquet years | Sparse columns (survey, dept tags) only present in recent years; without this flag DuckDB uses first file schema |
 
 ---
 

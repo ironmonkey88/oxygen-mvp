@@ -14,8 +14,10 @@
 - [x] Install Oxygen (0.5.47)
 - [x] Install Python 3.12 and create virtual environment
 - [x] Install Python packages: `dlt[duckdb]` 1.26.0, `dbt-core` 1.11.9, `dbt-duckdb` 1.10.1
-- [ ] Clone project repo and create `data/` directory
+- [x] Initialize GitHub repo and push all project files
+- [x] Clone project repo and create `data/` directory
 - [x] Set `ANTHROPIC_API_KEY` environment variable
+- [ ] Configure EC2 to pull from GitHub repo on each session
 - [ ] Configure dbt profile (`~/.dbt/profiles.yml`)
 - [ ] Create `config.yml` for Oxygen (model + database config)
 - [ ] Run `oxy start` and confirm UI loads at port 3000

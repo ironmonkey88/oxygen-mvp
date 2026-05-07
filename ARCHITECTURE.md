@@ -99,6 +99,8 @@ Airlayer and agents point to **Gold layer only**.
 
 > Location fields (ward, neighborhood, lat/long) are denormalized onto `fct_311_requests` for MVP 1. Promoted to `dim_location` in MVP 3.
 
+See [docs/schema.sql](docs/schema.sql) for full DDL. The ERD is generated from this file — edit the DDL, not the ERD.
+
 ---
 
 ## Admin Schema: Table Designs
