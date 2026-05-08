@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: raw_311_requests
+    description: 'Exact mirror of Somerville SODA API — all rows, no transforms. Read_parquet over yearly Parquet files.'
+    columns:
+      - name: id
+        description: 'Somerville 311 request ID'
+        data_tests:
+          - not_null
+          - unique
+      - name: date_created
+        description: 'Timestamp when request was created'
+        data_tests:
+          - not_null
+      - name: classification
+        description: 'Service, Information, or Feedback'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Service', 'Information', 'Feedback']

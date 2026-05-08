@@ -107,10 +107,10 @@ source ~/.bashrc
 
 ## 8. Configure dbt Profile
 
-Create `~/.dbt/profiles.yml` (or place `profiles.yml` in the `dbt/` folder):
+Create `~/.dbt/profiles.yml` (user-local — never check this into the repo):
 
 ```yaml
-oxygen_mvp:
+somerville_311:
   target: dev
   outputs:
     dev:
@@ -118,6 +118,8 @@ oxygen_mvp:
       path: /home/ubuntu/oxygen-mvp/data/somerville.duckdb
       threads: 4
 ```
+
+The profile name must match the `profile:` field in `dbt/dbt_project.yml`.
 
 Verify dbt can connect:
 ```bash

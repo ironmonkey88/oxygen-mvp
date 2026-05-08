@@ -9,6 +9,7 @@ __pycache__/
 dbt/target/
 dbt/logs/
 dbt/.user.yml
+dbt/profiles.yml
 
 # DuckDB
 data/*.duckdb

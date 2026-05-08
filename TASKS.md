@@ -8,6 +8,15 @@
 ## MVP 1 — 1st Data Product
 **Goal:** Static data file → DuckDB → Airlayer → Answer Agent chat UI
 
+### Repo Cleanup (Session 5)
+- [x] Audit local Mac vs EC2 vs GitHub for missing source files
+- [x] Recover `dlt/somerville_311_pipeline.py` into the repo (live EC2 copy)
+- [x] Recover `dbt/dbt_project.yml` and `dbt/models/bronze/*` from EC2 backup
+- [x] Update `bronze/raw_311_requests.sql` to mirror all 22 source columns per `docs/schema.sql`
+- [x] Verify Bronze model builds and 5/5 tests pass on EC2
+- [x] Add `dbt/profiles.yml` to `.gitignore`; remove repo-local profile alternative from `SETUP.md`
+- [x] Confirm `dim_origin` and `portal/` already present in `ARCHITECTURE.md` and `TASKS.md`
+
 ### Environment Setup
 - [x] Provision EC2 instance (t4g.medium, Ubuntu 24.04 LTS ARM) — IP: 18.224.151.49
 - [x] SSH in and install Docker (29.4.3)
@@ -18,7 +27,7 @@
 - [x] Clone project repo and create `data/` directory
 - [x] Set `ANTHROPIC_API_KEY` environment variable
 - [ ] Configure EC2 to pull from GitHub repo on each session
-- [ ] Configure dbt profile (`~/.dbt/profiles.yml`)
+- [x] Configure dbt profile (`~/.dbt/profiles.yml`)
 - [ ] Create `config.yml` for Oxygen (model + database config)
 - [ ] Run `oxy start` and confirm UI loads at port 3000
 
@@ -41,12 +50,12 @@
 - [ ] Confirm baseline comparisons fail dbt run on drift beyond tolerance
 
 ### Transformation (dbt — bronze schema)
-- [ ] Initialize dbt project (`dbt init`) in `dbt/` directory
-- [ ] Configure `dbt_project.yml` with all four schemas: bronze, silver, gold, admin
-- [ ] Configure `~/.dbt/profiles.yml` on EC2
-- [ ] Write `bronze/raw_311_requests.sql` — exact mirror, columns derived from actual Parquet data
-- [ ] Run `dbt run --select bronze` and confirm model builds
-- [ ] Run `dbt test --select bronze` — arrival checks only
+- [x] Initialize dbt project (`dbt init`) in `dbt/` directory
+- [x] Configure `dbt_project.yml` with all four schemas: bronze, silver, gold, admin
+- [x] Configure `~/.dbt/profiles.yml` on EC2
+- [x] Write `bronze/raw_311_requests.sql` — exact mirror, columns derived from actual Parquet data
+- [x] Run `dbt run --select bronze` and confirm model builds
+- [x] Run `dbt test --select bronze` — arrival checks only
 
 ### Transformation (dbt — gold schema)
 - [ ] Write `gold/dim_date.sql` — standard date spine
