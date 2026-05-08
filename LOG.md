@@ -9,11 +9,20 @@
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
 **Phase:** FR pass complete (Answer Agent answers test questions correctly). Plan 0 closed (env vars, allowlist, docs). Next: Plan 0.5 (portal /chat fix) → Plan 1 (Tailscale) → Plans 2-5 for trust pass.
 **Open security gap:** `:3000` is publicly accessible. Closes in Plan 1 (Tailscale).
-**Last Updated:** 2026-05-08 11:15 ET (LOG.md refactor — Plan A)
+**Last Updated:** 2026-05-08 11:30 ET (Session 10 — LOG.md refactor closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 10 — 2026-05-08 11:15 ET — log-refactor
+[full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
+
+- **Goal:** Split LOG.md into bounded summary + docs/sessions/ archive; establish frontmatter, body, and rotation rules.
+- **Shipped:** LOG.md 682 → 161 lines; 9 session files migrated; docs/log-archive.md created; CLAUDE.md protocol rewritten; commit a72bd2a.
+- **Decisions:** 0 new (architectural choice made in Session 9) — see Decisions Log
+- **Status:** complete
+- **Next:** Hand Plan 0.5 to Code.
 
 ### Session 9 — 2026-05-08 11:30 ET — plans-0.5-and-1-queued
 [full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
@@ -51,19 +60,11 @@
 - **Status:** complete
 - **Next:** Pick first hardening thread (Tailscale or dbt docs).
 
-### Session 5 — 2026-05-07 22:00 ET → 2026-05-08 07:00 ET — cleanup-and-overnight-run
-[full narrative](docs/sessions/session-05-2026-05-07-cleanup-and-overnight-run.md)
-
-- **Goal:** Repo audit + overnight run (gold + Airlayer + semantic).
-- **Shipped:** Bronze recovered + tests passing; gold models built (14/14 tests); Airlayer 0.1.1 installed; semantic layer (4 views, 1 topic) executes via auto-join.
-- **Decisions:** 11 decisions — see Decisions Log
-- **Status:** complete (oxy build gate downgraded — closed in Session 7)
-- **Next:** Decide CLAUDE.md model_ref doc fix; broaden allowlist; plan Answer Agent session.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 5** — 2026-05-07 22:00 ET → 2026-05-08 07:00 ET — Cleanup + overnight run (gold + Airlayer + semantic). [full narrative](docs/sessions/session-05-2026-05-07-cleanup-and-overnight-run.md)
 - **Session 4** — 2026-05-07 17:00–18:25 ET — Schema design + portal deployed. [full narrative](docs/sessions/session-04-2026-05-07-schema-and-portal.md)
 - **Session 3** — 2026-05-07 14:25–15:50 ET — EC2 provisioned, dlt pipeline designed. [full narrative](docs/sessions/session-03-2026-05-07-ec2-provisioned.md)
 - **Session 2** — 2026-05-07 — Project files written. [full narrative](docs/sessions/session-02-2026-05-07-project-files-written.md)
