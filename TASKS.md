@@ -119,13 +119,13 @@
 - [x] D7e — Decisions Log entry for the policy shift
 - [ ] D7 validation: in next Code session, confirm a routine command (e.g. `git -C <worktree> commit`) proceeds without prompt; confirm a destructive command (e.g. `git reset --hard`) still prompts. Cannot validate in this session — Code reads allowlist at session start.
 
-#### Tailscale (pulled forward from MVP 3)
-- [ ] Install Tailscale on EC2
+#### Tailscale (pulled forward from MVP 3) — Plan 1 in progress
+- [~] Install Tailscale on EC2
 - [ ] Authenticate Gordon's laptop and EC2 to same Tailnet
 - [ ] Update AWS security group: SSH and :3000 closed to public, port 80 stays open
 - [ ] Verify SSH works over Tailscale
 - [ ] Verify Oxygen :3000 reachable over Tailscale
-- [ ] Update SETUP.md and CLAUDE.md to reflect new access pattern
+- [ ] Update SETUP.md, CLAUDE.md, ARCHITECTURE.md to reflect new access pattern
 
 #### dbt docs (production-strength documentation)
 - [ ] Audit all schema.yml files: every model has description, every column has description (no nulls)
