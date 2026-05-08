@@ -1,9 +1,13 @@
 models:
-  - name: claude
+  - name: claude-sonnet-4-6
     vendor: anthropic
-    model: claude-sonnet-4-6
+    model_ref: claude-sonnet-4-6
+    key_var: ANTHROPIC_API_KEY
 
 databases:
   - name: somerville
     type: duckdb
     path: data/somerville.duckdb
+
+defaults:
+  database: somerville

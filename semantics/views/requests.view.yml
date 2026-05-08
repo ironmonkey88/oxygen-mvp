@@ -27,6 +27,14 @@ dimensions:
     type: date
     expr: date_created_dt
     description: "Date the request was created"
+  - name: request_type_id
+    type: string
+    expr: request_type_id
+    description: "FK to request_types view"
+  - name: status_id
+    type: string
+    expr: status_id
+    description: "FK to statuses view"
   - name: ward
     type: string
     expr: ward
