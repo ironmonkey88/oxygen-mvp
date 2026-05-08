@@ -7,12 +7,33 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Bronze model live on EC2 — ready to build gold models
-**Last Updated:** 2026-05-07 22:22 ET (Session 5 follow-up — Claude Code)
+**Phase:** Doc cleanup complete; gold models next
+**Last Updated:** 2026-05-07 22:53 ET (Overnight Session — Claude Code)
 
 ---
 
 ## Session Log
+
+### Overnight Session — Deliverable 0 — 2026-05-07 22:52 ET (Doc cleanup, Claude Code)
+
+**Goal:** apply Gordon's edits fixing `.sem.yml` → `.view.yml` and documenting the Airlayer dual-engine model (Oxygen built-in + standalone Rust CLI).
+
+**Accomplishments:**
+- Applied 3 edits to `CLAUDE.md`: Stack at a Glance row, Project File Structure (`semantic/` → `semantics/views/` + `semantics/topics/`), Reference Links (added Airlayer repo + schema-format).
+- Applied 3 edits to `ARCHITECTURE.md`: Stack Decisions row, Component Map diagram, Airlayer subsection (full rewrite covering two engines / one schema, semantic_query tool, oxy build, project structure).
+- Committed `71a8fd9` on the worktree branch, fast-forwarded `main`, pushed `origin/main`.
+- EC2 pulled — confirmed `git log -1` on EC2 reports `71a8fd9 docs: fix .sem.yml → .view.yml, document Airlayer dual-engine model`. EC2 was 7 commits behind GitHub at session start (pattern from Session 5); now caught up.
+
+**Decisions Made:**
+- `.view.yml` is the canonical file extension for views; `.topic.yml` for topics. `.sem.yml` no longer used anywhere in the project docs.
+- Airlayer is a dual-engine system: Oxygen's built-in semantic engine and the standalone Rust CLI share the same schema. Agents query via the `semantic_query` tool with a `topic` parameter.
+- Project structure is `semantics/views/` and `semantics/topics/` at project root (plural, with subdirs) — replaces the old single-file `semantic/somerville_311.sem.yml`.
+
+**Blockers:** None
+
+**Next Action:** Deliverable 1 — query bronze on EC2 then build the four gold dbt models.
+
+---
 
 ### Session 5 follow-up — 2026-05-07 22:22 ET (Hygiene, Claude Code)
 
@@ -210,6 +231,8 @@
 | 2026-05-07 22:22 ET | dlt metadata columns retained on Bronze view for lineage; `docs/schema.sql` updated to match | Schema/view drift reconciled at 24 columns; lineage trace is valuable at every layer |
 | 2026-05-07 22:22 ET | Always-ask boundary made explicit in memory | Permissive "don't ask" rule alone was too loose; schema/semantic/agent/destructive ops still require explicit confirmation |
 | 2026-05-07 22:22 ET | EC2 pulls from GitHub `main` at the start of every session | Session 5 found EC2 7 commits behind; CLAUDE.md "Session Start on EC2" section + SETUP.md pointer |
+| 2026-05-07 22:52 ET | `.view.yml` (views) + `.topic.yml` (topics) replace `.sem.yml` everywhere | Matches Airlayer schema spec; same file format used by Oxygen's built-in engine and the standalone Rust CLI |
+| 2026-05-07 22:52 ET | Project structure: `semantics/views/` + `semantics/topics/` (plural, subdirs) | Replaces old `semantic/somerville_311.sem.yml`; aligns with Oxygen's recommended layout |
 
 ---
 

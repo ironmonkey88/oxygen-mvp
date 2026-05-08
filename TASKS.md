@@ -5,6 +5,38 @@
 
 ---
 
+## Overnight Session — 2026-05-07 → 2026-05-08
+
+### Deliverable 0 — Doc cleanup
+- [x] Apply CLAUDE.md + ARCHITECTURE.md edits, commit, push
+- [x] EC2 `git pull origin main` and verify commit landed
+
+### Deliverable 1 — Gold dbt models
+- [ ] Query bronze on EC2 to confirm column names/types
+- [ ] Write `gold/dim_date.sql`
+- [ ] Write `gold/dim_request_type.sql`
+- [ ] Write `gold/dim_status.sql`
+- [ ] Write `gold/fct_311_requests.sql`
+- [ ] Add gold tests (unique/not_null/relationships)
+- [ ] `dbt run --select gold` and `dbt test --select gold` clean
+- [ ] Commit and push gold models
+
+### Deliverable 2 — Airlayer CLI install
+- [ ] Install Airlayer CLI on EC2; `airlayer --version` works
+- [ ] Sanity check `airlayer query --help` against DuckDB connection
+- [ ] Log version + system packages added to LOG.md
+- [ ] Commit LOG.md/TASKS.md update
+
+### Deliverable 3 — Semantic layer
+- [ ] Create `semantics/views/{requests,request_types,statuses,dates}.view.yml`
+- [ ] Create `semantics/topics/service_requests.topic.yml`
+- [ ] Update `config.yml` to register `somerville` datasource
+- [ ] `oxy build` exits 0
+- [ ] `airlayer query --measure requests.total_requests --dimension request_types.request_type --limit 5 -x` returns rows
+- [ ] Commit and push semantic layer
+
+---
+
 ## MVP 1 — 1st Data Product
 **Goal:** Static data file → DuckDB → Airlayer → Answer Agent chat UI
 
