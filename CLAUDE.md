@@ -231,12 +231,20 @@ See `ARCHITECTURE.md` for full table designs.
 ```yaml
 # config.yml
 models:
-  - name: claude
+  - name: claude-sonnet-4-6
     vendor: anthropic
-    model: claude-sonnet-4-6
+    model_ref: claude-sonnet-4-6
+    key_var: ANTHROPIC_API_KEY
 ```
 
-Requires `ANTHROPIC_API_KEY` environment variable. If not set, stop and ask Gordon.
+Two env vars must be set on EC2 before running Oxygen:
+
+| Var | Used for |
+|---|---|
+| `ANTHROPIC_API_KEY` | Answer Agent's LLM calls |
+| `OXY_DATABASE_URL` | `oxy build` / `oxy serve` connection to the Postgres container that `oxy start` manages (typically `postgresql://postgres:postgres@localhost:15432/oxy`) |
+
+Both live in `/etc/environment` — see SETUP.md §7 for why (`~/.bashrc` and `~/.profile` aren't read by plain non-interactive `ssh ec2 'cmd'`). If either is missing, stop and ask Gordon.
 
 ---
 

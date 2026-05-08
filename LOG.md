@@ -7,12 +7,46 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Answer Agent FR smoke test PASSED. End-to-end conversational pipeline live: `oxy start` → `oxy build` → agent answers Test A (2024 = 113,961) and Test B (2026 "this year" = 48,806) exact-match against DuckDB ground truth. Trust contract (SQL/row count/citations in every response) and analyst hardening (Tailscale, dbt docs, /trust, /metrics) still ahead.
-**Last Updated:** 2026-05-08 09:32 ET (Answer Agent FR smoke test — Claude Code)
+**Phase:** FR loose ends closed. Env vars now in `/etc/environment` (visible to non-interactive ssh); `oxy build` deferred gate from the overnight run is fully resolved. `:3000` is publicly accessible — known security gap, closes in Plan 1 (Tailscale). Portal `/chat` blank-page bug still open ([!] in TASKS.md), awaiting Chat's call on Option A vs B vs C.
+**Last Updated:** 2026-05-08 10:05 ET (Plan 0 — FR loose ends — Claude Code)
+
+**Open security gap:** `:3000` is publicly accessible. Closes in Plan 1 (Tailscale).
 
 ---
 
 ## Session Log
+
+### Session 8 — 2026-05-08 10:05 ET (Plan 0 — FR loose ends, Claude Code)
+
+**Type:** small ops pass. Chat-authored plan executed by Code. No data-layer changes.
+
+**Goal:** close the four FR loose ends (env-var loading, deferred `oxy build` gate, `:3000` flag, allowlist) before moving on to Plans 1–5.
+
+**Accomplishments:**
+- **Env vars migrated to `/etc/environment` (Option A).** Plan called for `~/.profile`, but a non-destructive empirical test (set a `PLAN0_TEST_VAR` and ssh'd in) proved `~/.profile` is NOT sourced by Ubuntu's non-interactive `ssh ec2 'cmd'` — only login shells (`bash -lc`) read it. `~/.bashrc` was already failing for the same reason (early-return guard for non-interactive shells). Ran the trade-off back to Chat; Chat picked `/etc/environment`. New file contents: `PATH=...:/home/ubuntu/.local/bin` (extended), `ANTHROPIC_API_KEY=sk-ant-...`, `OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy`. Removed the now-redundant `export ANTHROPIC_API_KEY=...` line from `~/.bashrc`.
+- **All three env-var gates pass without `bash -ic`:**
+  - `ssh oxygen-mvp 'echo $ANTHROPIC_API_KEY | head -c 14'` → `sk-ant-api03-E`
+  - `ssh oxygen-mvp 'echo $OXY_DATABASE_URL'` → `postgresql://postgres:postgres@localhost:15432/oxy`
+  - `ssh oxygen-mvp 'oxy build'` → `✅ Build complete` exit 0
+- **Updated [SETUP.md](SETUP.md) §7** to document the `/etc/environment` placement, the `~/.local/bin` PATH extension, and the two-var contract. Updated §11 systemd unit to pass both vars via explicit `Environment=` directives (systemd doesn't read `/etc/environment`) and corrected `ExecStart` path to `/home/ubuntu/.local/bin/oxy`.
+- **Updated [CLAUDE.md](CLAUDE.md) "LLM Configuration"** section: corrected the stale `config.yml` snippet (`model:` → `model_ref:`/`key_var:` per oxy 0.5.47 schema, originally noted in the 2026-05-08 07:22 ET Decisions Log entry), added the two-var table with a one-liner pointing at SETUP.md §7.
+- **Closed the deferred `oxy build` gate from the overnight run.** Decisions Log + Blockers Log updated below; "Accomplishments by MVP" caveat removed.
+- **Flagged the `:3000` public exposure** in Current Status with an "Open security gap" line that points at Plan 1 (Tailscale) as the fix.
+- **Broadened `.claude/settings.json` and `.claude/settings.local.json` allowlists** with broad `git -C * <subcmd> *` and bare-`git <subcmd> *` patterns for write ops (add/commit/push/pull/fetch/merge/checkout/stash/restore/tag). Deliberately did NOT allow `git reset *`, `git push --force *`, or `git branch *` — keep the safety friction. JSON validated with `python3 -m json.tool`.
+
+**Decisions Made (also in Decisions Log below):**
+- Env vars belong in `/etc/environment`, not `~/.profile` or `~/.bashrc`. Empirically verified: only `/etc/environment` (read by sshd via PAM) reaches plain non-interactive `ssh ec2 'cmd'` on this Ubuntu host.
+- `oxy build` validation gate from 2026-05-08 07:22 ET is now actually closed (was only partially closed by the gate downgrade).
+
+**Process notes:**
+- Pushed back on the plan's stated mechanism (`~/.profile`) before executing. Empirical 30-second test caught a wrong premise that would have failed the validation gate. Cheap to verify; expensive to debug after the fact.
+- The systemd unit in SETUP.md §11 is aspirational — `/etc/systemd/system/oxy.service` doesn't exist on EC2 yet. `oxy start` is currently a foreground process under PID 29429. Updating §11 anyway so the next person who installs the unit gets it right.
+
+**Blockers:** None.
+
+**Next Action (Gordon's call):** Plan 1 (Tailscale) closes the `:3000` public exposure and unblocks day-to-day SSH/Oxygen access. Or the trust contract pass (STANDARDS.md §4.1). Or the portal `/chat` blank-page fix (separate Chat thread — Option A vs B vs C).
+
+---
 
 ### Session 7 — 2026-05-08 09:32 ET (Answer Agent FR smoke test, Claude Code)
 
@@ -542,6 +576,8 @@ what we shipped.
 | 2026-05-08 09:32 ET | Answer Agent context block uses `type: file` against topic + views + DDL, not `type: semantic_model` or `semantic_query` tool | User's plan scoped to `tools: [execute_sql]` for the FR check; minimum-surface-area choice. Re-evaluate at the trust contract pass — `semantic_query` may be the cleaner path for verified SQL + citations |
 | 2026-05-08 09:32 ET | "This year" handled via `year(current_date)` instruction in system prompt, not via prompt-time date stamping | Agent stays correct across sessions without re-rendering; mitigation for the rule-following dependency is one explicit prompt line. Confirmed on Test B (2026 partial-year, exact match) |
 | 2026-05-08 09:32 ET | `oxy build` requires `OXY_DATABASE_URL` even when `oxy start` is running | `oxy start` creates the Postgres container at `postgresql://localhost:15432/oxy` but doesn't export the URL into the user's shell. Documented inline in run commands; should land in `~/.bashrc` or `run.sh` next |
+| 2026-05-08 10:05 ET | Env vars live in `/etc/environment`, not `~/.profile` or `~/.bashrc` | Ubuntu's non-interactive `ssh ec2 'cmd'` doesn't source `~/.profile` (login-shell only) or `~/.bashrc` (early-return for non-interactive). `/etc/environment` is read by sshd via PAM at session setup, so plain non-interactive ssh sees the vars without needing `bash -lc` / `bash -ic`. Empirically verified before committing. Format is literal `KEY=VALUE`, no `export`, no shell expansion |
+| 2026-05-08 10:05 ET | `oxy build` deferred gate from 2026-05-08 07:31 ET fully resolved | Embeddings built successfully during FR pass (Session 7) and again during Plan 0 smoke check. `OXY_DATABASE_URL` env var requirement now documented in [SETUP.md](SETUP.md) §7 and [CLAUDE.md](CLAUDE.md) "LLM Configuration" |
 
 ---
 
@@ -550,7 +586,7 @@ what we shipped.
 | Date | Blocker | Status | Resolution |
 |------|---------|--------|------------|
 | 2026-05-07 18:28 ET | Port 80 not open in AWS security group — portal unreachable from public internet | Resolved | Gordon added inbound HTTP rule (port 80, 0.0.0.0/0) in AWS console |
-| 2026-05-08 07:22 ET | `oxy build` validation gate fails: `OXY_DATABASE_URL environment variable is required. Use 'oxy start' to automatically start PostgreSQL with Docker, or set OXY_DATABASE_URL to your PostgreSQL connection string.` | Resolved 2026-05-08 07:31 ET | Gate downgraded: `oxy validate` (config syntax, exits 0) + `airlayer query -x` (real data, 5 rows) cover the original intent. Real `oxy build` deferred to Answer Agent session when `oxy start` will be running. See Decisions Log entry for 2026-05-08 07:31 ET. |
+| 2026-05-08 07:22 ET | `oxy build` validation gate fails: `OXY_DATABASE_URL environment variable is required. Use 'oxy start' to automatically start PostgreSQL with Docker, or set OXY_DATABASE_URL to your PostgreSQL connection string.` | Fully resolved 2026-05-08 10:05 ET | Initial gate-downgrade workaround (2026-05-08 07:31 ET) replaced by the real fix in Plan 0: `OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy` lives in `/etc/environment`. `oxy build` exits 0 in plain non-interactive ssh sessions. Documented in [SETUP.md](SETUP.md) §7 + [CLAUDE.md](CLAUDE.md). |
 
 ---
 
@@ -568,7 +604,8 @@ what we shipped.
 - [x] Portal verified live in browser at http://18.224.151.49
 - [x] Airlayer CLI 0.1.1 installed on EC2
 - [x] Airlayer semantic layer: 4 views + 1 topic, schema valid, executes via auto-join
-- [x] Oxygen runtime live on EC2 — `oxy start` brings up Postgres container + web app on :3000; `oxy build` exits 0
+- [x] Oxygen runtime live on EC2 — `oxy start` brings up Postgres container + web app on :3000; `oxy build` exits 0 in plain non-interactive ssh
+- [x] Env vars in `/etc/environment` — `ANTHROPIC_API_KEY`, `OXY_DATABASE_URL`, plus `~/.local/bin` on PATH; documented in [SETUP.md](SETUP.md) §7
 - [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
 - [x] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth
 - [ ] Trust contract on agent (SQL + row count + citations in every response)

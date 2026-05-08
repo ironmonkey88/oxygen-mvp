@@ -58,6 +58,20 @@
 
 ### MVP 1 — Hardening for analyst trust
 
+#### Plan 0 — FR loose ends (2026-05-08 10:05 ET — closed)
+- [x] Move `ANTHROPIC_API_KEY` and `OXY_DATABASE_URL` to `/etc/environment` (Option A — `~/.profile` empirically didn't reach non-interactive ssh)
+- [x] Extend PATH in `/etc/environment` to include `/home/ubuntu/.local/bin` so `oxy`/`airlayer` resolve in plain ssh
+- [x] Remove `export ANTHROPIC_API_KEY=...` line from `~/.bashrc`
+- [x] Update [SETUP.md](SETUP.md) §7 (env vars) + §11 (systemd unit env vars + ExecStart path)
+- [x] Update [CLAUDE.md](CLAUDE.md) "LLM Configuration" — current `model_ref`/`key_var` schema + two-var contract pointing at SETUP.md
+- [x] Close `oxy build` deferred gate (Decisions Log + Blockers Log + MVP 1 caveat removed)
+- [x] Flag `:3000` public exposure in Current Status — closes in Plan 1 (Tailscale)
+- [x] Broaden `.claude/settings.json` + `settings.local.json` allowlist for `git -C * <write-op> *` and bare `git <write-op> *` patterns; deliberately omit `reset`, `push --force`, `branch`
+- [x] Validation gate 1: `ssh oxygen-mvp 'echo $ANTHROPIC_API_KEY | head -c 14'` → `sk-ant-api03-E`
+- [x] Validation gate 2: `ssh oxygen-mvp 'echo $OXY_DATABASE_URL'` → `postgresql://postgres:postgres@localhost:15432/oxy`
+- [x] Validation gate 3: `ssh oxygen-mvp 'oxy build'` exit 0 (no `bash -ic`)
+- [x] Validation gate 4: agent regression check — "How many 311 tickets were filed in 2024?" still returns 113,961
+
 #### Tailscale (pulled forward from MVP 3)
 - [ ] Install Tailscale on EC2
 - [ ] Authenticate Gordon's laptop and EC2 to same Tailnet

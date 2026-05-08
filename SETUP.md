@@ -93,14 +93,32 @@ mkdir -p data
 
 ## 7. Set Environment Variables
 
+Two env vars are required at runtime:
+
+| Var | Value | Used by |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | your Anthropic API key | Oxygen Answer Agent |
+| `OXY_DATABASE_URL` | `postgresql://postgres:postgres@localhost:15432/oxy` | `oxy build`, `oxy serve` (the Postgres container `oxy start` brings up) |
+
+**Put them in `/etc/environment`, not `~/.bashrc` or `~/.profile`.** sshd reads `/etc/environment` via PAM at session setup, so plain `ssh ec2 'cmd'` sees the vars without needing a login-shell wrapper. `~/.bashrc` doesn't work (early-returns for non-interactive shells); `~/.profile` doesn't work (login-shell only). Format is literal `KEY=VALUE` — no `export`, no shell expansion.
+
 ```bash
-export ANTHROPIC_API_KEY=your_key_here
+sudo tee -a /etc/environment <<'EOF'
+ANTHROPIC_API_KEY=your_key_here
+OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy
+EOF
+
+# Also extend PATH so oxy/airlayer in ~/.local/bin are visible to non-interactive ssh.
+# Edit the existing PATH= line in /etc/environment to include /home/ubuntu/.local/bin.
+sudo sed -i 's|/snap/bin"|/snap/bin:/home/ubuntu/.local/bin"|' /etc/environment
 ```
 
-To persist across sessions, add to `~/.bashrc`:
+Verify in a fresh ssh session (NOT the one you used to set them — env loads at session start):
+
 ```bash
-echo 'export ANTHROPIC_API_KEY=your_key_here' >> ~/.bashrc
-source ~/.bashrc
+ssh ec2 'echo $ANTHROPIC_API_KEY | head -c 14'   # should print sk-ant-api03-E
+ssh ec2 'echo $OXY_DATABASE_URL'                   # should print the postgres URL
+ssh ec2 'oxy --version'                            # should resolve oxy on PATH
 ```
 
 ---
@@ -170,9 +188,11 @@ After=network.target
 [Service]
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
-ExecStart=/usr/local/bin/oxy start
+ExecStart=/home/ubuntu/.local/bin/oxy start
 Restart=always
+# systemd doesn't read /etc/environment by default — pass the vars explicitly.
 Environment="ANTHROPIC_API_KEY=your_key_here"
+Environment="OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy"
 
 [Install]
 WantedBy=multi-user.target
