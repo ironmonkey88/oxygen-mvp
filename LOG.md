@@ -50,6 +50,11 @@
 
 **Next Action (Gordon's call):** the trust contract pass — wire SQL + row count + citation requirements into the agent prompt and re-run with the 5-question test bench from STANDARDS.md §4.1. Or pivot to the analyst hardening track (Tailscale, dbt docs population, admin DQ schema, `/trust` + `/metrics` portal pages).
 
+**Addendum 2026-05-08 09:42 ET — flagged items captured:**
+- Persist `OXY_DATABASE_URL` → added to TASKS.md Environment Setup
+- Move `ANTHROPIC_API_KEY` + `~/.local/bin` exports out of `~/.bashrc` into `~/.profile` so non-interactive ssh sees them → added to TASKS.md Environment Setup
+- Public `:3000` exposure → already covered by the Tailscale subsection in MVP 1 Hardening (line 65: "Update AWS security group: SSH and :3000 closed to public")
+
 ---
 
 ### Session 6 — 2026-05-08 09:02 ET (MVP 1 scope sharpening, Claude.ai planning + Claude Code)

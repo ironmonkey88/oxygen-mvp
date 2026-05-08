@@ -105,6 +105,8 @@
 - [x] Configure dbt profile (`~/.dbt/profiles.yml`)
 - [x] Create `config.yml` for Oxygen (model + database config) — landed in overnight session
 - [x] Run `oxy start` and confirm UI loads at port 3000  *(2026-05-08 09:30 ET — Postgres container up, web app on :3000 returns 200, `oxy build` exits 0)*
+- [ ] Persist `OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy` so `oxy build` works in any shell  *(2026-05-08 09:32 ET — `oxy start` creates the container but doesn't export the URL; Session 7 worked around it inline. Add to `~/.bashrc` or have `run.sh` source it from `oxy status` output.)*
+- [ ] Move `ANTHROPIC_API_KEY` and `~/.local/bin` (oxy, airlayer) exports out of `~/.bashrc` into `~/.profile` (or a sourced env file)  *(2026-05-08 09:32 ET — Ubuntu's default `.bashrc` early-returns for non-interactive shells, so plain `ssh oxygen-mvp 'cmd'` doesn't see the key or the binaries; Session 7 worked around with `bash -ic`. Fix at the source.)*
 
 ### Ingestion (dlt)
 - [x] Identify Somerville 311 dataset ID on data.somervillema.gov — `4pyi-uqq6`, 1.17M rows, 22 columns
