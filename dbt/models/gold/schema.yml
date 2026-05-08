@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: 'Date dimension. One row per day from min(date_created) to max(date_created) + 30 days.'
+    columns:
+      - name: date_dt
+        description: 'Date PK'
+        data_tests:
+          - not_null
+          - unique
+
+  - name: dim_request_type
+    description: 'Distinct request types (md5 hash of type → surrogate key).'
+    columns:
+      - name: request_type_id
+        description: 'Surrogate PK — md5 of request_type'
+        data_tests:
+          - not_null
+          - unique
+      - name: request_type
+        description: 'Request type display name (sourced from bronze.type)'
+        data_tests:
+          - not_null
+
+  - name: dim_status
+    description: 'Distinct request statuses. is_open is FALSE only for Closed.'
+    columns:
+      - name: status_id
+        description: 'Surrogate PK — md5 of status'
+        data_tests:
+          - not_null
+          - unique
+      - name: status
+        description: 'Status display name'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Open', 'Closed', 'In Progress', 'On Hold']
+
+  - name: fct_311_requests
+    description: 'One row per Somerville 311 request. Location denormalized (ward, block_code).'
+    columns:
+      - name: id
+        description: 'Somerville 311 request ID'
+        data_tests:
+          - not_null
+          - unique
+      - name: date_created_dt
+        description: 'Request creation date (FK to dim_date.date_dt)'
+        data_tests:
+          - not_null
+      - name: request_type_id
+        description: 'FK to dim_request_type'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_request_type')
+                field: request_type_id
+      - name: status_id
+        description: 'FK to dim_status'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_status')
+                field: status_id
