@@ -7,14 +7,44 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** FR loose ends closed. Env vars now in `/etc/environment` (visible to non-interactive ssh); `oxy build` deferred gate from the overnight run is fully resolved. `:3000` is publicly accessible — known security gap, closes in Plan 1 (Tailscale). Portal `/chat` blank-page bug still open ([!] in TASKS.md), awaiting Chat's call on Option A vs B vs C.
-**Last Updated:** 2026-05-08 10:05 ET (Plan 0 — FR loose ends — Claude Code)
+**Phase:** Plan 0 fully closed (env vars in `/etc/environment`, systemd `EnvironmentFile=` chosen, allowlist restructured to tool-family + destructive-deny). Plans 0.5 (portal `/chat` fix — Option A) and 1 (Tailscale) written and queued. Sequencing: Plan 0.5 → Plan 1 → Plans 2-5.
+**Last Updated:** 2026-05-08 10:58 ET (Session 9 planning — Claude.ai)
 
 **Open security gap:** `:3000` is publicly accessible. Closes in Plan 1 (Tailscale).
+**Open UX gap:** portal `/chat` link renders blank page in browser. Closes in Plan 0.5 (next thread).
 
 ---
 
 ## Session Log
+
+### Session 9 — 2026-05-08 10:58 ET (Plan 0 closure + Plans 0.5 and 1 queued, Claude.ai planning)
+
+**Type:** Claude.ai planning session. No code changes. Plan 0 confirmed closed end-to-end with Code; Plans 0.5 and 1 written and queued for execution.
+
+**Goal:** close out Plan 0 feedback, queue the next two threads in correct order, and capture the meta-lessons on environment-specific assumptions and allowlist permissions before more plans get written.
+
+**Accomplishments (planning):**
+- Confirmed Plan 0 closed: all 6 validation gates green, env-var contract switched to `/etc/environment`, allowlist broadened with destructive ops kept on the deny list, two commits shipped ([e5e94e3](https://github.com/ironmonkey88/oxygen-mvp/commit/e5e94e3) + [196cf28](https://github.com/ironmonkey88/oxygen-mvp/commit/196cf28)). FR pass remains intact (2024 regression still returns 113,961).
+- Wrote Plan 0.5 (portal `/chat` fix) — Option A from Code's earlier diagnosis. Standalone, ~10 min. Repoint portal links to `http://18.224.151.49:3000/`, remove the broken `location /chat` nginx block, redeploy, smoke-test in browser. Logged with full narrative per the new mid-session-issue protocol.
+- Wrote Plan 1 (Tailscale) with a new pre-flight section: "verify environment-specific assumptions before destructive steps." Closes the public `:3000` gap. Added explicit gates that SSH and `:3000` over Tailscale must work *with successful command execution*, not just connection, before AWS security group rules are touched — closing port 22 prematurely is irreversible without console access.
+- Plan 1 also includes a Deliverable 4 to update the portal `/chat` link to whatever Tailnet target Gordon chooses (IP vs MagicDNS hostname) — keeps Plans 0.5 and 1 properly chained.
+
+**Decisions Made (also added to Decisions Log):**
+- Sequencing locked: Plan 0.5 → Plan 1 → Plans 2, 3, 4, 5. Plan 0.5 first because the demo is broken; Plan 1 next because the public `:3000` gap is a live security issue and Plan 0.5's URL changes when Plan 1 lands so doing them adjacent is efficient.
+- Plans that touch environment-specific mechanisms (SSH shell modes, systemd inheritance, nginx proxy semantics, Tailscale/Ubuntu networking, Oxygen runtime behavior) must call out their assumptions explicitly in pre-flight and verify them empirically before any destructive or irreversible step. This pattern is now baked into Plan 1 and will be applied to future plans. Two prior occurrences (overnight session: Chat asserted Airlayer was bundled into Oxygen; Plan 0 Deliverable 1: Chat asserted `~/.profile` would reach non-interactive SSH) confirm this is a real failure mode worth structurally addressing.
+- Portal `/chat` link points directly to `:3000` for MVP 1 (Option A from Code's diagnosis). Subdomain solution (Option C) deferred — revisit after Tailscale lands or with MVP 2.
+- Plan 1 Deliverable 4 surfaces an open question for Gordon: what target does the portal `/chat` link point at after Tailscale closes `:3000` publicly — Tailnet IP, MagicDNS hostname, or something else? Decision deferred to mid-execution.
+
+**Process / lessons:**
+- Code's pushback pattern continues to work. Two cases this session-cycle: (a) Plan 0 Deliverable 1 `~/.profile` premise — Code ran an empirical SSH test, surfaced the failure, asked Gordon to choose between three real options instead of papering over the bad gate. (b) Portal `/chat` blank-page bug — Code diagnosed the subpath proxy issue with curl evidence, framed three solutions, recommended one, surfaced the WebSocket corollary unprompted. Both saved hours of downstream rework. Pattern worth preserving: validation gates that rest on assumed mechanism behavior get challenged empirically before being met.
+- Mid-session issue protocol (added to CLAUDE.md earlier this session) is paying off: portal `/chat` bug, Plan 0 `~/.profile` divergence, and the systemd-inheritance question all got narrative treatment in LOG.md instead of being collapsed into Decisions Log one-liners. The *why* is preserved for future sessions.
+- **Allowlist permissions have been a sustained productivity drag.** Across Sessions 5, 8, and 9 we've iterated on the right level of Code autonomy four times: original narrow per-command list → Session 5 attempt at broadening (incomplete, didn't survive) → Plan 0 Deliverable 6 explicit git write-op patterns → Plan 0 Deliverable 7 tool-family-allow + destructive-deny restructure. Each iteration was triggered by Code pausing mid-flow on commands that should have been routine, with the pauses themselves costing both wall-clock time and the ability to leave Code unattended. The current state — broad tool-family wildcards, narrow destructive deny list, Code can self-amend `settings.local.json` — is the first version that addresses the underlying frame (default-allow routine, default-deny destructive) rather than chasing individual commands. Verification of whether it actually holds will come in the next Code session. If pauses persist, the answer is more denies, not more allows; the friction the deny list creates is the security perimeter and worth keeping. Preserving the lesson here: per-command allowlisting is a treadmill — every new tool, flag, or path variant generates a fresh prompt, the file accretes, and the protection erodes anyway because nobody audits a 60-entry allowlist. Tool-family-allow + destructive-deny is the only frame that scales.
+
+**Blockers:** None. Portal `/chat` blank-page is not blocked — it's queued as Plan 0.5.
+
+**Next Action:** Hand Plan 0.5 to Code. After it lands and Gordon confirms in-browser, hand Plan 1.
+
+---
 
 ### Session 8 — 2026-05-08 10:05 ET (Plan 0 — FR loose ends, Claude Code)
 
@@ -602,6 +632,10 @@ what we shipped.
 | 2026-05-08 10:05 ET | `oxy build` deferred gate from 2026-05-08 07:31 ET fully resolved | Embeddings built successfully during FR pass (Session 7) and again during Plan 0 smoke check. `OXY_DATABASE_URL` env var requirement now documented in [SETUP.md](SETUP.md) §7 and [CLAUDE.md](CLAUDE.md) "LLM Configuration" |
 | 2026-05-08 10:05 ET | systemd unit (when installed) inherits env vars from `/etc/environment` via `EnvironmentFile=` — Option (a) | Single source of truth: editing `/etc/environment` reaches both the unit and ssh sessions, no drift between them. Option (b) was explicit `Environment=` directives (isolation between unit and ssh) — drift cost dominates the isolation benefit on a single-user EC2. Decision is for the SETUP.md template; unit not yet installed on EC2 (oxy currently running as foreground PID 29429), so `EnvironmentFile=` will be exercised at first install |
 | 2026-05-08 10:18 ET | Allowlist policy: tool-family-allow + destructive-deny in `.claude/settings.local.json`; `settings.json` is hands-off | Per-subcommand allowlist accumulated 51 entries in `settings.local.json` and 112 in `settings.json` (66 git-related), with linter-injected per-command entries for every quirky invocation — 7e. Tool-family wildcards (`Bash(git *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`) plus an explicit `permissions.deny` list (`git reset`, `git push --force/-f`, `git branch -d/-D`, `rm -rf`, `sudo`) gives broad ergonomics without losing safety. `Edit/Write(.claude/settings.local.json)` is auto-allowed so Code can self-amend; `.claude/settings.json` is deliberately NOT in that list — committed file, wider blast radius, requires Gordon's confirmation. Cuts settings.local.json from 51 to 18 allow entries (+ 12 deny). Effect verifies in the next Code session — current session was already authorized for what it ran |
+| 2026-05-08 10:58 ET | Sequencing locked: Plan 0.5 → Plan 1 → Plans 2-5 | Plan 0.5 first because the demo is broken (portal `/chat` blank page); Plan 1 next because the public `:3000` gap is a live security issue and Plan 0.5's URL changes when Plan 1 lands — doing them adjacent is efficient |
+| 2026-05-08 10:58 ET | Plans touching environment-specific mechanisms must verify their assumptions empirically in pre-flight before destructive/irreversible steps | Two prior occurrences confirm this is a real failure mode: overnight session (Chat asserted Airlayer was bundled into Oxygen), Plan 0 Deliverable 1 (Chat asserted `~/.profile` would reach non-interactive SSH). Pattern now baked into Plan 1 (verify Tailscale SSH + `:3000` work before touching AWS security group) and applied to future plans. Categories that need this: SSH shell modes, systemd inheritance, nginx proxy semantics, Tailscale/Ubuntu networking, Oxygen runtime behavior |
+| 2026-05-08 10:58 ET | Portal `/chat` link points directly to `:3000` for MVP 1 (Option A) | Code diagnosed three options (A direct link, B fix nginx subpath proxy, C subdomain). Option A is a 10-min fix and avoids the WebSocket-proxy tarpit in B. Option C (subdomain) deferred — revisit after Tailscale lands or with MVP 2 |
+| 2026-05-08 10:58 ET | Plan 1 Deliverable 4 has an open decision: portal `/chat` Tailnet target | After Tailscale closes `:3000` publicly, the portal link needs a Tailnet target. Options: Tailnet IP, MagicDNS hostname, or accept that the chat UI is reachable from Gordon's laptop only and remove the link. Surface mid-execution; Gordon decides once the Tailnet is up and MagicDNS resolution is verified |
 
 ---
 
