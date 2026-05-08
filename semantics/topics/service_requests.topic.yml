@@ -1,0 +1,7 @@
+name: service_requests
+description: "Somerville 311 service request data"
+views:
+  - requests
+  - request_types
+  - statuses
+  - dates

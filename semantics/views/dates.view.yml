@@ -1,0 +1,38 @@
+name: dates
+description: "Date dimension — one row per day"
+table: main_gold.dim_date
+datasource: somerville
+
+entities:
+  - name: date
+    type: primary
+    key: date_dt
+
+dimensions:
+  - name: date_dt
+    type: date
+    expr: date_dt
+    primary_key: true
+    description: "Calendar date"
+  - name: year
+    type: number
+    expr: year
+  - name: quarter
+    type: number
+    expr: quarter
+  - name: month
+    type: number
+    expr: month
+  - name: month_name
+    type: string
+    expr: month_name
+  - name: day_of_week
+    type: number
+    expr: day_of_week
+    description: "0 = Sunday, 6 = Saturday"
+  - name: day_name
+    type: string
+    expr: day_name
+  - name: is_weekend
+    type: boolean
+    expr: is_weekend

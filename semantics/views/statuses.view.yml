@@ -1,0 +1,25 @@
+name: statuses
+description: "Somerville 311 request status dimension"
+table: main_gold.dim_status
+datasource: somerville
+
+entities:
+  - name: status
+    type: primary
+    key: status_id
+
+dimensions:
+  - name: status_id
+    type: string
+    expr: status_id
+    primary_key: true
+    description: "Surrogate key (md5 of status)"
+  - name: status
+    type: string
+    expr: status
+    description: "Status display name"
+    samples: ["Open", "Closed", "In Progress", "On Hold"]
+  - name: is_open
+    type: boolean
+    expr: is_open
+    description: "True for any non-Closed status"

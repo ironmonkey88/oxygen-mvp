@@ -1,0 +1,20 @@
+name: request_types
+description: "Somerville 311 request type dimension"
+table: main_gold.dim_request_type
+datasource: somerville
+
+entities:
+  - name: request_type
+    type: primary
+    key: request_type_id
+
+dimensions:
+  - name: request_type_id
+    type: string
+    expr: request_type_id
+    primary_key: true
+    description: "Surrogate key (md5 of request_type)"
+  - name: request_type
+    type: string
+    expr: request_type
+    description: "Request type display name"

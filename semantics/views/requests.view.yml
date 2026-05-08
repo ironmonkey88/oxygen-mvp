@@ -1,0 +1,47 @@
+name: requests
+description: "Somerville 311 service requests — fact table, one row per request"
+table: main_gold.fct_311_requests
+datasource: somerville
+
+entities:
+  - name: request
+    type: primary
+    key: id
+  - name: date
+    type: foreign
+    key: date_created_dt
+  - name: request_type
+    type: foreign
+    key: request_type_id
+  - name: status
+    type: foreign
+    key: status_id
+
+dimensions:
+  - name: id
+    type: string
+    expr: id
+    primary_key: true
+    description: "Somerville 311 request ID"
+  - name: date_created_dt
+    type: date
+    expr: date_created_dt
+    description: "Date the request was created"
+  - name: ward
+    type: string
+    expr: ward
+    description: "Somerville ward number"
+  - name: block_code
+    type: string
+    expr: block_code
+    description: "Census block code (location)"
+
+measures:
+  - name: total_requests
+    type: count
+    description: "Total 311 requests"
+  - name: open_requests
+    type: count
+    description: "Requests not yet closed (status != 'Closed')"
+    filters:
+      - expr: "status != 'Closed'"

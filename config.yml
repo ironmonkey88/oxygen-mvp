@@ -1,0 +1,9 @@
+models:
+  - name: claude
+    vendor: anthropic
+    model: claude-sonnet-4-6
+
+databases:
+  - name: somerville
+    type: duckdb
+    path: data/somerville.duckdb
