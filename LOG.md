@@ -55,6 +55,23 @@
 - Move `ANTHROPIC_API_KEY` + `~/.local/bin` exports out of `~/.bashrc` into `~/.profile` so non-interactive ssh sees them → added to TASKS.md Environment Setup
 - Public `:3000` exposure → already covered by the Tailscale subsection in MVP 1 Hardening (line 65: "Update AWS security group: SSH and :3000 closed to public")
 
+**Addendum 2026-05-08 09:46 ET — user-found bug: portal `/chat` link renders blank page.**
+
+Gordon clicked "Open Chat →" on the portal in a browser; landed on a mostly blank page. Smoke test missed this because Session 7 verification was terminal-only (`curl http://18.224.151.49/chat` returns the Oxygen SPA HTML, which it does — but the HTML alone isn't enough to render).
+
+**Root cause:** nginx subpath proxy is incomplete. `/chat` proxies to `:3000` and returns the SPA shell, but the SPA's HTML references `/assets/index-uGZkA66J.js` (and a dozen other assets) at absolute paths. nginx's `location /` block does `try_files $uri $uri/ =404;` — so asset requests never reach `:3000`. Browser gets the shell, then 404s every `<script>`. Verified:
+- `curl http://18.224.151.49/chat` → 200, references `/assets/index-uGZkA66J.js`
+- `curl http://18.224.151.49/assets/index-uGZkA66J.js` → **404** (nginx serves from portal root)
+- `curl http://18.224.151.49:3000/assets/index-uGZkA66J.js` → 200, 2.2MB JS bundle
+
+Same bug almost certainly affects the WebSocket path used for chat streaming.
+
+**Recommendation sent to Chat:** Option A — drop the subpath proxy, change portal "Open Chat →" hrefs to `http://18.224.151.49:3000/`, remove the `location /chat` block from nginx. Tailscale work already on the docket folds the public-`:3000` exposure into a clean future fix (Tailnet hostname).
+
+**Process note:** Going forward, log user-found gaps like this as their own dated events. The smoke test passing on the CLI does not imply the in-browser flow works. For features with a UI surface, the FR check should include a real browser load (either Claude in Chrome, or Gordon-in-the-loop verification before declaring done).
+
+→ Captured in TASKS.md under "Portal" as a new task. Awaiting Chat's call on Option A vs B vs C before editing portal/index.html or nginx.
+
 ---
 
 ### Session 6 — 2026-05-08 09:02 ET (MVP 1 scope sharpening, Claude.ai planning + Claude Code)

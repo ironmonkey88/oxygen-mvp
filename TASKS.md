@@ -150,6 +150,7 @@
 ### Portal
 - [x] Install nginx on EC2
 - [x] Deploy portal index.html at port 80 — verified live at http://18.224.151.49
+- [!] Fix portal "Open Chat →" link — renders blank page in browser  *(2026-05-08 09:46 ET — nginx `/chat` proxies the SPA HTML but `/assets/*.js` at root hits portal's `try_files` and 404s. WebSocket path likely also affected. Awaiting Chat's call on Option A (drop subpath proxy, link directly to `http://18.224.151.49:3000/`) vs Option B (full nginx subpath rewrite) vs Option C (subdomain). See LOG.md 09:46 ET addendum for details.)*
 - [ ] Add /tasks route — rendered TASKS.md
 - [ ] Add /erd route — ERD SVG from schema.sql
 - [ ] Add /docs route — dbt docs generate output
