@@ -22,13 +22,35 @@
 
 **Goal:** close the four FR loose ends (env-var loading, deferred `oxy build` gate, `:3000` flag, allowlist) before moving on to Plans 1–5.
 
+**The env-var fork in the road (why `/etc/environment` won):**
+
+Plan 0 originally called for `~/.profile`. A 30-second empirical test killed that premise:
+
+```
+$ ssh oxygen-mvp 'echo $PLAN0_TEST_VAR'
+PLAN0_TEST_VAR=                     ← .profile NOT sourced
+
+$ ssh oxygen-mvp 'bash -lc "echo $PLAN0_TEST_VAR"'
+PLAN0_TEST_VAR=hello_from_profile   ← only login shell sources .profile
+```
+
+Why: OpenSSH on Ubuntu invokes the user's shell as `bash -c '<cmd>'` — non-login, non-interactive. `~/.bashrc` early-returns for non-interactive (default Ubuntu guard at line 7-9), `~/.profile` is login-shell only. Neither is read for `ssh ec2 'cmd'`.
+
+Three options taken back to Chat:
+- **(A) `/etc/environment`** — sshd reads it via PAM at session setup. Plain non-interactive ssh sees vars without any wrapper. Format: `KEY=VALUE`, no `export`, no shell expansion. System-wide; mode 644 — fine on single-user EC2.
+- **(B) `~/.ssh/environment` + `PermitUserEnvironment yes`** — per-user; same end result as (A); requires sudo edit of sshd_config + reload.
+- **(C) keep plan but switch wrapper from `bash -ic` to `bash -lc`** — vars in `~/.profile`, but every ssh command needs the wrapper. Doesn't meet the zero-wrapper goal.
+
+Chat picked **(A)**: zero-wrapper ergonomics, system-file ownership trivial on single-user EC2, and `/etc/environment`'s format constraints (`KEY=VALUE`, no expansion) work fine for both flat strings we needed.
+
 **Accomplishments:**
-- **Env vars migrated to `/etc/environment` (Option A).** Plan called for `~/.profile`, but a non-destructive empirical test (set a `PLAN0_TEST_VAR` and ssh'd in) proved `~/.profile` is NOT sourced by Ubuntu's non-interactive `ssh ec2 'cmd'` — only login shells (`bash -lc`) read it. `~/.bashrc` was already failing for the same reason (early-return guard for non-interactive shells). Ran the trade-off back to Chat; Chat picked `/etc/environment`. New file contents: `PATH=...:/home/ubuntu/.local/bin` (extended), `ANTHROPIC_API_KEY=sk-ant-...`, `OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy`. Removed the now-redundant `export ANTHROPIC_API_KEY=...` line from `~/.bashrc`.
+- **Env vars migrated to `/etc/environment` (Option A).** New file contents: `PATH=...:/home/ubuntu/.local/bin` (extended so `oxy`/`airlayer` resolve in plain ssh), `ANTHROPIC_API_KEY=sk-ant-...`, `OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy`. Removed the now-redundant `export ANTHROPIC_API_KEY=...` line from `~/.bashrc`. Single source of truth — deliberately did NOT add the same vars to `~/.profile` as a backup. Each `ssh oxygen-mvp 'cmd'` opens a fresh PAM session, so the post-edit tests already used fresh sessions; no separate "log out and reconnect" step was needed.
 - **All three env-var gates pass without `bash -ic`:**
   - `ssh oxygen-mvp 'echo $ANTHROPIC_API_KEY | head -c 14'` → `sk-ant-api03-E`
   - `ssh oxygen-mvp 'echo $OXY_DATABASE_URL'` → `postgresql://postgres:postgres@localhost:15432/oxy`
   - `ssh oxygen-mvp 'oxy build'` → `✅ Build complete` exit 0
-- **Updated [SETUP.md](SETUP.md) §7** to document the `/etc/environment` placement, the `~/.local/bin` PATH extension, and the two-var contract. Updated §11 systemd unit to pass both vars via explicit `Environment=` directives (systemd doesn't read `/etc/environment`) and corrected `ExecStart` path to `/home/ubuntu/.local/bin/oxy`.
+- **Updated [SETUP.md](SETUP.md) §7** to document the `/etc/environment` placement, the `~/.local/bin` PATH extension, and the two-var contract.
+- **Updated [SETUP.md](SETUP.md) §11 systemd unit (decision: Option (a)).** Replaced explicit `Environment=` directives with a single `EnvironmentFile=/etc/environment` line — systemd does not read `/etc/environment` by default, but `EnvironmentFile=` makes it inherit. Single source of truth: editing `/etc/environment` reaches both the unit and ssh sessions. Trade-off considered: option (b) was keeping explicit `Environment=` directives (isolation between unit and ssh), but the drift cost dominates the isolation benefit on a single-user EC2. **Cannot verify by service restart yet** — `/etc/systemd/system/oxy.service` does not exist on EC2 (oxy is currently running as a foreground process under PID 29429); `EnvironmentFile=` will be exercised at first install. Also corrected `ExecStart` path to `/home/ubuntu/.local/bin/oxy`.
 - **Updated [CLAUDE.md](CLAUDE.md) "LLM Configuration"** section: corrected the stale `config.yml` snippet (`model:` → `model_ref:`/`key_var:` per oxy 0.5.47 schema, originally noted in the 2026-05-08 07:22 ET Decisions Log entry), added the two-var table with a one-liner pointing at SETUP.md §7.
 - **Closed the deferred `oxy build` gate from the overnight run.** Decisions Log + Blockers Log updated below; "Accomplishments by MVP" caveat removed.
 - **Flagged the `:3000` public exposure** in Current Status with an "Open security gap" line that points at Plan 1 (Tailscale) as the fix.
@@ -578,6 +600,8 @@ what we shipped.
 | 2026-05-08 09:32 ET | `oxy build` requires `OXY_DATABASE_URL` even when `oxy start` is running | `oxy start` creates the Postgres container at `postgresql://localhost:15432/oxy` but doesn't export the URL into the user's shell. Documented inline in run commands; should land in `~/.bashrc` or `run.sh` next |
 | 2026-05-08 10:05 ET | Env vars live in `/etc/environment`, not `~/.profile` or `~/.bashrc` | Ubuntu's non-interactive `ssh ec2 'cmd'` doesn't source `~/.profile` (login-shell only) or `~/.bashrc` (early-return for non-interactive). `/etc/environment` is read by sshd via PAM at session setup, so plain non-interactive ssh sees the vars without needing `bash -lc` / `bash -ic`. Empirically verified before committing. Format is literal `KEY=VALUE`, no `export`, no shell expansion |
 | 2026-05-08 10:05 ET | `oxy build` deferred gate from 2026-05-08 07:31 ET fully resolved | Embeddings built successfully during FR pass (Session 7) and again during Plan 0 smoke check. `OXY_DATABASE_URL` env var requirement now documented in [SETUP.md](SETUP.md) §7 and [CLAUDE.md](CLAUDE.md) "LLM Configuration" |
+| 2026-05-08 10:05 ET | systemd unit (when installed) inherits env vars from `/etc/environment` via `EnvironmentFile=` — Option (a) | Single source of truth: editing `/etc/environment` reaches both the unit and ssh sessions, no drift between them. Option (b) was explicit `Environment=` directives (isolation between unit and ssh) — drift cost dominates the isolation benefit on a single-user EC2. Decision is for the SETUP.md template; unit not yet installed on EC2 (oxy currently running as foreground PID 29429), so `EnvironmentFile=` will be exercised at first install |
+| 2026-05-08 10:18 ET | Allowlist policy: tool-family-allow + destructive-deny in `.claude/settings.local.json`; `settings.json` is hands-off | Per-subcommand allowlist accumulated 51 entries in `settings.local.json` and 112 in `settings.json` (66 git-related), with linter-injected per-command entries for every quirky invocation — 7e. Tool-family wildcards (`Bash(git *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`) plus an explicit `permissions.deny` list (`git reset`, `git push --force/-f`, `git branch -d/-D`, `rm -rf`, `sudo`) gives broad ergonomics without losing safety. `Edit/Write(.claude/settings.local.json)` is auto-allowed so Code can self-amend; `.claude/settings.json` is deliberately NOT in that list — committed file, wider blast radius, requires Gordon's confirmation. Cuts settings.local.json from 51 to 18 allow entries (+ 12 deny). Effect verifies in the next Code session — current session was already authorized for what it ran |
 
 ---
 

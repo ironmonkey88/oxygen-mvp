@@ -190,9 +190,10 @@ User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
 ExecStart=/home/ubuntu/.local/bin/oxy start
 Restart=always
-# systemd doesn't read /etc/environment by default — pass the vars explicitly.
-Environment="ANTHROPIC_API_KEY=your_key_here"
-Environment="OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy"
+# Inherit env vars from /etc/environment — keeps the systemd unit and
+# non-interactive ssh sessions on the same source of truth. systemd does
+# not read /etc/environment by default; EnvironmentFile= does the work.
+EnvironmentFile=/etc/environment
 
 [Install]
 WantedBy=multi-user.target

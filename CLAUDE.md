@@ -125,6 +125,7 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 - **Flag Oxygen limitations immediately** — surface problems before building workarounds
 - **Update TASKS.md** as work completes — `[x]` done · `[~]` in progress · `[!]` blocked
 - **Update LOG.md** after completing tasks, making decisions, or hitting blockers
+- **Allowlist policy:** `.claude/settings.local.json` is auto-editable by Code (per-machine, gitignored). `.claude/settings.json` requires Gordon's confirmation (committed, wider blast radius). Tool families are allowed wholesale (`Bash(git *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`); destructive subcommands (`git reset`, `git push --force`, `git branch -d`, `rm -rf`, `sudo`) are explicitly denied and will always prompt.
 
 ---
 

@@ -72,6 +72,18 @@
 - [x] Validation gate 3: `ssh oxygen-mvp 'oxy build'` exit 0 (no `bash -ic`)
 - [x] Validation gate 4: agent regression check — "How many 311 tickets were filed in 2024?" still returns 113,961
 
+##### Plan 0 amendments — systemd Option (a) + Deliverable 7 allowlist restructure (2026-05-08 10:18 ET)
+- [x] SETUP.md §11 systemd unit: Option (a) — `EnvironmentFile=/etc/environment` instead of explicit `Environment=` directives (single source of truth)
+- [x] Capture pre-restructure allowlist state in LOG.md Decisions Log (settings.json: 112 allow / 66 git-related, settings.local.json: 51 allow, no deny)
+- [x] D7a — `Edit(.claude/settings.local.json)` + `Write(.claude/settings.local.json)` auto-allowed (Code can self-amend)
+- [x] D7b — tool-family wildcards: `Bash(git *)`, `Bash(git -C * *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`
+- [x] D7b — removed redundant per-subcommand entries from settings.local.json (51 → 18 allow entries)
+- [x] D7c — added `permissions.deny` array: `git reset`, `git push --force/-f`, `git branch -d/-D`, `rm -rf`, `sudo` (12 entries, both bare-`git` and `git -C`)
+- [x] D7d — `python3 -m json.tool` validates both settings.json and settings.local.json
+- [x] D7e — CLAUDE.md Rules: one-line allowlist policy referring to settings.local.json (auto) vs settings.json (Gordon-gated)
+- [x] D7e — Decisions Log entry for the policy shift
+- [ ] D7 validation: in next Code session, confirm a routine command (e.g. `git -C <worktree> commit`) proceeds without prompt; confirm a destructive command (e.g. `git reset --hard`) still prompts. Cannot validate in this session — Code reads allowlist at session start.
+
 #### Tailscale (pulled forward from MVP 3)
 - [ ] Install Tailscale on EC2
 - [ ] Authenticate Gordon's laptop and EC2 to same Tailnet
