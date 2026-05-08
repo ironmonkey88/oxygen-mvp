@@ -40,6 +40,13 @@
 ## MVP 1 — 1st Data Product
 **Goal:** Static data file → DuckDB → Airlayer → Answer Agent chat UI
 
+### Scope statement
+- Target user: city analyst, not general resident
+- Goal: analyst asks Answer Agent a question, gets a correct answer with SQL + row count + citations, and can verify it independently
+- Bar: extreme trustability — every answer is inspectable and reproducible
+- Out of scope this MVP: charts, exports, follow-up suggestions, anomaly surfacing, /about page, long-form .qmd-style docs
+- See [STANDARDS.md](STANDARDS.md) for "done done" criteria
+
 ### Repo Cleanup (Session 5)
 - [x] Audit local Mac vs EC2 vs GitHub for missing source files
 - [x] Recover `dlt/somerville_311_pipeline.py` into the repo (live EC2 copy)
@@ -48,6 +55,42 @@
 - [x] Verify Bronze model builds and 5/5 tests pass on EC2
 - [x] Add `dbt/profiles.yml` to `.gitignore`; remove repo-local profile alternative from `SETUP.md`
 - [x] Confirm `dim_origin` and `portal/` already present in `ARCHITECTURE.md` and `TASKS.md`
+
+### MVP 1 — Hardening for analyst trust
+
+#### Tailscale (pulled forward from MVP 3)
+- [ ] Install Tailscale on EC2
+- [ ] Authenticate Gordon's laptop and EC2 to same Tailnet
+- [ ] Update AWS security group: SSH and :3000 closed to public, port 80 stays open
+- [ ] Verify SSH works over Tailscale
+- [ ] Verify Oxygen :3000 reachable over Tailscale
+- [ ] Update SETUP.md and CLAUDE.md to reflect new access pattern
+
+#### dbt docs (production-strength documentation)
+- [ ] Audit all schema.yml files: every model has description, every column has description (no nulls)
+- [ ] Add bronze model + column descriptions
+- [ ] Add gold model + column descriptions
+- [ ] Add admin model + column descriptions (when admin schema lands)
+- [ ] Add `dbt docs generate` step to run.sh
+- [ ] Configure nginx /docs route to serve dbt/target/static_index.html
+- [ ] Verify /docs renders on portal
+
+#### Portal pages for trust
+- [ ] Build /metrics page generator (auto-generated from Airlayer YAML — every measure with definition and expanded SQL)
+- [ ] Build /trust page (driven by admin.fct_test_run — last run, pass/fail counts, test details, data freshness)
+- [ ] Update portal/index.html nav: surface /docs, /metrics, /trust alongside /chat
+- [ ] Update portal/index.html copy to reflect analyst persona (engineering-honest, not marketing)
+
+#### Limitations registry
+- [ ] Decide location and format (open question in STANDARDS.md)
+- [ ] Document known 311 data limitations
+- [ ] Surface limitations on /trust page
+- [ ] Configure Answer Agent to reference limitations when relevant
+
+### Documentation — MVP 1 scope sharpening
+- [x] Deliverable A: STANDARDS.md written, committed, pushed
+- [~] Deliverable B: TASKS.md updates (scope statement, Hardening section, Answer Agent + Sign-off updates, marks done)
+- [ ] Deliverable C: LOG.md session entry + Decisions Log + Current Status
 
 ### Environment Setup
 - [x] Provision EC2 instance (t4g.medium, Ubuntu 24.04 LTS ARM) — IP: 18.224.151.49
@@ -58,7 +101,7 @@
 - [x] Initialize GitHub repo and push all project files
 - [x] Clone project repo and create `data/` directory
 - [x] Set `ANTHROPIC_API_KEY` environment variable
-- [ ] Configure EC2 to pull from GitHub repo on each session
+- [x] Configure EC2 to pull from GitHub repo on each session  *(addressed by `CLAUDE.md` "Session Start on EC2" section per Session 5 follow-up)*
 - [x] Configure dbt profile (`~/.dbt/profiles.yml`)
 - [x] Create `config.yml` for Oxygen (model + database config) — landed in overnight session
 - [ ] Run `oxy start` and confirm UI loads at port 3000  *(needed before `oxy build` validation gate can pass)*
@@ -122,13 +165,18 @@
 - [ ] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
 - [ ] Create `agents/answer_agent.agent.yml`
 - [ ] Configure `execute_sql` tool and Airlayer context block
+- [ ] Configure agent prompt to require SQL, row count, and citations in every response  *(extreme trustability — see STANDARDS.md §4.1)*
 - [ ] Test with 3–5 sample questions in Oxygen chat UI
 - [ ] Confirm agent returns accurate answers
+- [ ] Test bench: 5 representative analyst questions, verify responses include SQL + row count + citation in every reply
 
 ### MVP 1 Sign-off
-- [ ] User can ask "How many 311 requests were opened in 2024?" and get a correct answer
-- [ ] User can ask "What are the most common request types?" and get a correct answer
-- [ ] No errors in Oxygen logs during normal use
+- [ ] All checks in [STANDARDS.md](STANDARDS.md) MVP 1 sign-off checklist pass
+- [ ] Analyst can ask "How many 311 requests opened in 2024?" and get an answer with SQL, row count, and citation
+- [ ] Analyst can ask "Most common request types?" and get an answer with SQL, row count, and citation
+- [ ] /trust page shows green for last pipeline run
+- [ ] /metrics page lists all current measures with definitions
+- [ ] /docs page renders dbt documentation with no missing descriptions
 
 ---
 
