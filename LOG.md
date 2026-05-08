@@ -7,13 +7,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** FR pass complete (Answer Agent answers test questions correctly). Plan 0 closed (env vars, allowlist, docs). Next: Plan 0.5 (portal /chat fix) → Plan 1 (Tailscale) → Plans 2-5 for trust pass.
+**Phase:** Plan 0.5 closed (portal `/chat` link repointed to `:3000`; nginx subpath proxy removed). Plan 0 closed. FR pass intact. Next: Plan 1 (Tailscale) closes the public `:3000` gap and chains a portal-link update.
 **Open security gap:** `:3000` is publicly accessible. Closes in Plan 1 (Tailscale).
-**Last Updated:** 2026-05-08 11:30 ET (Session 10 — LOG.md refactor closed)
+**Last Updated:** 2026-05-08 11:48 ET (Session 11 — Plan 0.5 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 11 — 2026-05-08 11:35 ET — portal-chat-fix
+[full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
+
+- **Goal:** Make portal chat link actually open the chat UI (Option A: direct `:3000` link).
+- **Shipped:** 3 portal hrefs repointed; nginx `location /chat` removed; deployed; commit 6d76594. Gates 1-4 green, gate 5 = Gordon's browser test.
+- **Decisions:** 0 new (Option A captured in Session 9) — see Decisions Log
+- **Status:** complete (pending Gordon's browser confirmation)
+- **Next:** Plan 1 (Tailscale) — its Deliverable 4 will update the same hrefs to a Tailnet target.
 
 ### Session 10 — 2026-05-08 11:15 ET — log-refactor
 [full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
@@ -51,19 +60,11 @@
 - **Status:** complete
 - **Next:** Trust contract pass — but first close three flags (env vars, docs, public :3000).
 
-### Session 6 — 2026-05-08 09:02 ET — mvp1-scope-sharpening
-[full narrative](docs/sessions/session-06-2026-05-08-mvp1-scope-sharpening.md)
-
-- **Goal:** Sharpen MVP 1 around analyst persona + extreme trustability bar; capture in STANDARDS.md.
-- **Shipped:** STANDARDS.md (7 sections); TASKS.md scope statement + Hardening section; allowlist broadened to tool families.
-- **Decisions:** 9 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Pick first hardening thread (Tailscale or dbt docs).
-
 ---
 
 ## Earlier Sessions
 
+- **Session 6** — 2026-05-08 09:02 ET — MVP 1 scope sharpening + STANDARDS.md. [full narrative](docs/sessions/session-06-2026-05-08-mvp1-scope-sharpening.md)
 - **Session 5** — 2026-05-07 22:00 ET → 2026-05-08 07:00 ET — Cleanup + overnight run (gold + Airlayer + semantic). [full narrative](docs/sessions/session-05-2026-05-07-cleanup-and-overnight-run.md)
 - **Session 4** — 2026-05-07 17:00–18:25 ET — Schema design + portal deployed. [full narrative](docs/sessions/session-04-2026-05-07-schema-and-portal.md)
 - **Session 3** — 2026-05-07 14:25–15:50 ET — EC2 provisioned, dlt pipeline designed. [full narrative](docs/sessions/session-03-2026-05-07-ec2-provisioned.md)
