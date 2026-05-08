@@ -104,7 +104,7 @@
 - [x] Configure EC2 to pull from GitHub repo on each session  *(addressed by `CLAUDE.md` "Session Start on EC2" section per Session 5 follow-up)*
 - [x] Configure dbt profile (`~/.dbt/profiles.yml`)
 - [x] Create `config.yml` for Oxygen (model + database config) — landed in overnight session
-- [ ] Run `oxy start` and confirm UI loads at port 3000  *(needed before `oxy build` validation gate can pass)*
+- [~] Run `oxy start` and confirm UI loads at port 3000  *(needed before `oxy build` validation gate can pass)*
 
 ### Ingestion (dlt)
 - [x] Identify Somerville 311 dataset ID on data.somervillema.gov — `4pyi-uqq6`, 1.17M rows, 22 columns
@@ -162,13 +162,13 @@
 - [x] Confirm Airlayer loads without errors in Oxygen — `oxy validate` clean ("All 5 config files are valid"); `oxy build` deferred to Answer Agent session
 
 ### Answer Agent
-- [ ] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
-- [ ] Create `agents/answer_agent.agent.yml`
-- [ ] Configure `execute_sql` tool and Airlayer context block
-- [ ] Configure agent prompt to require SQL, row count, and citations in every response  *(extreme trustability — see STANDARDS.md §4.1)*
-- [ ] Test with 3–5 sample questions in Oxygen chat UI
-- [ ] Confirm agent returns accurate answers
-- [ ] Test bench: 5 representative analyst questions, verify responses include SQL + row count + citation in every reply
+- [~] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
+- [~] Create `agents/answer_agent.agent.yml`
+- [~] Configure `execute_sql` tool and Airlayer context block
+- [ ] Configure agent prompt to require SQL, row count, and citations in every response  *(extreme trustability — see STANDARDS.md §4.1; deferred — trust contract is a follow-up pass after FR smoke test)*
+- [~] Test with 3–5 sample questions in Oxygen chat UI  *(2026-05-08 FR smoke test: 2024 full-year + 2026 partial-year)*
+- [~] Confirm agent returns accurate answers
+- [ ] Test bench: 5 representative analyst questions, verify responses include SQL + row count + citation in every reply  *(deferred — trust contract pass)*
 
 ### MVP 1 Sign-off
 - [ ] All checks in [STANDARDS.md](STANDARDS.md) MVP 1 sign-off checklist pass

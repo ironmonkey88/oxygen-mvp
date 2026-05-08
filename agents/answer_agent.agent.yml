@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/oxy-hq/oxygen/refs/heads/main/json-schemas/agent.json
+
+name: answer_agent
+description: "Somerville 311 analytics — answer natural-language questions about service request data."
+
+model: claude-sonnet-4-6
+
+context:
+  - name: topic
+    type: file
+    src:
+      - "semantics/topics/service_requests.topic.yml"
+      - "semantics/views/*.view.yml"
+  - name: ddl
+    type: file
+    src:
+      - "docs/schema.sql"
+
+system_instructions: |
+  You are a Somerville 311 analytics assistant. You answer natural-language questions about Somerville's 311 service request data.
+
+  Use the `execute_sql` tool against the `somerville` database (DuckDB). Always run a query — do not answer from memory.
+
+  Gold tables live in the `main_gold` schema. The fact table is `main_gold.fct_311_requests`; use `date_created_dt` for request creation date.
+
+  When the user says "this year", interpret it as the current calendar year. In DuckDB, that's `year(current_date)`. Same pattern for "last year", "this month", etc.
+
+  ## Semantic layer (topic + views)
+  {{ context.topic }}
+
+  ## DDL
+  ```sql
+  {{ context.ddl }}
+  ```
+
+tools:
+  - name: execute_sql
+    type: execute_sql
+    database: somerville
