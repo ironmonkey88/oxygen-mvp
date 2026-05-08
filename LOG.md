@@ -224,6 +224,105 @@ Airlayer 0.1.1 does **not** accept a `--connection` flag on `airlayer query`. Da
 
 ---
 
+### Session 5 — 2026-05-07 ~22:00 ET → 2026-05-08 ~07:00 ET (Claude.ai planning + Code overnight run)
+
+**Context:**
+Planning conversation in Claude.ai to scope a multi-deliverable overnight 
+run for Code: gold layer + Airlayer install + semantic layer. Process 
+notes captured here so future sessions can see how we worked, not just 
+what we shipped.
+
+**Process accomplishments:**
+- Caught two factual errors in the prep before handing off to Code:
+  - I (Claude.ai) initially asserted Airlayer was bundled into Oxygen and 
+    needed no install. Gordon pushed back with the GitHub URL. Verified 
+    via repo: Airlayer is a separate Rust binary with its own install 
+    script. Correction made before any work was given to Code.
+  - Discovered our docs used `.sem.yml` everywhere, but the actual file 
+    extension is `.view.yml` (confirmed in airlayer/docs/schema-format.md, 
+    which states "This is the same format used by Oxy"). Doc cleanup 
+    became Deliverable 0 of the overnight run.
+- Confirmed Oxygen and standalone Airlayer share the exact same `.view.yml` 
+  schema. Two engines, one schema. Going with Option B (install both) 
+  gives us a CLI for shell-based testing without spinning up the Oxygen 
+  runtime.
+- Walked through dependency check (gold → Airlayer → semantic, sequential), 
+  validation gates, and explicit out-of-scope list (silver, run.sh, admin 
+  schema, Answer Agent) before Code received the prompt. Prevented scope 
+  creep overnight.
+- Gordon kept Claude.ai honest by asking "did we resolve all your 
+  questions?" before handoff — surfaced the residual config.yml collision 
+  question, which got added to the prompt as "flag as blocker if it 
+  appears."
+- Pre-run doc fixes (CLAUDE.md, ARCHITECTURE.md) handed to Code as 
+  Deliverable 0 with explicit before/after blocks rather than free-form 
+  "update the docs" — much faster and unambiguous.
+
+**Decisions made (process / planning):**
+- Session-starter.md stays in two places (local copy and repo copy) — 
+  serves as a stable contract that rarely changes. LOG.md is the state 
+  that changes session to session.
+- For overnight runs: each deliverable commits and pushes independently. 
+  Don't batch. Code's commit cadence ("feat(gold): ...", 
+  "chore(airlayer): install", "feat(semantic): ...") worked as designed.
+- For overnight runs: validation gates must be concrete, runnable 
+  commands. "Done when X passes" beats "done when it works."
+- Out-of-scope items must be listed explicitly in the prompt. Code 
+  honored "do not build silver, run.sh, admin schema, or Answer Agent" 
+  cleanly.
+
+**Blockers encountered overnight (process-related):**
+- Heredocs over SSH (`ssh oxygen-mvp '... <<EOF'`) trip Claude Code's 
+  permission system on every call, even with `Bash(ssh oxygen-mvp *)` in 
+  the allowlist. The newline + `#` pattern can hide arguments from path 
+  validation. Manual approval required each time.
+- Worktree git commands (`git -C /path/to/worktree commit ...`) don't 
+  match allowlist patterns like `Bash(git commit *)` because `-C <path>` 
+  comes before the subcommand. "Allow always" doesn't always stick because 
+  worktree paths contain session-specific identifiers.
+- Combined effect: overnight run paused multiple times waiting for human 
+  approval. Did not fully run unattended.
+
+**Resolutions / lessons for future overnight runs:**
+- Allowlist needs broader patterns. Update `.claude/settings.local.json` 
+  to include `Bash(git *)` and `Bash(git -C *)` rather than relying on 
+  per-subcommand patterns. Add `Bash(duckdb *)`, `Bash(dbt *)`, 
+  `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`.
+- For multi-line SQL or Python on EC2, do NOT use heredocs. Write the 
+  query/script to a file in `scratch/` (gitignored) on local, scp to 
+  /tmp/ on EC2, run with `duckdb -f` or `python script.py`. Bonus: 
+  queries become reproducible artifacts.
+- For future runs of this length, walk the allowlist + heredoc rule 
+  through Code in advance as a pre-flight, not in the middle of the run.
+
+**Decisions surfaced for Gordon's morning review:**
+- CLAUDE.md `LLM Configuration` snippet uses `model:` but Oxygen 0.5.47 
+  wants `model_ref` + `key_var`. Code flagged but did not edit without 
+  signoff. Needs decision.
+- `oxy build` requires Oxygen runtime (Docker + Postgres on port 3000 via 
+  `oxy start`). Was not run. `oxy validate` (config syntax) and 
+  `airlayer query -x` (actual execution returning 5 rows with auto-join) 
+  both passed — semantic layer is functionally working. `oxy build` 
+  deferred to first Answer Agent session when `oxy start` will be running 
+  anyway. Recommend marking Deliverable 3 done with this caveat.
+
+**Net result:**
+- Deliverables 0, 1, 2 fully complete.
+- Deliverable 3 functionally complete (semantic layer works); only the 
+  heaviest validation gate (`oxy build`) deferred to next session for 
+  good reason.
+- Two real lessons captured for future overnight runs (allowlist + 
+  heredocs).
+
+**Next action:**
+- Decide on CLAUDE.md `model_ref` edit (Code is paused waiting).
+- Update `.claude/settings.local.json` allowlist before next overnight 
+  attempt.
+- Plan next session: Answer Agent (will pull in `oxy start` + `oxy build` 
+  naturally).
+
+---
+
 ### Session 3 — 2026-05-07 14:25 ET – 15:50 ET
 
 **Accomplishments:**
