@@ -190,6 +190,8 @@ sudo systemctl status oxy
 
 ## Run Order (Important)
 
+**Before any work on EC2, pull first:** `cd ~/oxygen-mvp && git pull origin main`. GitHub `main` is the source of truth — EC2 is downstream. See CLAUDE.md "Session Start on EC2" for details.
+
 DuckDB only allows one writer at a time. Always run in this order:
 
 ```bash

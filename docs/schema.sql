@@ -40,7 +40,12 @@ CREATE TABLE IF NOT EXISTS bronze.raw_311_requests (
     reliable_service_delivery                       VARCHAR,  -- dept tag, sparse
     navigating_city_services_and_policies           VARCHAR,  -- dept tag, sparse
     public_space_cleanliness_and_environmental_health VARCHAR, -- dept tag, sparse
-    voting_and_election_information                 VARCHAR   -- dept tag, sparse
+    voting_and_election_information                 VARCHAR,  -- dept tag, sparse
+
+    -- dlt metadata: emitted by the ingest pipeline, retained at every layer
+    -- (bronze → silver → gold) so any row can be traced back to its source load.
+    _dlt_load_id                                    VARCHAR,  -- dlt load identifier, retained for lineage
+    _dlt_id                                         VARCHAR   -- dlt row identifier, retained for lineage
 );
 
 -- Raw load of dbt run_results.json after each pipeline run.

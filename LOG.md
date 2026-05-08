@@ -8,11 +8,31 @@
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
 **Phase:** Bronze model live on EC2 — ready to build gold models
-**Last Updated:** 2026-05-07 22:13 ET (Session 5 — Claude Code)
+**Last Updated:** 2026-05-07 22:22 ET (Session 5 follow-up — Claude Code)
 
 ---
 
 ## Session Log
+
+### Session 5 follow-up — 2026-05-07 22:22 ET (Hygiene, Claude Code)
+
+**Goal:** close out four follow-ups from Session 5 cleanup. No model logic touched.
+
+**Accomplishments:**
+- Reconciled `docs/schema.sql` with the live Bronze view: added `_dlt_load_id` and `_dlt_id` to `bronze.raw_311_requests` with a comment block explaining they're retained at every layer for lineage.
+- Tightened the autonomous-execution memory entry. Replaced the loose "don't ask for routine reversible work" rule with two explicit lists: a "do not ask" list (file edits, allowlist additions, read-only git/EC2, scp, dbt/dlt/oxy runs) and an "always ask first" list (schema changes that propagate downstream, semantic/agent edits, destructive ops, pushes, anything that changes the data contract or costs money).
+- Added "Session Start on EC2" section to `CLAUDE.md`: first command on EC2 every session is `cd ~/oxygen-mvp && git pull origin main`. Added a one-liner pointer in `SETUP.md` Run Order section.
+
+**Decisions Made:**
+- dlt metadata columns (`_dlt_load_id`, `_dlt_id`) are retained on the Bronze view for lineage. `docs/schema.sql` updated to match — schema and view now agree at 24 columns.
+- Always-ask boundary made explicit in memory. Schema, semantic-layer, agent, and data-contract changes always go through Gordon — even when broader work is approved.
+- EC2 pulls from GitHub `main` at the start of every session. The Session 5 drift (EC2 7 commits behind) was the trigger.
+
+**Blockers:** None
+
+**Next Action:** Start MVP 1 gold models in a fresh session.
+
+---
 
 ### Session 5 — 2026-05-07 22:00–22:15 ET (Cleanup, Claude Code)
 
@@ -187,6 +207,9 @@
 | 2026-05-07 22:13 ET | Bronze keeps source columns as VARCHAR per `docs/schema.sql` | Date columns cast `::VARCHAR` rather than `::TIMESTAMP`; transforms deferred to silver |
 | 2026-05-07 22:13 ET | No empty stubs for unbuilt components | `agents/`, `semantic/`, `apps/`, `config.yml`, `run.sh`, silver/gold/admin model dirs land when their MVP is built |
 | 2026-05-07 22:13 ET | Recovered backup dbt scaffold rather than starting fresh | Backup is real prior work, aligns with schema.sql once columns extended |
+| 2026-05-07 22:22 ET | dlt metadata columns retained on Bronze view for lineage; `docs/schema.sql` updated to match | Schema/view drift reconciled at 24 columns; lineage trace is valuable at every layer |
+| 2026-05-07 22:22 ET | Always-ask boundary made explicit in memory | Permissive "don't ask" rule alone was too loose; schema/semantic/agent/destructive ops still require explicit confirmation |
+| 2026-05-07 22:22 ET | EC2 pulls from GitHub `main` at the start of every session | Session 5 found EC2 7 commits behind; CLAUDE.md "Session Start on EC2" section + SETUP.md pointer |
 
 ---
 

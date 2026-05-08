@@ -167,6 +167,22 @@ Never assume column names from API documentation. Always derive from actual data
 
 ---
 
+## Session Start on EC2
+
+First command on EC2 every session, before any work:
+
+```bash
+cd ~/oxygen-mvp && git pull origin main
+```
+
+- If pull reports "Already up to date" — proceed.
+- If pull pulls commits — review what changed before running any pipeline.
+- If pull reports conflicts — stop and ask Gordon.
+
+GitHub `main` is the source of truth. EC2 is downstream of it. Skipping this step is what caused the Session 5 drift (EC2 was 7 commits behind).
+
+---
+
 ## Run Order — Always Use run.sh
 
 **Never run dlt, dbt, or oxy commands individually.** Always use:
