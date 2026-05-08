@@ -100,10 +100,6 @@
       color: var(--text-mid);
     }
     .nav-links a:hover { color: var(--text); }
-    .nav-links .nav-cta {
-      color: var(--green);
-      font-weight: 500;
-    }
 
     /* ── HERO ── */
     .hero {
@@ -148,20 +144,18 @@
       margin-top: 20px;
       max-width: 540px;
     }
-    .hero-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+    .hero-pill {
+      display: inline-block;
       margin-top: 32px;
-      padding: 13px 22px;
-      background: var(--green);
-      color: var(--white);
-      font-size: 15px;
-      font-weight: 500;
-      border-radius: 6px;
-      transition: background 0.15s;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--green);
+      background: var(--green-pale);
+      border: 1px solid #b8d4c0;
+      padding: 4px 10px;
+      border-radius: 4px;
     }
-    .hero-cta:hover { background: var(--green-mid); }
 
     /* ── STATS ── */
     .stats {
@@ -393,8 +387,6 @@
       <a href="#assets">Assets</a>
       <a href="#stack">Stack</a>
       <a href="#roadmap">Roadmap</a>
-      <!-- URL changes when Tailscale lands (Plan 1) — will become Tailnet hostname -->
-      <a href="http://18.224.151.49:3000/" class="nav-cta">Open Chat →</a>
     </div>
   </nav>
 
@@ -403,8 +395,7 @@
     <div class="hero-label">Somerville, MA — Open Data Platform</div>
     <h1>Ask anything about<br><em>city services.</em></h1>
     <p>A conversational analytics platform built on Somerville's open 311 data. Ask questions in plain English and get accurate answers — powered by Oxygen, the all-in-one data and AI platform.</p>
-    <!-- URL changes when Tailscale lands (Plan 1) — will become Tailnet hostname -->
-    <a href="http://18.224.151.49:3000/" class="hero-cta">Start asking questions →</a>
+    <span class="hero-pill">Private beta</span>
   </div>
 
   <!-- STATS -->
@@ -436,8 +427,6 @@
         <div class="asset-icon">💬</div>
         <div class="asset-title">Analytics chat</div>
         <div class="asset-desc">Ask natural language questions about Somerville 311 data. Powered by Oxygen's Answer Agent and Claude Sonnet.</div>
-        <!-- URL changes when Tailscale lands (Plan 1) — will become Tailnet hostname -->
-        <a href="http://18.224.151.49:3000/" class="asset-link">:3000 → Open chat</a>
       </div>
       <div class="asset-card">
         <div class="asset-icon">📋</div>

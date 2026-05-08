@@ -120,12 +120,14 @@
 - [ ] D7 validation: in next Code session, confirm a routine command (e.g. `git -C <worktree> commit`) proceeds without prompt; confirm a destructive command (e.g. `git reset --hard`) still prompts. Cannot validate in this session — Code reads allowlist at session start.
 
 #### Tailscale (pulled forward from MVP 3) — Plan 1 in progress
-- [~] Install Tailscale on EC2
-- [ ] Authenticate Gordon's laptop and EC2 to same Tailnet
-- [ ] Update AWS security group: SSH and :3000 closed to public, port 80 stays open
-- [ ] Verify SSH works over Tailscale
-- [ ] Verify Oxygen :3000 reachable over Tailscale
-- [ ] Update SETUP.md, CLAUDE.md, ARCHITECTURE.md to reflect new access pattern
+- [x] Install Tailscale on EC2  *(2026-05-08, 1.96.4; `tailscale up --hostname=oxygen-mvp --ssh`; node IP 100.73.216.43; MagicDNS `oxygen-mvp.taildee698.ts.net` resolves)*
+- [x] Authenticate Gordon's laptop and EC2 to same Tailnet  *(both visible in `tailscale status`: laptop 100.122.230.71, EC2 100.73.216.43)*
+- [x] Repoint local `~/.ssh/config` `oxygen-mvp` alias from public IP → `oxygen-mvp.taildee698.ts.net`  *(2026-05-08; backup at `~/.ssh/config.bak.preTailscale`)*
+- [x] Verify SSH works over Tailscale  *(D3 gate: `ssh oxygen-mvp 'echo ok'` → ok; verbose probe confirms `Authenticated to oxygen-mvp.taildee698.ts.net ([100.73.216.43]:22)`)*
+- [x] Verify Oxygen :3000 reachable over Tailscale  *(curl from laptop: MagicDNS hostname → 200, Tailnet IP → 200; service bound to 0.0.0.0:3000)*
+- [x] Update AWS security group: SSH and :3000 closed to public, port 80 stays open  *(2026-05-08, post-delete probes: Tailnet SSH ok, Tailnet :3000 = 200, public :3000 = curl timeout exit 28, public :80 = 200)*
+- [ ] Update SETUP.md, CLAUDE.md, ARCHITECTURE.md to reflect new access pattern  *(also document nginx docroot = `/var/www/somerville` via `sites-enabled/somerville`, NOT `/var/www/html`)*
+- [x] D4 — portal `/chat` link decision  *(2026-05-08; hybrid: dropped nav CTA + asset-card link, replaced hero CTA with non-link `Private beta` pill matching nav-badge styling; removed 3 stale `:3000` comments + dead `.nav-cta`/`.hero-cta` CSS; deployed to `/var/www/somerville/index.html`; live portal clean)*
 
 #### dbt docs (production-strength documentation)
 - [ ] Audit all schema.yml files: every model has description, every column has description (no nulls)
