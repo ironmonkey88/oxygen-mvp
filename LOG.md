@@ -7,12 +7,49 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Doc cleanup complete; gold models next
-**Last Updated:** 2026-05-07 22:53 ET (Overnight Session — Claude Code)
+**Phase:** Gold layer live (4 models, 14/14 tests pass); Airlayer install next
+**Last Updated:** 2026-05-07 23:05 ET (Overnight Session — Claude Code)
 
 ---
 
 ## Session Log
+
+### Overnight Session — Deliverable 1 — 2026-05-07 23:05 ET (Gold dbt models, Claude Code)
+
+**Goal:** build the four MVP 1 gold models (`dim_date`, `dim_request_type`, `dim_status`, `fct_311_requests`) plus tests, with no silver layer in between.
+
+**Pre-flight profiling (scratch/null_check.py):**
+- Zero NULLs across `id`, `date_created`, `type`, `most_recent_status`, `most_recent_status_date`, `classification`, `origin_of_request` — defensive coalesce not needed for FK hashes.
+- DuckDB `extract(dow from ...)` returns Sunday=0..Saturday=6, so `dow IN (0, 6)` = weekend.
+- Status cardinality is 4: `Closed` (1.15M), `Open` (9.7K), `In Progress` (6.0K), `On Hold` (245). No ambiguity for `is_open` mapping.
+- `bronze.type` cardinality 342; `category` cardinality 21.
+- Bronze location columns are only `ward` and `block_code` — there is no `neighborhood`, `lat`, `long`, or `address`. Diverged from prompt and used only what exists.
+
+**Accomplishments:**
+- Wrote `dbt/models/gold/dim_date.sql` — date spine 2015-07-01 → 2026-06-05 (max + 30 days), 3,993 rows.
+- Wrote `dbt/models/gold/dim_request_type.sql` — md5 hash surrogate key, 342 rows.
+- Wrote `dbt/models/gold/dim_status.sql` — md5 surrogate key, `is_open` derived from status text, 4 rows.
+- Wrote `dbt/models/gold/fct_311_requests.sql` — 1,168,959 rows, location denormalized (`ward`, `block_code`), survey columns retained as VARCHAR, dept tag columns converted via `try_cast(... as boolean)` to preserve NULL.
+- Wrote `dbt/models/gold/schema.yml` — unique + not_null on PKs/SKs, accepted_values on status, relationships from `fct_311_requests` to both dims.
+- Validation: `dbt run --select gold` PASS=4, `dbt test --select gold` PASS=14, both WARN=0 ERROR=0.
+- Cleared dbt deprecation `MissingArgumentsPropertyInGenericTestDeprecation` by wrapping `relationships` test args under `arguments:` key.
+- Sanity checks (scratch/gold_row_check.py): row counts and classification breakdown match bronze exactly.
+
+**Decisions Made:**
+- Surrogate keys named with `_id` suffix per overnight prompt (CLAUDE.md reserves `_sk` for MVP 3+). md5 hashes of the source text.
+- `is_open` mapping (no ambiguity in observed values): `Closed → false`, `Open/In Progress/On Hold → true`.
+- Location fields on fact: `ward` and `block_code` only — neighborhood/lat/long/address do not exist in the bronze source. `dim_location` still deferred to MVP 3.
+- Dept tag flags use `try_cast(col as boolean)` so the three-state nature (`'1'` → true, `'0'` → false, NULL → NULL) is preserved.
+- Dept tag columns renamed with `is_<area>_tag` per CLAUDE.md naming standard.
+- `dim_origin` deferred from this overnight session — not in prompt scope; flagged in TASKS.md.
+- `accepted_values` test added only for status; classification/origin deferred (they'll surface as semantic layer dimensions in Deliverable 3 instead of dbt tests).
+- Tooling discipline: switched to scratch/-then-scp pattern for ad-hoc DuckDB queries (per Gordon's mid-session feedback) — no more SSH heredocs.
+
+**Blockers:** None
+
+**Next Action:** Deliverable 2 — install the standalone Airlayer CLI on EC2.
+
+---
 
 ### Overnight Session — Deliverable 0 — 2026-05-07 22:52 ET (Doc cleanup, Claude Code)
 
@@ -233,6 +270,10 @@
 | 2026-05-07 22:22 ET | EC2 pulls from GitHub `main` at the start of every session | Session 5 found EC2 7 commits behind; CLAUDE.md "Session Start on EC2" section + SETUP.md pointer |
 | 2026-05-07 22:52 ET | `.view.yml` (views) + `.topic.yml` (topics) replace `.sem.yml` everywhere | Matches Airlayer schema spec; same file format used by Oxygen's built-in engine and the standalone Rust CLI |
 | 2026-05-07 22:52 ET | Project structure: `semantics/views/` + `semantics/topics/` (plural, subdirs) | Replaces old `semantic/somerville_311.sem.yml`; aligns with Oxygen's recommended layout |
+| 2026-05-07 23:05 ET | Gold location fields limited to `ward` + `block_code` | Bronze data does not contain neighborhood/lat/long/address — read-the-data-first rule overrode the prompt's wider list |
+| 2026-05-07 23:05 ET | Gold surrogate keys named `_id` (md5 hash of source text) | Aligned with overnight prompt; CLAUDE.md `_sk` convention reserved for MVP 3+ |
+| 2026-05-07 23:05 ET | `is_open = false` only for `Closed`; true for Open/In Progress/On Hold | All four observed status values mapped unambiguously; logged in `dim_status.sql` |
+| 2026-05-07 23:05 ET | Adopted scratch/-then-scp workflow for ad-hoc DuckDB queries | Heredoc SSH commands trip the read-only allowlist on every call; new `scratch/` dir gitignored, files run via `~/oxygen-mvp/.venv/bin/python /tmp/foo.py` |
 
 ---
 

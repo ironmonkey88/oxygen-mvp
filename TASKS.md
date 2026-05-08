@@ -12,14 +12,14 @@
 - [x] EC2 `git pull origin main` and verify commit landed
 
 ### Deliverable 1 — Gold dbt models
-- [ ] Query bronze on EC2 to confirm column names/types
-- [ ] Write `gold/dim_date.sql`
-- [ ] Write `gold/dim_request_type.sql`
-- [ ] Write `gold/dim_status.sql`
-- [ ] Write `gold/fct_311_requests.sql`
-- [ ] Add gold tests (unique/not_null/relationships)
-- [ ] `dbt run --select gold` and `dbt test --select gold` clean
-- [ ] Commit and push gold models
+- [x] Query bronze on EC2 to confirm column names/types
+- [x] Write `gold/dim_date.sql`
+- [x] Write `gold/dim_request_type.sql`
+- [x] Write `gold/dim_status.sql`
+- [x] Write `gold/fct_311_requests.sql`
+- [x] Add gold tests (unique/not_null/relationships)
+- [x] `dbt run --select gold` and `dbt test --select gold` clean
+- [~] Commit and push gold models
 
 ### Deliverable 2 — Airlayer CLI install
 - [ ] Install Airlayer CLI on EC2; `airlayer --version` works
@@ -90,14 +90,14 @@
 - [x] Run `dbt test --select bronze` — arrival checks only
 
 ### Transformation (dbt — gold schema)
-- [ ] Write `gold/dim_date.sql` — standard date spine
-- [ ] Write `gold/dim_request_type.sql` — sourced from actual column values
-- [ ] Write `gold/dim_status.sql` — sourced from actual column values
-- [ ] Write `gold/dim_origin.sql` — sourced from actual column values
-- [ ] Write `gold/fct_311_requests.sql` — location fields denormalized, no `dim_location` yet
-- [ ] Run `dbt run --select gold` and confirm all models build
-- [ ] Add dbt tests: unique + not_null on all surrogate keys
-- [ ] Add dbt tests: accepted_values on status, classification, origin
+- [x] Write `gold/dim_date.sql` — standard date spine
+- [x] Write `gold/dim_request_type.sql` — sourced from actual column values
+- [x] Write `gold/dim_status.sql` — sourced from actual column values
+- [ ] Write `gold/dim_origin.sql` — sourced from actual column values  *(deferred — not in overnight scope)*
+- [x] Write `gold/fct_311_requests.sql` — location fields denormalized, no `dim_location` yet
+- [x] Run `dbt run --select gold` and confirm all models build
+- [x] Add dbt tests: unique + not_null on all surrogate keys
+- [x] Add dbt tests: accepted_values on status  *(classification/origin: deferred, surface in semantic layer instead)*
 
 ### Docs
 - [x] Create `docs/schema.sql` — DDL source of truth (already written, needs committing)
