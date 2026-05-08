@@ -7,13 +7,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 0.5 closed (portal `/chat` link repointed to `:3000`; nginx subpath proxy removed). Plan 0 closed. FR pass intact. Next: Plan 1 (Tailscale) closes the public `:3000` gap and chains a portal-link update.
-**Open security gap:** `:3000` is publicly accessible. Closes in Plan 1 (Tailscale).
-**Last Updated:** 2026-05-08 11:48 ET (Session 11 — Plan 0.5 closed)
+**Phase:** Plan 1 (Tailscale) closed end-to-end. Public `:22` and `:3000` deleted from AWS SG; portal CTAs to chat dropped/replaced with `Private beta` pill. Public attack surface = port 80 only. FR pass intact. Next: doc updates (SETUP/CLAUDE/ARCHITECTURE), then trust contract pass or admin DQ.
+**Open security gap:** None. Closed in Plan 1.
+**Last Updated:** 2026-05-08 13:56 ET (Session 12 — Plan 1 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 12 — 2026-05-08 13:30 ET — plan-1-tailscale
+[full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
+
+- **Goal:** Close public `:3000` gap via Tailscale; strip broken public chat CTAs.
+- **Shipped:** Tailscale 1.96.4 on EC2 (MagicDNS `oxygen-mvp.taildee698.ts.net`); SSH alias repointed; AWS SG `:22`/`:3000` deleted; portal hybrid update (drop nav+asset CTAs, hero `Private beta` pill); commit `ae20c94`.
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Update SETUP.md/CLAUDE.md/ARCHITECTURE.md for new access pattern + nginx docroot.
 
 ### Session 11 — 2026-05-08 11:35 ET — portal-chat-fix
 [full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
@@ -51,19 +60,11 @@
 - **Status:** complete
 - **Next:** Plan 0.5 (portal /chat fix), then Plan 1 (Tailscale).
 
-### Session 7 — 2026-05-08 morning ET — fr-answer-agent
-[full narrative](docs/sessions/session-07-2026-05-08-fr-answer-agent.md)
-
-- **Goal:** FR pass — Answer Agent answers test questions end-to-end.
-- **Shipped:** agents/answer_agent.agent.yml; Oxygen runtime live on EC2; commits f9b3b59 + 5f91595. Test A (2024)=113,961 ✓, Test B (2026)=48,806 ✓.
-- **Decisions:** 2 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Trust contract pass — but first close three flags (env vars, docs, public :3000).
-
 ---
 
 ## Earlier Sessions
 
+- **Session 7** — 2026-05-08 morning ET — FR pass; Answer Agent live, agents/answer_agent.agent.yml; 2024=113,961 ✓, 2026=48,806 ✓. [full narrative](docs/sessions/session-07-2026-05-08-fr-answer-agent.md)
 - **Session 6** — 2026-05-08 09:02 ET — MVP 1 scope sharpening + STANDARDS.md. [full narrative](docs/sessions/session-06-2026-05-08-mvp1-scope-sharpening.md)
 - **Session 5** — 2026-05-07 22:00 ET → 2026-05-08 07:00 ET — Cleanup + overnight run (gold + Airlayer + semantic). [full narrative](docs/sessions/session-05-2026-05-07-cleanup-and-overnight-run.md)
 - **Session 4** — 2026-05-07 17:00–18:25 ET — Schema design + portal deployed. [full narrative](docs/sessions/session-04-2026-05-07-schema-and-portal.md)
@@ -145,6 +146,9 @@
 | 2026-05-08 11:30 ET | Portal /chat link directly to :3000 for MVP 1 | Subdomain (Option C) deferred |
 | 2026-05-08 11:30 ET | Plan 1 Deliverable 4 surfaces Tailnet target choice mid-execution | IP vs MagicDNS vs other — Gordon decides |
 | 2026-05-08 11:15 ET | LOG.md split into summary + docs/sessions/ archive | Plan A refactor — bounded LOG.md, on-demand session retrieval |
+| 2026-05-08 13:56 ET | Portal chat CTA = hybrid (drop nav+asset, hero `Private beta` pill) | No Tailnet hostname leakage; hero pill keeps visual hierarchy at the page centerpiece |
+| 2026-05-08 13:56 ET | SSH alias targets MagicDNS hostname, not Tailnet IP | IP-stable across node re-registrations |
+| 2026-05-08 13:56 ET | Tailscale SSH (`--ssh`) enabled alongside OpenSSH pubkey | Belt-and-suspenders fallback path; no harm |
 
 ---
 
