@@ -2,21 +2,70 @@ version: 2
 
 models:
   - name: raw_311_requests
-    description: 'Exact mirror of Somerville SODA API — all rows, no transforms. Read_parquet over yearly Parquet files.'
+    description: |
+      Bronze view over the Somerville 311 SODA API export. Exact mirror of
+      source: 22 source columns kept as VARCHAR plus 2 dlt lineage columns,
+      no transforms. Reads yearly Parquet files written by the dlt
+      ingestion pipeline; `union_by_name=true` is used because earlier
+      years are missing the survey and department-tag columns. Arrival
+      checks only — type casts, referential integrity, and PII redaction
+      are deferred to silver/gold.
     columns:
       - name: id
-        description: 'Somerville 311 request ID'
+        description: 'Somerville 311 request ID. Primary key from source.'
         data_tests:
           - not_null
           - unique
-      - name: date_created
-        description: 'Timestamp when request was created'
-        data_tests:
-          - not_null
       - name: classification
-        description: 'Service, Information, or Feedback'
+        description: 'Top of the type hierarchy. One of Service, Information, Feedback.'
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['Service', 'Information', 'Feedback']
+      - name: category
+        description: 'Mid-level grouping within classification (e.g. Parking, Trash & Recycling).'
+      - name: type
+        description: 'Leaf level of the source classification/category/type hierarchy. Becomes `request_type` in gold.'
+      - name: origin_of_request
+        description: 'How the request was submitted (Contact Center, Website, etc.). Becomes `origin` in gold.'
+      - name: date_created
+        description: 'Timestamp the request was opened. VARCHAR at bronze; cast to TIMESTAMPTZ in gold.'
+        data_tests:
+          - not_null
+      - name: most_recent_status
+        description: 'Latest status of the request (Open / Closed / In Progress / On Hold).'
+      - name: most_recent_status_date
+        description: 'Timestamp the most recent status was last set. VARCHAR at bronze; cast in gold.'
+      - name: block_code
+        description: 'Block identifier. Padded with spaces in source when unknown — see [docs/limitations/block-code-padded.md](../../../docs/limitations/block-code-padded.md). Cleanup deferred to Silver (MVP 3).'
+      - name: ward
+        description: 'Somerville ward 1–7 as VARCHAR. NULL when unknown.'
+      - name: accuracy
+        description: 'Post-resolution survey field for accuracy. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+      - name: courtesy
+        description: 'Post-resolution survey field for courtesy. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+      - name: ease
+        description: 'Post-resolution survey field for ease. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+      - name: overallexperience
+        description: 'Post-resolution survey field for overall experience. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+      - name: emergency_readiness_and_response_planning
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_emergency_readiness_tag`). Sparse — only ~4,187 rows of 1.17M carry any dept tag."
+      - name: green_space_care_and_maintenance
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_green_space_tag`). Sparse."
+      - name: infrastructure_maintenance_and_repairs
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_infrastructure_tag`). Sparse."
+      - name: noise_and_activity_disturbances
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_noise_tag`). Sparse."
+      - name: reliable_service_delivery
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_reliable_service_tag`). Sparse."
+      - name: navigating_city_services_and_policies
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_city_services_tag`). Sparse."
+      - name: public_space_cleanliness_and_environmental_health
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_public_space_tag`). Sparse."
+      - name: voting_and_election_information
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_voting_tag`). Sparse."
+      - name: _dlt_load_id
+        description: 'dlt load identifier — retained at every layer for source-to-pipeline lineage.'
+      - name: _dlt_id
+        description: 'dlt row identifier — retained at every layer for source-to-pipeline lineage.'

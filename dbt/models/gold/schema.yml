@@ -2,66 +2,162 @@ version: 2
 
 models:
   - name: dim_date
-    description: 'Date dimension. One row per day from min(date_created) to max(date_created) + 30 days.'
+    description: |
+      Date dimension covering the full span of observed 311 requests plus
+      a 30-day forward buffer (min(date_created) to max(date_created) + 30
+      days). Generated from a date spine — not sourced from the 311 feed.
+      Canonical date spine: every gold time dimension joins here.
     columns:
       - name: date_dt
-        description: 'Date PK'
+        description: 'Calendar date. Primary key for this dimension.'
         data_tests:
           - not_null
           - unique
+      - name: year
+        description: 'Four-digit year (YYYY) extracted from date_dt.'
+      - name: quarter
+        description: 'Calendar quarter 1–4.'
+      - name: month
+        description: 'Month number 1–12.'
+      - name: month_name
+        description: 'Full English month name (January, February, …).'
+      - name: day
+        description: 'Day of month 1–31.'
+      - name: day_of_week
+        description: 'Day-of-week index. DuckDB extract(dow): 0=Sunday, 6=Saturday.'
+      - name: day_name
+        description: 'Full English day name (Monday, Tuesday, …).'
+      - name: week_of_year
+        description: 'ISO week-of-year 1–53.'
+      - name: is_weekend
+        description: 'Boolean — TRUE for Saturday and Sunday.'
+      - name: fiscal_year
+        description: 'Fiscal year. Currently equals calendar year — Somerville fiscal calendar mapping TBD.'
 
   - name: dim_request_type
-    description: 'Distinct request types (md5 hash of type → surrogate key).'
+    description: |
+      Distinct request types observed in raw_311_requests. One row per
+      unique `type` value (the leaf level of the source classification/
+      category/type hierarchy). Surrogate key is md5(request_type) for
+      stable joins across pipeline runs.
     columns:
       - name: request_type_id
-        description: 'Surrogate PK — md5 of request_type'
+        description: 'Surrogate primary key — md5 hash of request_type.'
         data_tests:
           - not_null
           - unique
       - name: request_type
-        description: 'Request type display name (sourced from bronze.type)'
+        description: 'Human-readable request type display value (sourced from bronze.type).'
         data_tests:
           - not_null
+      - name: first_seen_dt
+        description: 'Earliest date_created across all requests of this type.'
+      - name: last_seen_dt
+        description: 'Most recent date_created across all requests of this type.'
+      - name: request_count
+        description: 'Total number of requests of this type, all-time.'
 
   - name: dim_status
-    description: 'Distinct request statuses. is_open is FALSE only for Closed.'
+    description: |
+      Distinct statuses observed in raw_311_requests with derived `is_open`
+      boolean. Mapping has no ambiguity in the four observed values:
+      Closed → FALSE; Open / In Progress / On Hold → TRUE.
     columns:
       - name: status_id
-        description: 'Surrogate PK — md5 of status'
+        description: 'Surrogate primary key — md5 hash of status.'
         data_tests:
           - not_null
           - unique
       - name: status
-        description: 'Status display name'
+        description: 'Human-readable status display value.'
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['Open', 'Closed', 'In Progress', 'On Hold']
+      - name: is_open
+        description: 'Boolean — FALSE for Closed; TRUE for Open / In Progress / On Hold.'
+      - name: first_seen_dt
+        description: 'Earliest date_created among requests with this status.'
+      - name: last_seen_dt
+        description: 'Most recent date_created among requests with this status.'
 
   - name: fct_311_requests
-    description: 'One row per Somerville 311 request. Location denormalized (ward, block_code).'
+    description: |
+      One row per Somerville 311 request. Grain: one request.
+      Location denormalized at this layer — bronze carries only `ward`
+      and `block_code` (no neighborhood/lat/long/address). dim_location
+      is deferred to MVP 3, where Silver will also redact PII.
+      Survey columns (accuracy / courtesy / ease / overallexperience)
+      flow through but are sparse — see
+      docs/limitations/2024-survey-columns-sparse.md.
+      Department tag columns are cast from VARCHAR '0'/'1' to BOOLEAN via
+      try_cast (NULL preserved when source is empty).
     columns:
       - name: id
-        description: 'Somerville 311 request ID'
+        description: 'Somerville 311 request ID — natural key sourced from bronze.id.'
         data_tests:
           - not_null
           - unique
-      - name: date_created_dt
-        description: 'Request creation date (FK to dim_date.date_dt)'
-        data_tests:
-          - not_null
+      - name: classification
+        description: 'Top of the type hierarchy: Service / Information / Feedback.'
+      - name: category
+        description: 'Mid-level grouping within classification.'
+      - name: request_type
+        description: 'Leaf-level request type. Sourced from bronze.type.'
       - name: request_type_id
-        description: 'FK to dim_request_type'
+        description: 'FK to dim_request_type.request_type_id (md5 of request_type).'
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_request_type')
                 field: request_type_id
+      - name: status
+        description: 'Most recent status display value (Open / Closed / In Progress / On Hold).'
       - name: status_id
-        description: 'FK to dim_status'
+        description: 'FK to dim_status.status_id (md5 of status).'
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_status')
                 field: status_id
+      - name: origin
+        description: 'How the request was submitted (Contact Center, Website, etc.). Sourced from bronze.origin_of_request.'
+      - name: date_created_dt
+        description: 'Date the request was opened. FK to dim_date.date_dt.'
+        data_tests:
+          - not_null
+      - name: date_created_ts
+        description: 'Full timestamp the request was opened (precision retained alongside date_created_dt for time-of-day analysis).'
+      - name: most_recent_status_dt
+        description: 'Date the most recent status was set.'
+      - name: most_recent_status_ts
+        description: 'Full timestamp the most recent status was set.'
+      - name: ward
+        description: 'Somerville ward 1–7 as VARCHAR. NULL when unknown.'
+      - name: block_code
+        description: 'Block identifier. Carried through from source — still padded with spaces when unknown; cleanup deferred to Silver. See docs/limitations/block-code-padded.md.'
+      - name: accuracy
+        description: 'Post-resolution survey field for accuracy. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+      - name: courtesy
+        description: 'Post-resolution survey field for courtesy. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+      - name: ease
+        description: 'Post-resolution survey field for ease. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+      - name: overallexperience
+        description: 'Post-resolution survey field for overall experience. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+      - name: is_emergency_readiness_tag
+        description: 'Department tag — emergency readiness and response planning. Boolean. Sparse.'
+      - name: is_green_space_tag
+        description: 'Department tag — green space care and maintenance. Boolean. Sparse.'
+      - name: is_infrastructure_tag
+        description: 'Department tag — infrastructure maintenance and repairs. Boolean. Sparse.'
+      - name: is_noise_tag
+        description: 'Department tag — noise and activity disturbances. Boolean. Sparse.'
+      - name: is_reliable_service_tag
+        description: 'Department tag — reliable service delivery. Boolean. Sparse.'
+      - name: is_city_services_tag
+        description: 'Department tag — navigating city services and policies. Boolean. Sparse.'
+      - name: is_public_space_tag
+        description: 'Department tag — public space cleanliness and environmental health. Boolean. Sparse.'
+      - name: is_voting_tag
+        description: 'Department tag — voting and election information. Boolean. Sparse.'
