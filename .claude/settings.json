@@ -73,7 +73,20 @@
       "Bash(tree *)",
       "Bash(du *)",
       "Bash(df *)",
-      "Bash(stat *)"
+      "Bash(stat *)",
+      "Bash(mkdir *)",
+      "Bash(rmdir *)",
+      "Bash(diff *)",
+      "Bash(shasum *)",
+      "Bash(md5 *)",
+      "Bash(file *)",
+      "Bash(awk *)",
+      "Bash(cut *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(comm *)",
+      "Bash(column *)",
+      "Bash(xxd *)"
     ]
   },
   "hooks": {
