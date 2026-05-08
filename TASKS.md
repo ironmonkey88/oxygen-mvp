@@ -19,13 +19,13 @@
 - [x] Write `gold/fct_311_requests.sql`
 - [x] Add gold tests (unique/not_null/relationships)
 - [x] `dbt run --select gold` and `dbt test --select gold` clean
-- [~] Commit and push gold models
+- [x] Commit and push gold models
 
 ### Deliverable 2 — Airlayer CLI install
-- [ ] Install Airlayer CLI on EC2; `airlayer --version` works
-- [ ] Sanity check `airlayer query --help` against DuckDB connection
-- [ ] Log version + system packages added to LOG.md
-- [ ] Commit LOG.md/TASKS.md update
+- [x] Install Airlayer CLI on EC2; `airlayer --version` works (0.1.1)
+- [x] Sanity check `airlayer query --help` runs (CLI shape note logged)
+- [x] Log version + system packages added to LOG.md
+- [x] Commit LOG.md/TASKS.md update
 
 ### Deliverable 3 — Semantic layer
 - [ ] Create `semantics/views/{requests,request_types,statuses,dates}.view.yml`

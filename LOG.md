@@ -7,12 +7,38 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Gold layer live (4 models, 14/14 tests pass); Airlayer install next
-**Last Updated:** 2026-05-07 23:05 ET (Overnight Session — Claude Code)
+**Phase:** Gold layer live; Airlayer CLI installed; semantic layer next
+**Last Updated:** 2026-05-07 23:29 ET (Overnight Session — Claude Code)
 
 ---
 
 ## Session Log
+
+### Overnight Session — Deliverable 2 — 2026-05-07 23:29 ET (Airlayer CLI install, Claude Code)
+
+**Goal:** install the standalone Airlayer Rust CLI on EC2 and confirm it can be invoked.
+
+**Accomplishments:**
+- Ran `bash <(curl -sSfL https://raw.githubusercontent.com/oxy-hq/airlayer/main/install_airlayer.sh)` on EC2.
+- Installer downloaded a prebuilt binary for `aarch64-unknown-linux-gnu` (no Rust toolchain needed).
+- Binary landed at `/home/ubuntu/.local/bin/airlayer` (already on the default Ubuntu login PATH via `~/.profile`).
+- Version confirmed: `airlayer 0.1.1`.
+- Sanity-checked: `airlayer --help`, `airlayer --version`, `airlayer query --help` all run.
+- No system packages added.
+
+**CLI shape note (matters for Deliverable 3):**
+Airlayer 0.1.1 does **not** accept a `--connection` flag on `airlayer query`. Datasource connections are loaded from `config.yml` via `-c/--config`. The prompt's exact sanity command (`--connection "duckdb:///..."`) failed with `unexpected argument '--connection'`; running with just `--help` succeeds. Subcommands available in 0.1.1: `query`, `validate`, `init`, `update`, `test-connection`, `convert`, `build`, `pull`, `inspect`. Important for Deliverable 3: `--datasource <DATASOURCE>` selects which database from `config.yml` to execute against, and `-x/--execute` requires `--config` plus an `exec-*` feature flag.
+
+**Decisions Made:**
+- No system packages installed — prebuilt aarch64 binary is sufficient.
+- Non-login SSH sessions don't pick up `~/.local/bin` in PATH; commands must either source the profile or prefix with `~/.local/bin/airlayer`. Will use `export PATH=$HOME/.local/bin:$PATH` in scripted SSH calls.
+- Skipped `airlayer init` — would scaffold its own `config.yml`/`CLAUDE.md`/skills, which would conflict with the existing repo. Will hand-write the semantic layer config in Deliverable 3.
+
+**Blockers:** None
+
+**Next Action:** Deliverable 3 — write `semantics/views/*.view.yml`, `semantics/topics/service_requests.topic.yml`, register the `somerville` datasource in `config.yml`, and pass both validation gates (`oxy build` and an `airlayer query -x` returning rows).
+
+---
 
 ### Overnight Session — Deliverable 1 — 2026-05-07 23:05 ET (Gold dbt models, Claude Code)
 
@@ -274,6 +300,8 @@
 | 2026-05-07 23:05 ET | Gold surrogate keys named `_id` (md5 hash of source text) | Aligned with overnight prompt; CLAUDE.md `_sk` convention reserved for MVP 3+ |
 | 2026-05-07 23:05 ET | `is_open = false` only for `Closed`; true for Open/In Progress/On Hold | All four observed status values mapped unambiguously; logged in `dim_status.sql` |
 | 2026-05-07 23:05 ET | Adopted scratch/-then-scp workflow for ad-hoc DuckDB queries | Heredoc SSH commands trip the read-only allowlist on every call; new `scratch/` dir gitignored, files run via `~/oxygen-mvp/.venv/bin/python /tmp/foo.py` |
+| 2026-05-07 23:29 ET | Airlayer 0.1.1 installed via prebuilt aarch64 binary at `~/.local/bin/airlayer` | No Rust toolchain or system packages required — installer binary is self-contained |
+| 2026-05-07 23:29 ET | Datasource config lives in `config.yml`, not on the airlayer CLI | Airlayer 0.1.1 has no `--connection` flag on `query`; `-c/--config` + `--datasource` is the supported path |
 
 ---
 
