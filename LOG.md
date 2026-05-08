@@ -148,8 +148,9 @@
 | 2026-05-08 11:15 ET | LOG.md split into summary + docs/sessions/ archive | Plan A refactor — bounded LOG.md, on-demand session retrieval |
 | 2026-05-08 13:56 ET | Portal chat CTA = hybrid (drop nav+asset, hero `Private beta` pill) | No Tailnet hostname leakage; hero pill keeps visual hierarchy at the page centerpiece |
 | 2026-05-08 13:56 ET | SSH alias targets MagicDNS hostname, not Tailnet IP | IP-stable across node re-registrations |
-| 2026-05-08 13:56 ET | Tailscale SSH (`--ssh`) enabled alongside OpenSSH pubkey | Belt-and-suspenders fallback path; no harm |
+| 2026-05-08 13:56 ET | ~~Tailscale SSH (`--ssh`) enabled alongside OpenSSH pubkey~~ → reverted same day | Initial "belt-and-suspenders" framing was wrong: Tailscale SSH preempts port 22 for Tailnet peers via `tailscaled be-child`, bypassing OpenSSH PAM and silently breaking `/etc/environment` env-var loading (PATH/ANTHROPIC_API_KEY/OXY_DATABASE_URL all missing in non-interactive SSH). See 2026-05-08 16:45 ET row. |
 | 2026-05-08 13:58 ET | MVP 1 chat is private-beta-only; public portal advertises it but doesn't link to it | Tailnet-only access; no public hostname leak; portal shows `Private beta` pill instead of CTA |
+| 2026-05-08 16:45 ET | Disable Tailscale SSH (`tailscale set --ssh=false`) — OpenSSH+pubkey only | Restores `/etc/environment` loading via PAM. We weren't using Tailscale SSH features (single dev, single MBP, `.pem` deployed). Re-enable + fix env-var path properly when a real driver appears (second device, teammate). |
 
 ---
 
