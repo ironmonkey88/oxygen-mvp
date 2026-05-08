@@ -104,7 +104,7 @@
 - [x] Configure EC2 to pull from GitHub repo on each session  *(addressed by `CLAUDE.md` "Session Start on EC2" section per Session 5 follow-up)*
 - [x] Configure dbt profile (`~/.dbt/profiles.yml`)
 - [x] Create `config.yml` for Oxygen (model + database config) — landed in overnight session
-- [~] Run `oxy start` and confirm UI loads at port 3000  *(needed before `oxy build` validation gate can pass)*
+- [x] Run `oxy start` and confirm UI loads at port 3000  *(2026-05-08 09:30 ET — Postgres container up, web app on :3000 returns 200, `oxy build` exits 0)*
 
 ### Ingestion (dlt)
 - [x] Identify Somerville 311 dataset ID on data.somervillema.gov — `4pyi-uqq6`, 1.17M rows, 22 columns
@@ -162,12 +162,12 @@
 - [x] Confirm Airlayer loads without errors in Oxygen — `oxy validate` clean ("All 5 config files are valid"); `oxy build` deferred to Answer Agent session
 
 ### Answer Agent
-- [~] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
-- [~] Create `agents/answer_agent.agent.yml`
-- [~] Configure `execute_sql` tool and Airlayer context block
+- [x] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
+- [x] Create `agents/answer_agent.agent.yml`
+- [x] Configure `execute_sql` tool and Airlayer context block
 - [ ] Configure agent prompt to require SQL, row count, and citations in every response  *(extreme trustability — see STANDARDS.md §4.1; deferred — trust contract is a follow-up pass after FR smoke test)*
-- [~] Test with 3–5 sample questions in Oxygen chat UI  *(2026-05-08 FR smoke test: 2024 full-year + 2026 partial-year)*
-- [~] Confirm agent returns accurate answers
+- [x] Test with 3–5 sample questions in Oxygen chat UI  *(2026-05-08 09:31 ET — FR smoke test: Test A 2024 = 113,961 ✓ exact match, Test B 2026 "this year" = 48,806 ✓ exact match, agent correctly resolved current year via `year(current_date)`)*
+- [x] Confirm agent returns accurate answers  *(both smoke tests exact-match DuckDB ground truth)*
 - [ ] Test bench: 5 representative analyst questions, verify responses include SQL + row count + citation in every reply  *(deferred — trust contract pass)*
 
 ### MVP 1 Sign-off

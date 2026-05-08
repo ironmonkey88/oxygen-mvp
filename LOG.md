@@ -7,12 +7,50 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Scope sharpened around analyst persona and extreme trustability. STANDARDS.md is the spec. Next: hardening tasks (Tailscale, dbt docs population, admin schema, /trust + /metrics pages) plus Answer Agent.
-**Last Updated:** 2026-05-08 09:02 ET (MVP 1 scope sharpening — Claude.ai planning + Claude Code)
+**Phase:** Answer Agent FR smoke test PASSED. End-to-end conversational pipeline live: `oxy start` → `oxy build` → agent answers Test A (2024 = 113,961) and Test B (2026 "this year" = 48,806) exact-match against DuckDB ground truth. Trust contract (SQL/row count/citations in every response) and analyst hardening (Tailscale, dbt docs, /trust, /metrics) still ahead.
+**Last Updated:** 2026-05-08 09:32 ET (Answer Agent FR smoke test — Claude Code)
 
 ---
 
 ## Session Log
+
+### Session 7 — 2026-05-08 09:32 ET (Answer Agent FR smoke test, Claude Code)
+
+**Type:** End-to-end functional requirement check. EC2 work. Trust contract explicitly deferred to follow-up pass.
+
+**Goal:** prove the conversational pipeline works end-to-end — a user asks "How many 311 tickets were filed this year?" and gets a numerically correct answer for partial-year 2026.
+
+**Accomplishments:**
+- Wrote [agents/answer_agent.agent.yml](agents/answer_agent.agent.yml): `claude-sonnet-4-6` model, `execute_sql` tool against `somerville` DuckDB datasource, context block that injects `semantics/topics/service_requests.topic.yml` + all four `semantics/views/*.view.yml` + `docs/schema.sql` as text via `type: file`. System prompt is minimal — 4 short paragraphs covering identity, schema location (`main_gold.fct_311_requests`, `date_created_dt`), and the rule that "this year" means `year(current_date)`. No SQL/row-count/citation contract yet — that's the follow-up trust pass.
+- Brought up Oxygen runtime on EC2 — `oxy start` launched the `oxy-postgres` Docker container (postgres:18-alpine, port 15432) and the web app on `:3000`. Server log: "Web app running at http://localhost:3000 (HTTP/1.1+HTTP/2)".
+- Closed the deferred validation gate from the overnight session: **`oxy build` exits 0** with `OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy`. Vector embeddings built for the agent.
+- Confirmed portal `/chat` route proxies to Oxygen — `curl http://18.224.151.49/chat` returns `<title>Oxygen</title>` and the SPA asset bundle.
+
+**Smoke test results:**
+- **Test A (full-year regression, 2024):** DuckDB ground truth = `113,961`. Agent generated `SELECT COUNT(*) AS total_requests FROM main_gold.fct_311_requests WHERE year(date_created_dt) = 2024` and answered "**113,961 311 tickets**". **Exact match.**
+- **Test B (partial-year demo, 2026):** DuckDB ground truth = `48,806` (data through 2026-05-06). User question: "How many 311 tickets were filed this year?". Agent generated `SELECT COUNT(*) AS total_requests FROM main_gold.fct_311_requests WHERE year(date_created_dt) = year(current_date)` and answered "**48,806 311 tickets**" with the qualifier "So far this year". **Exact match.** Agent correctly interpreted "this year" as 2026 (not 2025) by following the `year(current_date)` instruction in the system prompt rather than relying on memory.
+
+**Validation gates — all 5 passed:**
+1. `oxy validate` exits 0 — "All 6 config files are valid" (4 views, 1 topic, 1 agent)
+2. `oxy build` exits 0 — embeddings built for `answer_agent`
+3. `curl -I http://localhost:3000` returns `HTTP/1.1 200 OK`
+4. Test A agent answer matches DuckDB count for 2024 (113,961 = 113,961)
+5. Test B agent answer matches DuckDB count for 2026 (48,806 = 48,806)
+
+**Decisions Made (also in Decisions Log):**
+- **Context block uses `type: file` against the topic + views + DDL.** Considered the more idiomatic `type: semantic_model` and the alternative `semantic_query` tool, but the user's plan explicitly scoped to `tools: [execute_sql]` and we wanted minimum surface area for the FR check. Re-evaluate this when the trust contract pass lands — `semantic_query` would auto-emit verified SQL through Airlayer, which may be the cleaner path for citations.
+- **System prompt instructs `year(current_date)` for "this year" rather than baking today's date into the prompt at render time.** Lets the agent stay correct across sessions without prompt re-stamping. Trade-off: agent has to remember the rule; mitigated by an explicit instruction line.
+- **`oxy build` requires `OXY_DATABASE_URL` even when run standalone.** `oxy start` creates the Postgres container at `postgresql://localhost:15432/oxy` but doesn't export the URL into the user's shell. Documented inline in the run command for now; should land in `~/.bashrc` or `run.sh` when those hooks are next touched.
+
+**Process notes:**
+- Ubuntu's `~/.bashrc` early-returns for non-interactive shells, so `ssh oxygen-mvp 'cmd'` doesn't see `ANTHROPIC_API_KEY` or `oxy` on PATH. Worked around with `bash -ic "..."` to force interactive mode. Worth fixing at the source — either move the exports to `~/.profile` or have `run.sh` source an env file directly.
+- Followed the no-SSH-heredocs convention: ground-truth DuckDB query went through `~/oxygen-mvp/.venv/bin/python3 -c "..."` rather than a heredoc.
+
+**Blockers:** None.
+
+**Next Action (Gordon's call):** the trust contract pass — wire SQL + row count + citation requirements into the agent prompt and re-run with the 5-question test bench from STANDARDS.md §4.1. Or pivot to the analyst hardening track (Tailscale, dbt docs population, admin DQ schema, `/trust` + `/metrics` portal pages).
+
+---
 
 ### Session 6 — 2026-05-08 09:02 ET (MVP 1 scope sharpening, Claude.ai planning + Claude Code)
 
@@ -479,6 +517,9 @@ what we shipped.
 | 2026-05-08 09:02 ET | Long-form `.qmd`-style docs deferred from MVP 1 | `dbt docs` with full descriptions on every model/column meets the analyst-trust bar without separate prose docs |
 | 2026-05-08 09:02 ET | Exports, charts, follow-up suggestions, anomaly surfacing all deferred to MVP 2+ | Keeps MVP 1 focused on the single experience: analyst asks → verifies → trusts |
 | 2026-05-08 09:02 ET | Allowlist replaced with broad patterns (`Bash(git -C * add *)` etc.) instead of per-command entries | Per-message regex-escaped entries don't match next variation; broad patterns plus narrow deny-by-omission for `reset`/`push --force` gives ergonomics without losing safety |
+| 2026-05-08 09:32 ET | Answer Agent context block uses `type: file` against topic + views + DDL, not `type: semantic_model` or `semantic_query` tool | User's plan scoped to `tools: [execute_sql]` for the FR check; minimum-surface-area choice. Re-evaluate at the trust contract pass — `semantic_query` may be the cleaner path for verified SQL + citations |
+| 2026-05-08 09:32 ET | "This year" handled via `year(current_date)` instruction in system prompt, not via prompt-time date stamping | Agent stays correct across sessions without re-rendering; mitigation for the rule-following dependency is one explicit prompt line. Confirmed on Test B (2026 partial-year, exact match) |
+| 2026-05-08 09:32 ET | `oxy build` requires `OXY_DATABASE_URL` even when `oxy start` is running | `oxy start` creates the Postgres container at `postgresql://localhost:15432/oxy` but doesn't export the URL into the user's shell. Documented inline in run commands; should land in `~/.bashrc` or `run.sh` next |
 
 ---
 
@@ -505,9 +546,11 @@ what we shipped.
 - [x] Portal verified live in browser at http://18.224.151.49
 - [x] Airlayer CLI 0.1.1 installed on EC2
 - [x] Airlayer semantic layer: 4 views + 1 topic, schema valid, executes via auto-join
+- [x] Oxygen runtime live on EC2 — `oxy start` brings up Postgres container + web app on :3000; `oxy build` exits 0
+- [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
+- [x] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth
+- [ ] Trust contract on agent (SQL + row count + citations in every response)
 - [ ] Admin DQ framework in place
-- [ ] Answer Agent `.agent.yml` configured
-- [ ] Chat UI accessible and answering questions  *(blocked on `oxy start` — Docker + Postgres bring-up)*
 
 ### MVP 2 — Visual Data Product
 - [ ] Airapp `.app.yml` with charts
