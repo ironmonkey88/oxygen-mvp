@@ -28,12 +28,12 @@
 - [x] Commit LOG.md/TASKS.md update
 
 ### Deliverable 3 — Semantic layer
-- [ ] Create `semantics/views/{requests,request_types,statuses,dates}.view.yml`
-- [ ] Create `semantics/topics/service_requests.topic.yml`
-- [ ] Update `config.yml` to register `somerville` datasource
-- [ ] `oxy build` exits 0
-- [ ] `airlayer query --measure requests.total_requests --dimension request_types.request_type --limit 5 -x` returns rows
-- [ ] Commit and push semantic layer
+- [x] Create `semantics/views/{requests,request_types,statuses,dates}.view.yml`
+- [x] Create `semantics/topics/service_requests.topic.yml`
+- [x] Update `config.yml` to register `somerville` datasource (oxy 0.5.47 schema: `model_ref`/`key_var`)
+- [!] `oxy build` exits 0  — *blocked: requires `oxy start` (Docker + Postgres). `oxy validate` passes; flagged for Gordon to decide.*
+- [x] `airlayer query ... -x` returns rows (5 rows, auto-join via entity match)
+- [x] Commit and push semantic layer
 
 ---
 
@@ -60,8 +60,8 @@
 - [x] Set `ANTHROPIC_API_KEY` environment variable
 - [ ] Configure EC2 to pull from GitHub repo on each session
 - [x] Configure dbt profile (`~/.dbt/profiles.yml`)
-- [ ] Create `config.yml` for Oxygen (model + database config)
-- [ ] Run `oxy start` and confirm UI loads at port 3000
+- [x] Create `config.yml` for Oxygen (model + database config) — landed in overnight session
+- [ ] Run `oxy start` and confirm UI loads at port 3000  *(needed before `oxy build` validation gate can pass)*
 
 ### Ingestion (dlt)
 - [x] Identify Somerville 311 dataset ID on data.somervillema.gov — `4pyi-uqq6`, 1.17M rows, 22 columns
@@ -110,11 +110,13 @@
 - [ ] Add /docs route — dbt docs generate output
 
 ### Semantic Layer (Airlayer)
-- [ ] Review Airlayer docs: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
-- [ ] Create `semantic/somerville_311.sem.yml`
-- [ ] Define initial views and dimensions (request type, status, opened date, ward)
-- [ ] Define initial measures (total requests, open requests, avg days open)
-- [ ] Confirm Airlayer loads without errors in Oxygen
+- [x] Review Airlayer docs (incl. https://github.com/oxy-hq/airlayer/blob/main/docs/schema-format.md)
+- [x] Create `semantics/views/*.view.yml` + `semantics/topics/service_requests.topic.yml` (replaces old single-file `.sem.yml`)
+- [x] Define initial views and dimensions (request type, status, opened date, ward, block_code)
+- [x] Define initial measures (`total_requests`, `open_requests`)
+- [ ] Define `avg days open` measure  *(deferred — needs `most_recent_status_date - date_created_dt` math, MVP 4 metric library)*
+- [x] Airlayer schema valid (`airlayer validate` clean) and executes via auto-join (`airlayer query -x` returned 5 rows)
+- [!] Confirm Airlayer loads without errors in Oxygen — *blocked on `oxy build` Postgres dep*
 
 ### Answer Agent
 - [ ] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md

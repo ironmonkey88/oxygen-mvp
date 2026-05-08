@@ -7,12 +7,40 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Gold layer live; Airlayer CLI installed; semantic layer next
-**Last Updated:** 2026-05-07 23:29 ET (Overnight Session — Claude Code)
+**Phase:** Semantic layer live and queryable via Airlayer (`-x` returns rows). `oxy build` gate blocked on `oxy start` / Postgres bring-up — flagged for morning.
+**Last Updated:** 2026-05-08 07:22 ET (Overnight Session — Claude Code)
 
 ---
 
 ## Session Log
+
+### Overnight Session — Deliverable 3 — 2026-05-08 07:22 ET (Semantic layer, Claude Code)
+
+**Goal:** ship the four `.view.yml` files + topic + `config.yml`, then pass the two validation gates.
+
+**Accomplishments:**
+- Created `semantics/views/{requests,request_types,statuses,dates}.view.yml` and `semantics/topics/service_requests.topic.yml` — 4 views, 1 topic.
+- Created `config.yml` at project root with merged Oxygen + Airlayer config: `models` (Anthropic Claude Sonnet 4.6), `databases` (somerville → DuckDB), `defaults.database: somerville`.
+- `requests` view declares primary entity on `id` and three foreign entities (`date_created_dt`, `request_type_id`, `status_id`); auto-join works.
+- `airlayer validate` — Schema is valid: 4 views, 1 topic.
+- **Validation gate 1 (airlayer query -x): PASSED.** `airlayer query --measure requests.total_requests --dimension request_types.request_type --limit 5 -c config.yml -x` returned 5 rows with sensible counts (e.g. "Obtain a parking permit inquiry": 74,443). Auto-generated SQL: `SELECT request_types.request_type, COUNT(*) FROM main_gold.dim_request_type LEFT JOIN main_gold.fct_311_requests ON request_type_id = request_type_id GROUP BY 1 LIMIT 5`. Auto-join inferred from entity match.
+- **Validation gate 2 (oxy build): NOT PASSED — see blocker below.** `oxy validate` passes ("All 5 config files are valid"), confirming the semantic config is well-formed; `oxy build` is blocked on Oxygen's runtime stack.
+- Mid-deliverable fixes:
+  - `airlayer validate` initially failed: entity keys must be declared as dimensions. Added `request_type_id` and `status_id` dimensions to `requests.view.yml`.
+  - `oxy build` initially failed: deserialize error on `models.model` field. Oxy 0.5.47 schema uses `model_ref` (not `model`) and `key_var` (env var name) per [oxy-hq/oxy/examples/config.yml](https://github.com/oxy-hq/oxy/blob/main/examples/config.yml). Updated `config.yml` accordingly.
+
+**Decisions Made:**
+- `requests` view denormalized location dims = `ward`, `block_code` (only what bronze actually has — not `neighborhood`/`lat`/`long`/`address`).
+- `open_requests` measure filter is `status != 'Closed'` (text comparison on the local fact column) rather than a join through `statuses.is_open`. Simpler, no fan-out, same result.
+- `oxy build` validation gate left unpassed rather than spinning up Docker Postgres in the middle of an overnight session — Gordon should make the call on bringing up Oxygen's full stack in the morning.
+- CLAUDE.md's `LLM Configuration` snippet is stale (`model:` → should be `model_ref:` per oxy 0.5.47). Not edited — out of scope for this deliverable. Recommend a quick doc-fix commit.
+
+**Blockers:**
+- **`oxy build` requires `oxy start` (Docker + Postgres) — not run.** Logged in Blockers Log below. `oxy validate` and `airlayer query -x` together cover the "config is valid + can be executed" intent of the gate; the embedding/vector build only matters once the Oxygen web app is up. Gordon's call.
+
+**Next Action:** Gordon decides whether to (a) `oxy start` then `oxy build` to close the gate, (b) treat `oxy validate` + `airlayer query -x` as sufficient for MVP 1 and downgrade the gate, or (c) defer Oxygen bring-up to a later session.
+
+---
 
 ### Overnight Session — Deliverable 2 — 2026-05-07 23:29 ET (Airlayer CLI install, Claude Code)
 
@@ -302,6 +330,10 @@ Airlayer 0.1.1 does **not** accept a `--connection` flag on `airlayer query`. Da
 | 2026-05-07 23:05 ET | Adopted scratch/-then-scp workflow for ad-hoc DuckDB queries | Heredoc SSH commands trip the read-only allowlist on every call; new `scratch/` dir gitignored, files run via `~/oxygen-mvp/.venv/bin/python /tmp/foo.py` |
 | 2026-05-07 23:29 ET | Airlayer 0.1.1 installed via prebuilt aarch64 binary at `~/.local/bin/airlayer` | No Rust toolchain or system packages required — installer binary is self-contained |
 | 2026-05-07 23:29 ET | Datasource config lives in `config.yml`, not on the airlayer CLI | Airlayer 0.1.1 has no `--connection` flag on `query`; `-c/--config` + `--datasource` is the supported path |
+| 2026-05-08 07:22 ET | Semantic location dims = `ward` + `block_code` only | Bronze data is the source of truth — neighborhood/lat/long/address don't exist; same constraint as gold fct |
+| 2026-05-08 07:22 ET | `requests.open_requests` filter = `status != 'Closed'` (no join) | Avoids cross-view join + fan-out; `status` text already on fct, equivalent semantics to `is_open = true` |
+| 2026-05-08 07:22 ET | `config.yml` uses `model_ref` + `key_var` (oxy 0.5.47 schema) | CLAUDE.md sample uses outdated `model:` field; fixed in config.yml, doc fix deferred to Gordon |
+| 2026-05-08 07:22 ET | Airlayer entity keys must also be declared as dimensions | `airlayer validate` rejects entities pointing to undeclared columns; added FK ID dims to `requests.view.yml` |
 
 ---
 
@@ -310,6 +342,7 @@ Airlayer 0.1.1 does **not** accept a `--connection` flag on `airlayer query`. Da
 | Date | Blocker | Status | Resolution |
 |------|---------|--------|------------|
 | 2026-05-07 18:28 ET | Port 80 not open in AWS security group — portal unreachable from public internet | Resolved | Gordon added inbound HTTP rule (port 80, 0.0.0.0/0) in AWS console |
+| 2026-05-08 07:22 ET | `oxy build` validation gate fails: `OXY_DATABASE_URL environment variable is required. Use 'oxy start' to automatically start PostgreSQL with Docker, or set OXY_DATABASE_URL to your PostgreSQL connection string.` | Open | Needs `oxy start` (Docker container `postgres:18-alpine`, persistent volume `oxy-postgres-data`, web app on port 3000). Decision deferred to Gordon — see Deliverable 3 session entry. `oxy validate` and `airlayer query -x` both pass independently, so the semantic config itself is fine. |
 
 ---
 
@@ -322,14 +355,14 @@ Airlayer 0.1.1 does **not** accept a `--connection` flag on `airlayer query`. Da
 - [x] Data model designed — schema.sql written, ERD generated
 - [x] nginx installed, portal live and verified at http://18.224.151.49
 - [x] dbt initialized; bronze model live (1.17M rows, 5/5 tests pass)
+- [x] dbt gold models live: `dim_date` (3,993), `dim_request_type` (342), `dim_status` (4), `fct_311_requests` (1,168,959); 14/14 tests pass
 - [x] Portal designed and fonts self-hosted (DM Serif Display, DM Mono, Instrument Sans)
 - [x] Portal verified live in browser at http://18.224.151.49
-- [ ] dbt bronze model in place
-- [ ] dbt gold models in place
+- [x] Airlayer CLI 0.1.1 installed on EC2
+- [x] Airlayer semantic layer: 4 views + 1 topic, schema valid, executes via auto-join
 - [ ] Admin DQ framework in place
-- [ ] Airlayer `.sem.yml` configured
 - [ ] Answer Agent `.agent.yml` configured
-- [ ] Chat UI accessible and answering questions
+- [ ] Chat UI accessible and answering questions  *(blocked on `oxy start` — Docker + Postgres bring-up)*
 
 ### MVP 2 — Visual Data Product
 - [ ] Airapp `.app.yml` with charts
