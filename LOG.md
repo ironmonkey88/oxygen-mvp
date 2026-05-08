@@ -149,6 +149,7 @@
 | 2026-05-08 13:56 ET | Portal chat CTA = hybrid (drop nav+asset, hero `Private beta` pill) | No Tailnet hostname leakage; hero pill keeps visual hierarchy at the page centerpiece |
 | 2026-05-08 13:56 ET | SSH alias targets MagicDNS hostname, not Tailnet IP | IP-stable across node re-registrations |
 | 2026-05-08 13:56 ET | Tailscale SSH (`--ssh`) enabled alongside OpenSSH pubkey | Belt-and-suspenders fallback path; no harm |
+| 2026-05-08 13:58 ET | MVP 1 chat is private-beta-only; public portal advertises it but doesn't link to it | Tailnet-only access; no public hostname leak; portal shows `Private beta` pill instead of CTA |
 
 ---
 
