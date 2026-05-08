@@ -54,6 +54,10 @@ oxygen-mvp/
 ├── LOG.md
 ├── TASKS.md
 ├── config.yml
+├── portal/
+│   └── index.html                  ← project portal, served by nginx at port 80
+├── docs/
+│   └── schema.sql                  ← DDL source of truth for all tables
 ├── data/
 │   └── somerville.duckdb
 ├── dlt/
