@@ -5,6 +5,41 @@
 
 ---
 
+## Sign-off Status
+
+### MVP 1 — 1st Data Product
+- [x] Environment set up on EC2
+- [x] GitHub repo initialized and connected
+- [x] dlt pipeline ingesting Somerville 311 data — 1,168,959 rows loaded
+- [x] Data model designed — schema.sql written, ERD generated
+- [x] nginx installed, portal live and verified at http://18.224.151.49
+- [x] dbt initialized; bronze model live (1.17M rows, 5/5 tests pass)
+- [x] dbt gold models live: `dim_date` (3,993), `dim_request_type` (342), `dim_status` (4), `fct_311_requests` (1,168,959); 14/14 tests pass
+- [x] Portal designed and fonts self-hosted (DM Serif Display, DM Mono, Instrument Sans)
+- [x] Portal verified live in browser at http://18.224.151.49
+- [x] Airlayer CLI 0.1.1 installed on EC2
+- [x] Airlayer semantic layer: 4 views + 1 topic, schema valid, executes via auto-join
+- [x] Oxygen runtime live on EC2 — `oxy start` brings up Postgres container + web app on :3000; `oxy build` exits 0 in plain non-interactive ssh
+- [x] Env vars in `/etc/environment` — `ANTHROPIC_API_KEY`, `OXY_DATABASE_URL`, plus `~/.local/bin` on PATH; documented in [SETUP.md](SETUP.md) §7
+- [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
+- [x] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth
+- [ ] Trust contract on agent (SQL + row count + citations in every response)
+- [ ] Admin DQ framework in place
+
+### MVP 2 — Visual Data Product
+- [ ] Airapp `.app.yml` with charts
+
+### MVP 3 — Governance Layer
+- [ ] dbt Silver model with PII redaction
+- [ ] dbt Gold model updated with dim_location
+- [ ] Tailscale access control
+
+### MVP 4 — Semantics
+- [ ] Full Airlayer metric library
+- [ ] Routing Agent configured
+
+---
+
 ## Overnight Session — 2026-05-07 → 2026-05-08
 
 ### Deliverable 0 — Doc cleanup

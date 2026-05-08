@@ -266,16 +266,122 @@ Both live in `/etc/environment` — see SETUP.md §7 for why (`~/.bashrc` and `~
 
 ---
 
-## LOG.md Logging Protocol
+## LOG.md and Sessions Logging Protocol
 
-Update `LOG.md` automatically — do not wait for Gordon to ask. This is a hard requirement, not a suggestion.
+The captain's log is split into two tiers — a bounded LOG.md summary (state) and `docs/sessions/` archive (narrative).
 
-**When:** After any `[x]` task, after any blocker, after any architectural decision, at end of session. Do not batch — log as you go.
+### Where to write what
 
-**What:** Session summary, decisions made (also add to Decisions Log table), blockers hit (also add to Blockers Log table), accomplishments.
+**`docs/sessions/session-NN-YYYY-MM-DD-slug.md`** — full narrative for the session. Mid-session issues, decisions, debugging steps, evidence, why we chose X over Y. This is the bronze layer. No length cap, but use the structure below to stay compact.
 
-**Timestamp format:** `YYYY-MM-DD HH:MM ET` — always run `date` to get the exact time. Never use vague terms like "~evening". Gordon is in US Eastern time (ET).
+**LOG.md** — single-screen view of project state. Recent 5 sessions get a 5-line summary linking to the full file. Older sessions are listed as one-liners under "Earlier Sessions." Decisions Log is a 30-day rolling window. Blockers Log is open-blockers only.
 
-**Format:** Prepend new entries to the Session Log section. Never delete old entries.
+**`docs/log-archive.md`** — rotation overflow. Decisions older than 30 days, resolved blockers. Append-only.
 
-**Also update TASKS.md:** Mark tasks `[x]` as they complete. Do not wait until end of session.
+### Frontmatter (required, controlled vocabulary)
+
+Every session file starts with this exact frontmatter shape. Vocabulary is closed — adding new values requires editing this section, not an inline judgment call.
+
+```
+---
+session: <integer>
+date: YYYY-MM-DD
+start_time: HH:MM ET
+end_time: HH:MM ET                    # omit if session ongoing
+type: <one of: planning | code | hybrid | overnight>
+plan: <one of: plan-0 | plan-0.5 | plan-1 | plan-2 | plan-3 | plan-4 | plan-5 | plan-A | none>
+layers: [<zero or more of: ingestion, bronze, silver, gold, admin, semantic, agent, portal, infra, docs>]
+work: [<one or more of: feature, bugfix, refactor, planning, hardening, infra, docs, test>]
+status: <one of: complete | partial | blocked>
+---
+```
+
+Rules:
+- `plan:` is the dominant plan for this session. If a session spans plans, pick primary; mention others in body.
+- `layers:` lists data-model layers and infrastructure surfaces touched. Empty array `[]` is valid for pure planning.
+- `work:` describes the kind of work done. Multiple values allowed (`[feature, docs]` is common).
+- `status:` is the session's outcome, not the plan's outcome.
+
+### Body structure (fixed five sections)
+
+Each section has a target length. If a section runs over, that's a signal to split the session, not to write longer.
+
+```
+## Goal
+One sentence. What we set out to do this session.
+
+## What shipped
+Bulleted list, one line per item. File paths in code spans. Commit hashes
+inline (`abc1234`) when present. No prose. Target: 5-15 bullets.
+
+## Decisions
+Bulleted list. Each bullet: <decision> — <rationale in one clause>.
+Target: 0-8 bullets. If zero, write "None." not an empty section.
+
+## Issues encountered
+Only if relevant. For each issue: one line stating what broke, one line of
+evidence (curl result, error message, empirical test outcome), one line
+stating the resolution. Three lines per issue, not three paragraphs.
+Target: 0-5 issues. Omit the section entirely if there were none.
+
+## Next action
+One sentence. What the next session should do. If blocked, name the blocker.
+```
+
+### Hard rules
+
+- No "Process / lessons" section. Cross-session lessons go in CLAUDE.md or STANDARDS.md, not in a session file.
+- No restating decisions verbatim from the Decisions Log table — the table row exists for that.
+- No re-narrating what a plan said. Link to the plan if referenced; don't paste it.
+- Code blocks for evidence are encouraged (they compress better than prose).
+- "Worth flagging" / "Things to know" preambles are banned. If it's worth flagging, it goes in `## Decisions` or `## Issues encountered`. If it's not, cut it.
+
+### LOG.md Recent Sessions summary format
+
+Each summary in LOG.md is exactly this shape, no variation:
+
+```
+### Session N — YYYY-MM-DD HH:MM ET — <slug>
+[full narrative](docs/sessions/session-NN-YYYY-MM-DD-slug.md)
+
+- **Goal:** <one sentence from the session file>
+- **Shipped:** <one sentence summary of what landed>
+- **Decisions:** <count, e.g. "3 decisions"> — see Decisions Log
+- **Status:** <complete | partial | blocked>
+- **Next:** <one sentence>
+```
+
+Five lines of summary per session in LOG.md, period. Detail lives in the session file.
+
+### Rotation rules
+
+- When "Recent Sessions" exceeds 5 entries, the oldest moves to "Earlier Sessions" (one-line summary only, retains link).
+- When a Decisions Log row is older than 30 days, move it to `docs/log-archive.md`.
+- When a blocker is resolved, move the row to `docs/log-archive.md`.
+
+### When to read what
+
+- Session start: read LOG.md and TASKS.md only. Do not read `docs/sessions/` unless investigating a specific past decision.
+- "Why did we do X?" investigation: `grep -l "X" docs/sessions/*.md`, then read matching files. Do not pull all of `docs/sessions/` into context.
+- Decision archaeology: check inline Decisions Log first; if older, search `docs/log-archive.md` and the indexed session files via the frontmatter `plan:`, `layers:`, `work:` fields.
+
+### Log file size budgets
+
+- LOG.md: target ~150 lines, hard ceiling 250. If approaching ceiling, run rotation manually.
+- Individual session files: target ~100 lines, soft ceiling 300. If a session gets too long, split thematically (`session-09a-...md`, `session-09b-...md`) — sessions don't have to be 1:1 with elapsed time.
+- `docs/log-archive.md`: no ceiling. Append-only.
+
+### Health check
+
+When LOG.md feels heavy, run:
+
+```bash
+wc -l LOG.md docs/sessions/*.md docs/log-archive.md
+```
+
+If LOG.md > 250 lines or any session file > 300 lines, rotate.
+
+### Timestamp + TASKS.md hygiene
+
+- Timestamp format: `YYYY-MM-DD HH:MM ET` — always run `date` to get the exact time. Never use vague terms like "~evening". Gordon is in US Eastern time (ET).
+- Update TASKS.md as work completes — `[x]` done · `[~]` in progress · `[!]` blocked. Do not wait until end of session.
