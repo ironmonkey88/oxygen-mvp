@@ -7,7 +7,7 @@
 | Ingestion | **dlt** | Python-native, declarative, mature REST API support. Chosen over Oxygen's native Airway. |
 | Warehouse | **DuckDB** | Zero-config embedded OLAP. Sufficient for 1.17M total records (~100-115k/year). |
 | Transformation | **dbt Core** | Gordon knows dbt deeply. Airform (Oxygen's native option) only added April 2026 — too new. |
-| Semantic Layer | **Airlayer** | Oxygen-native `.sem.yml`. Source of truth for all agent queries. |
+| Semantic Layer | **Airlayer** | `.view.yml` schema files. Same format used by both Oxygen's built-in semantic engine and the standalone Airlayer Rust CLI. Source of truth for all agent queries. |
 | Q&A | **Answer Agent** | Standard Oxygen `.agent.yml` with `execute_sql` tool. Oxygen's term for a data chat agent. |
 | Routing | **Routing Agent** | `type: routing` agent that dispatches to answer agents. Added in MVP 4 only. |
 | Dashboards | **Airapp** | Declarative `.app.yml` — Oxygen's equivalent of a Looker dashboard. |
@@ -40,7 +40,7 @@ DuckDB file (transformed)
 ├──────────────────────┐
 ▼                      ▼
 Airlayer               Airapp
-(.sem.yml metrics)     (.app.yml dashboards)
+(.view.yml metrics)    (.app.yml dashboards)
 │
 ▼
 Answer Agent
@@ -206,10 +206,18 @@ lsof data/somerville.duckdb
 
 ### Airlayer (Semantic Layer)
 - Equivalent to: dbt metrics + LookML
-- File type: `.sem.yml`
-- Defines: views, dimensions, measures, topics
+- File type: `.view.yml` (views), `.topic.yml` (topics), optional `.motif.yml` and `.query.yml`
+- Defines: views, dimensions, measures, entities, segments, topics
 - Topics group views by business domain (like Looker Explore)
-- Docs: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
+- Two engines, one schema:
+  - Oxygen has a built-in semantic engine that reads `.view.yml` files. Agents access it via the `semantic_query` tool with a `topic` parameter.
+  - Standalone Airlayer is a separate Rust CLI (`airlayer query`, `airlayer init`) installed independently. Useful for shell-based testing and for embedding semantic queries outside Oxygen.
+- Both engines share the exact same `.view.yml` schema — write once, query from either.
+- Build command (Oxygen): `oxy build` compiles the semantic layer.
+- Project structure: `semantics/views/` and `semantics/topics/` at project root.
+- Oxygen Docs: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
+- Airlayer Repo: https://github.com/oxy-hq/airlayer
+- Schema Reference: https://github.com/oxy-hq/airlayer/blob/main/docs/schema-format.md
 
 ### Answer Agent
 - Equivalent to: Looker's "Ask" / a Looker chatbot

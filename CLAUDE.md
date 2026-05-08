@@ -34,7 +34,7 @@ Gordon is an experienced Snowflake/dbt/Looker architect who is new to Oxygen.
 | Ingestion | dlt |
 | Warehouse | DuckDB |
 | Transformation | dbt Core |
-| Semantic Layer | Airlayer (`.sem.yml`) |
+| Semantic Layer | Airlayer (`.view.yml`) — standalone Rust CLI + Oxygen built-in engine |
 | Q&A Agent | Answer Agent (`.agent.yml`) |
 | Routing | Routing Agent (`type: routing`) — MVP 4 only |
 | Dashboards | Airapp (`.app.yml`) |
@@ -72,8 +72,14 @@ oxygen-mvp/
 │   │   ├── gold/
 │   │   └── admin/                  ← profiling + DQ star schema
 │   └── tests/
-├── semantic/
-│   └── somerville_311.sem.yml
+├── semantics/
+│   ├── views/
+│   │   ├── requests.view.yml
+│   │   ├── request_types.view.yml
+│   │   ├── statuses.view.yml
+│   │   └── dates.view.yml
+│   └── topics/
+│       └── service_requests.topic.yml
 ├── agents/
 │   ├── answer_agent.agent.yml
 │   └── routing_agent.agent.yml
@@ -240,6 +246,8 @@ Requires `ANTHROPIC_API_KEY` environment variable. If not set, stop and ask Gord
 - Oxygen Agents: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
 - Oxygen Routing Agents: https://oxy.tech/docs/guide/learn-about-oxy/routing-agents.md
 - Oxygen Semantic Layer: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
+- Airlayer Repo: https://github.com/oxy-hq/airlayer
+- Airlayer Schema Format: https://github.com/oxy-hq/airlayer/blob/main/docs/schema-format.md
 - Oxygen Data Apps: https://oxy.tech/docs/guide/learn-about-oxy/data-apps.md
 - Oxygen AWS Deployment: https://oxy.tech/docs/guide/deployment/hands-on/aws.md
 - dlt Docs: https://dlthub.com/docs
