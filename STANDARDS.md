@@ -60,7 +60,7 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [ ] Page indicates whether the data is healthy enough to query today (a yes/no, not just a list)
 
 ### 4.4 Known limitations are first-class
-- [ ] A limitations registry exists in the repo *(open question — see §7 for location/format)*
+- [ ] A limitations registry exists in the repo — see [`docs/limitations/`](docs/limitations/) (format resolved §7; populating is ongoing)
 - [ ] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area
 
 ### 4.5 Reproducible
@@ -188,6 +188,6 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 
 ## 7. Open questions
 
-- **Limitations registry — location and format?** Options: (a) YAML alongside `semantics/` (e.g. `semantics/limitations/*.limitation.yml`); (b) separate `docs/limitations/`; (c) inline as fields on `.view.yml` measures and dimensions. Decide before MVP 1 sign-off — the Answer Agent and the portal both need to consume from a single canonical location.
+- **Limitations registry — location and format?** ✅ Resolved 2026-05-08 → Option (b) `docs/limitations/`. Markdown files with YAML frontmatter (`id`, `title`, `severity`, `affects`, `since`, `status`) and free-form prose body. See [`docs/limitations/README.md`](docs/limitations/README.md). The Answer Agent and `/trust` page consume from this single location.
 - **Does Oxygen's Answer Agent natively support emitting SQL + row count + citations, or is it prompt-configured only?** Verify during the Answer Agent task; if prompt-configured, the trust contract lives in the agent prompt and must be tested against the 5-question bench.
 - **Where does the `/metrics` page generator live?** Candidates: `semantics/` (close to source), `scripts/` (treated as build tooling), `portal/` (treated as a portal asset). Decide when building the page — likely `scripts/` so portal stays static.
