@@ -7,8 +7,8 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Semantic layer live and queryable via Airlayer (`-x` returns rows). `oxy build` gate blocked on `oxy start` / Postgres bring-up — flagged for morning.
-**Last Updated:** 2026-05-08 07:22 ET (Overnight Session — Claude Code)
+**Phase:** Semantic layer complete. All four overnight deliverables green after Gordon downgraded the `oxy build` gate to `oxy validate` + `airlayer query -x`. Next: Answer Agent (will pull `oxy start` + `oxy build` in naturally).
+**Last Updated:** 2026-05-08 07:31 ET (Overnight Session — Claude Code)
 
 ---
 
@@ -35,10 +35,9 @@
 - `oxy build` validation gate left unpassed rather than spinning up Docker Postgres in the middle of an overnight session — Gordon should make the call on bringing up Oxygen's full stack in the morning.
 - CLAUDE.md's `LLM Configuration` snippet is stale (`model:` → should be `model_ref:` per oxy 0.5.47). Not edited — out of scope for this deliverable. Recommend a quick doc-fix commit.
 
-**Blockers:**
-- **`oxy build` requires `oxy start` (Docker + Postgres) — not run.** Logged in Blockers Log below. `oxy validate` and `airlayer query -x` together cover the "config is valid + can be executed" intent of the gate; the embedding/vector build only matters once the Oxygen web app is up. Gordon's call.
+**Blockers:** None — `oxy build` gate downgraded by Gordon at 2026-05-08 07:31 ET (option (b) below). `oxy validate` + `airlayer query -x` together cover the original gate intent.
 
-**Next Action:** Gordon decides whether to (a) `oxy start` then `oxy build` to close the gate, (b) treat `oxy validate` + `airlayer query -x` as sufficient for MVP 1 and downgrade the gate, or (c) defer Oxygen bring-up to a later session.
+**Next Action:** Answer Agent — `oxy start` and `oxy build` will land naturally there.
 
 ---
 
@@ -433,6 +432,7 @@ what we shipped.
 | 2026-05-08 07:22 ET | `requests.open_requests` filter = `status != 'Closed'` (no join) | Avoids cross-view join + fan-out; `status` text already on fct, equivalent semantics to `is_open = true` |
 | 2026-05-08 07:22 ET | `config.yml` uses `model_ref` + `key_var` (oxy 0.5.47 schema) | CLAUDE.md sample uses outdated `model:` field; fixed in config.yml, doc fix deferred to Gordon |
 | 2026-05-08 07:22 ET | Airlayer entity keys must also be declared as dimensions | `airlayer validate` rejects entities pointing to undeclared columns; added FK ID dims to `requests.view.yml` |
+| 2026-05-08 07:31 ET | `oxy build` validation gate downgraded for MVP 1; replaced by `oxy validate` + `airlayer query -x` | `oxy build` is for vector embeddings, not config validation. The `oxy validate` syntax check + `airlayer query -x` actual-execution check together cover the original "config is valid + queryable" intent. Real `oxy build` will run naturally during the Answer Agent session when `oxy start` is up. |
 
 ---
 
@@ -441,7 +441,7 @@ what we shipped.
 | Date | Blocker | Status | Resolution |
 |------|---------|--------|------------|
 | 2026-05-07 18:28 ET | Port 80 not open in AWS security group — portal unreachable from public internet | Resolved | Gordon added inbound HTTP rule (port 80, 0.0.0.0/0) in AWS console |
-| 2026-05-08 07:22 ET | `oxy build` validation gate fails: `OXY_DATABASE_URL environment variable is required. Use 'oxy start' to automatically start PostgreSQL with Docker, or set OXY_DATABASE_URL to your PostgreSQL connection string.` | Open | Needs `oxy start` (Docker container `postgres:18-alpine`, persistent volume `oxy-postgres-data`, web app on port 3000). Decision deferred to Gordon — see Deliverable 3 session entry. `oxy validate` and `airlayer query -x` both pass independently, so the semantic config itself is fine. |
+| 2026-05-08 07:22 ET | `oxy build` validation gate fails: `OXY_DATABASE_URL environment variable is required. Use 'oxy start' to automatically start PostgreSQL with Docker, or set OXY_DATABASE_URL to your PostgreSQL connection string.` | Resolved 2026-05-08 07:31 ET | Gate downgraded: `oxy validate` (config syntax, exits 0) + `airlayer query -x` (real data, 5 rows) cover the original intent. Real `oxy build` deferred to Answer Agent session when `oxy start` will be running. See Decisions Log entry for 2026-05-08 07:31 ET. |
 
 ---
 
