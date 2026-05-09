@@ -391,3 +391,7 @@ If LOG.md > 250 lines or any session file > 300 lines, rotate.
 
 - Timestamp format: `YYYY-MM-DD HH:MM ET` — always run `date` to get the exact time. Never use vague terms like "~evening". Gordon is in US Eastern time (ET).
 - Update TASKS.md as work completes — `[x]` done · `[~]` in progress · `[!]` blocked. Do not wait until end of session.
+
+### Transcript timestamps
+
+In addition to LOG.md timestamps, emit a one-line marker in chat output at the start of each deliverable, at any pause or blocker, and before any long-running command (>~30 seconds). Format: `[YYYY-MM-DD HH:MM ET] <short label>`. Always run `date` to get the actual time. This makes transcript review tractable for sessions that span hours.
