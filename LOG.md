@@ -20,6 +20,7 @@
 | 6 | Answer Agent + Trust Contract | queued (rev 2 batch) | — |
 | 7 | MVP 1 Sign-off Sweep | queued (rev 2 batch) | — |
 | 8 | Limitations Registry Expansion | queued (rev 2 batch) | — |
+| 9 | Allowlist Coverage, Once and For All | done | Session 16 |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -28,13 +29,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 4 closed — `/trust` page live and dynamic, driven by `admin.fct_test_run` ⨝ `dim_data_quality_test` with freshness from `gold.fct_311_requests`. `run.sh` extended to step 8/8 (generate + deploy `trust.html`, plus auto-sync `portal/index.html`). Portal nav surfaces `/docs/`, `/metrics`, `/trust`. STANDARDS.md §4.3 (4/4) ticked; §5.8 5-of-6 ticked (engineering-honest copy is Plan 7). Synthetic-fail render check verified the red banner branch end-to-end. Now in the rev 2 chat-batch chain: next is **Plan 5 — Tech Debt Sweep**.
+**Phase:** Plan 9 closed — allowlist coverage hardened. `.claude/settings.json` now carries `defaultMode: "acceptEdits"`, top-level `Read`/`Write`/`Edit`/`WebFetch(*)`, `autoMode.environment.allowNetwork: true`, `Read(**/.env)` deny, plus a verification-idiom cohort (curl/for/while/if/sed/cat/wget/rsync/npm/pwd/whoami/etc.) on top of the existing tool-family allows. Granular sudo allows preserved. `scripts/check_allowlist_coverage.sh` ran clean — zero prompts. CLAUDE.md gained the Allowlist `[x]` rule + general `[x]` evidence rule under LOG Logging Protocol. Plan 4 (Trust Page) remains the last functional plan closed; rev 2 chat-batch resumes with **Plan 5 — Tech Debt Sweep** after a state-check pass.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 13:30 ET (Session 15 — Plan 4 closed)
+**Last Updated:** 2026-05-09 19:05 ET (Session 16 — Plan 9 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 16 — 2026-05-09 17:30 ET → 19:05 ET — Plan 9 — Allowlist Coverage
+[full narrative](docs/sessions/session-16-2026-05-09-plan-9-allowlist-coverage.md)
+
+- **Goal:** Eliminate allowlist-induced stalls on read-only and verification work for unattended sessions, without weakening the destructive-deny boundary.
+- **Shipped:** `.claude/settings.json` Layer 0 (defaultMode acceptEdits, top-level Read/Write/Edit/WebFetch(*), autoMode allowNetwork, $schema, Read(**/.env) deny) + Layer 1 verification-idiom cohort (curl/for/while/if/sed/cat/wget/rsync/npm/pwd/etc.); `scripts/check_allowlist_coverage.sh` and verified clean run; CLAUDE.md Allowlist `[x]` rule + general `[x]` evidence rule; frontmatter `plan:` vocab extended through plan-9.
+- **Decisions:** 5 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** State-check rev 2 batch (last clean plan was Plan 4); resume with Plan 5 — Tech Debt Sweep or recovery pass on whatever stalled.
 
 ### Session 15 — 2026-05-09 12:53 ET → 13:30 ET — Plan 4 — Trust Page
 [full narrative](docs/sessions/session-15-2026-05-09-plan-4-trust-page.md)
@@ -72,19 +82,11 @@
 - **Status:** complete
 - **Next:** Update SETUP.md/CLAUDE.md/ARCHITECTURE.md for new access pattern + nginx docroot.
 
-### Session 11 — 2026-05-08 11:35 ET — portal-chat-fix
-[full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
-
-- **Goal:** Make portal chat link actually open the chat UI (Option A: direct `:3000` link).
-- **Shipped:** 3 portal hrefs repointed; nginx `location /chat` removed; deployed; commit 6d76594. Gates 1-4 green, gate 5 = Gordon's browser test.
-- **Decisions:** 0 new (Option A captured in Session 9) — see Decisions Log
-- **Status:** complete (pending Gordon's browser confirmation)
-- **Next:** Plan 1 (Tailscale) — its Deliverable 4 will update the same hrefs to a Tailnet target.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 11** — 2026-05-08 11:35 ET — Plan 0.5 portal /chat fix; 3 hrefs repointed to `:3000`, nginx `location /chat` removed (commit `6d76594`); gates 1-4 green. [full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
 - **Session 10** — 2026-05-08 11:15 ET — Log refactor: LOG.md split into bounded summary + `docs/sessions/` archive; frontmatter/body/rotation rules established (commit `a72bd2a`). [full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
 - **Session 9** — 2026-05-08 11:30 ET — Plans 0.5 + 1 queued; sequencing locked (0.5→1→2→3→4→5); pre-flight rule for env-specific assumptions. [full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
 - **Session 8** — 2026-05-08 10:00 ET — Plan 0 loose ends; `/etc/environment` env-var contract; allowlist broadened (D7 tool-family + destructive-deny); commits `e5e94e3` `196cf28`. [full narrative](docs/sessions/session-08-2026-05-08-plan-0-loose-ends.md)
@@ -193,6 +195,11 @@
 | 2026-05-09 13:30 ET | `run.sh` syncs `portal/index.html` → `/var/www/somerville/index.html` as a final step | Static portal nav edits landed on EC2 only after a manual scp on first deploy; auto-syncing closes the gap so the canonical source-of-truth at `portal/index.html` stays in lock-step with what nginx serves. |
 | 2026-05-09 13:30 ET | `/chat` route satisfied by Private beta pill, not a public route link | Session 11/12 made chat Tailnet-only at `:3000`; portal advertises but doesn't link. STANDARDS.md §5.8 "Routes live: /chat" is interpreted as covered by that convention; Plan 7 sign-off owns any rewording. |
 | 2026-05-09 13:30 ET | Synthetic-fail render check is part of Plan 4 done-done | Plan 3 D3 verified the drift-fail mechanism produces fail rows in `fct_test_run`, but the trust page's red-branch CSS hadn't been exercised end-to-end. UPDATE → regen → curl → restore loop confirmed the visual flip green→red→green. |
+| 2026-05-09 19:05 ET | Plan 9 lands as a dedicated, separately-committed plan | Third allowlist-coverage incident (Sessions 13, 14, 15) — pattern is structural; rolling it into the rev 2 batch would obscure the fix. |
+| 2026-05-09 19:05 ET | `defaultMode: "acceptEdits"` adopted at the `permissions` level | Single high-leverage setting that auto-accepts Edit/Write/Read on project files; prerequisite for clean unattended runs without weakening Bash boundaries. |
+| 2026-05-09 19:05 ET | `Bash(sed *)` allowed despite Session 13 incident | Destructive-deny (`rm -rf`, `git reset --hard`, `sudo bash/sh`, `sudo rm/dd`) bounds blast radius; `sed -i` on tracked file is recoverable via `git restore`, on untracked file is a manual-typo class problem. |
+| 2026-05-09 19:05 ET | `Bash(npm *)` / `Bash(pnpm *)` allowed prophylactically | Agent and portal don't have Node deps today, but if they grow them, future sessions shouldn't stall on the first install. |
+| 2026-05-09 19:05 ET | No blanket `sudo *` deny | Granular deploy-path sudo allows (`sudo cp/mv/ln/chmod/chown/nginx/systemctl …`) used by `run.sh`; blanket deny would prompt every deploy. Granular allows + granular denies stay. |
 
 ---
 

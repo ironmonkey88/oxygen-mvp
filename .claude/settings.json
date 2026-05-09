@@ -1,6 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
+    "defaultMode": "acceptEdits",
     "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "WebFetch(*)",
+
       "Bash(ssh oxygen-mvp *)",
       "Bash(scp *)",
       "Bash(date)",
@@ -156,9 +163,30 @@
       "Bash(sudo mv *)",
       "Bash(sudo ln -s *)",
       "Bash(sudo chmod *)",
-      "Bash(sudo chown *)"
+      "Bash(sudo chown *)",
+
+      "Bash(wget *)",
+      "Bash(rsync *)",
+      "Bash(npm *)",
+      "Bash(pnpm *)",
+      "Bash(for * in *; do *; done)",
+      "Bash(while * do * done)",
+      "Bash(if * then * fi)",
+      "Bash([ * ])",
+      "Bash([[ * ]])",
+      "Bash(cat *)",
+      "Bash(less *)",
+      "Bash(more *)",
+      "Bash(sed *)",
+      "Bash(cmp *)",
+      "Bash(yq *)",
+      "Bash(python3 -m json.tool *)",
+      "Bash(pwd)",
+      "Bash(uptime)",
+      "Bash(whoami)"
     ],
     "deny": [
+      "Read(**/.env)",
       "Bash(git reset --hard *)",
       "Bash(git reset --hard)",
       "Bash(git -C * reset --hard *)",
@@ -184,6 +212,11 @@
       "Bash(sudo -s)",
       "Bash(aws *)"
     ]
+  },
+  "autoMode": {
+    "environment": {
+      "allowNetwork": true
+    }
   },
   "hooks": {
     "PreToolUse": [

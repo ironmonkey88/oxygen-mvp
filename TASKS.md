@@ -93,6 +93,14 @@
 
 ### MVP 1 — Hardening for analyst trust
 
+#### Plan 9 — Allowlist Coverage, Once and For All (2026-05-09 19:05 ET — closed)
+- [x] Layer 0: structural audit + add `defaultMode: acceptEdits`, top-level `Read`/`Write`/`Edit`/`WebFetch(*)`, `autoMode.environment.allowNetwork: true`, `$schema`, `Read(**/.env)` deny  *(verified via `jq '.permissions.defaultMode, ."$schema", .autoMode.environment.allowNetwork'`)*
+- [x] Layer 1: broaden allow patterns (verification idioms cohort) in `.claude/settings.json`  *(added wget/rsync/npm/pnpm/for/while/if/[/[[/cat/less/more/sed/cmp/yq/python3 -m json.tool/pwd/uptime/whoami; existing curl/jq/grep/head/tail/awk/find/stat already covered)*
+- [x] Layer 1 verify: deny list intact; granular sudo allows preserved (no blanket `sudo *` deny); `python3 -m json.tool .claude/settings.json` exits 0  *(deny list 25 entries inc. new `Read(**/.env)`; granular sudo: nginx/systemctl/cp/mv/ln/chmod/chown/tail/cat/grep/sed-n still present)*
+- [x] Layer 2: create `scripts/check_allowlist_coverage.sh` and run it clean (no prompts)  *(ran first pass clean — Code's running session picked up the new patterns mid-flight, no restart needed)*
+- [x] Layer 3: CLAUDE.md — Allowlist `[x]` rule + general `[x]` evidence rule  *(under "LOG.md and Sessions Logging Protocol" section, after Transcript timestamps)*
+- [x] Session file written; LOG.md Recent Sessions updated; Decisions logged; clean commit on `origin/main`  *(see commit hash in session note)*
+
 #### Plan 0 — FR loose ends (2026-05-08 10:05 ET — closed)
 - [x] Move `ANTHROPIC_API_KEY` and `OXY_DATABASE_URL` to `/etc/environment` (Option A — `~/.profile` empirically didn't reach non-interactive ssh)
 - [x] Extend PATH in `/etc/environment` to include `/home/ubuntu/.local/bin` so `oxy`/`airlayer` resolve in plain ssh

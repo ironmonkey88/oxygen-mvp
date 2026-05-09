@@ -295,7 +295,7 @@ date: YYYY-MM-DD
 start_time: HH:MM ET
 end_time: HH:MM ET                    # omit if session ongoing
 type: <one of: planning | code | hybrid | overnight>
-plan: <one of: plan-0 | plan-0.5 | plan-1 | plan-2 | plan-3 | plan-4 | plan-5 | plan-A | none>
+plan: <one of: plan-0 | plan-0.5 | plan-1 | plan-2 | plan-3 | plan-4 | plan-5 | plan-6 | plan-7 | plan-8 | plan-9 | plan-A | none>
 layers: [<zero or more of: ingestion, bronze, silver, gold, admin, semantic, agent, portal, infra, docs>]
 work: [<one or more of: feature, bugfix, refactor, planning, hardening, infra, docs, test>]
 status: <one of: complete | partial | blocked>
@@ -395,3 +395,20 @@ If LOG.md > 250 lines or any session file > 300 lines, rotate.
 ### Transcript timestamps
 
 In addition to LOG.md timestamps, emit a one-line marker in chat output at the start of each deliverable, at any pause or blocker, and before any long-running command (>~30 seconds). Format: `[YYYY-MM-DD HH:MM ET] <short label>`. Always run `date` to get the actual time. This makes transcript review tractable for sessions that span hours.
+
+### Allowlist `[x]` rule
+
+A `[x]` for any allowlist change requires evidence the change is in `.claude/settings.json` (committed, tracked file), not just `.claude/settings.local.json` (gitignored, scratch). Acceptable evidence in the session note: a one-line confirmation like
+
+    git show HEAD:.claude/settings.json | grep -F 'Bash(curl *)'
+
+showing the pattern is in the committed file. `settings.local.json` is auto-allowed Code scratch space and never satisfies an allowlist `[x]`. This rule exists because the Plan 0 D7b "regression" (Session 14) was caused by `[x]` marks based on `settings.local.json` edits that never mirrored to the committed file.
+
+### `[x]` evidence rule
+
+Every `[x]` in TASKS.md should be backed by one of:
+- a commit hash (the change landed in tracked code),
+- a verification command output (a test passed, a curl returned 200, etc.),
+- a file path + line range (the documentation was written).
+
+Bare `[x]` based on "I did the thing" is not enough. A `[x]` is a claim; claims need evidence, especially for security/permission changes.
