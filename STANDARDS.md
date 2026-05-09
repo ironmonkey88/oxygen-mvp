@@ -15,11 +15,11 @@ The target user for MVP 1 is a **city analyst** — someone helping the city run
 ## 3. Foundational standards (apply to every layer)
 
 ### 3.1 Security
-- [ ] Public-facing surfaces (port 80 portal) are intentionally public; everything else (SSH, Oxygen :3000) is private
-- [ ] No secrets in repo — use `.env`, `ANTHROPIC_API_KEY` env var, password vars per oxy `key_var:` pattern
-- [ ] DuckDB file is local to EC2; never exposed over network
-- [ ] Tailscale required for SSH and Oxygen :3000 access by MVP 1 sign-off
-- [ ] AWS security group: port 80 open to `0.0.0.0/0`; SSH (22) and :3000 closed to public
+- [x] Public-facing surfaces (port 80 portal) are intentionally public; everything else (SSH, Oxygen :3000) is private  *(Plan 1)*
+- [x] No secrets in repo — use `.env`, `ANTHROPIC_API_KEY` env var, password vars per oxy `key_var:` pattern  *(Plan 0)*
+- [x] DuckDB file is local to EC2; never exposed over network  *(implicit; never been exposed)*
+- [x] Tailscale required for SSH and Oxygen :3000 access by MVP 1 sign-off  *(Plan 1)*
+- [x] AWS security group: port 80 open to `0.0.0.0/0`; SSH (22) and :3000 closed to public  *(Plan 1)*
 
 ### 3.2 Reliability
 - [ ] All pipeline steps idempotent
@@ -29,10 +29,10 @@ The target user for MVP 1 is a **city analyst** — someone helping the city run
 - [ ] Pipeline exit codes captured even when tests fail (run continues to record failures, then propagates failure)
 
 ### 3.3 Usability
-- [ ] All `schema.yml` files have non-null descriptions on every model and every column
-- [ ] `dbt docs generate` produces a static site, hosted on the portal at `/docs`
-- [ ] Naming conventions enforced (snake_case, `_dt`, `is_`, `pct_`, `_count` per CLAUDE.md)
-- [ ] All metrics defined exactly once in the semantic layer; never hardcoded in SQL or app config
+- [x] All `schema.yml` files have non-null descriptions on every model and every column  *(Plan 2 D1: bronze 1+24, gold 4+47, admin 3+all)*
+- [x] `dbt docs generate` produces a static site, hosted on the portal at `/docs`  *(Plan 2 D1; run.sh step 6 keeps it current)*
+- [x] Naming conventions enforced (snake_case, `_dt`, `is_`, `pct_`, `_count` per CLAUDE.md)
+- [x] All metrics defined exactly once in the semantic layer; never hardcoded in SQL or app config  *(verified via `/metrics` generator reading `semantics/views/*.view.yml` directly)*
 
 ---
 
@@ -49,9 +49,9 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [ ] Methodology is inspectable — never summarized away or paraphrased into prose
 
 ### 4.2 Every metric has a public definition
-- [ ] All measures defined in Airlayer `.view.yml` files (single source of truth)
-- [ ] `/metrics` page on the portal is auto-generated from the Airlayer YAML — not hand-written
-- [ ] Every measure renders with its expanded SQL and any caveats from the YAML description
+- [x] All measures defined in Airlayer `.view.yml` files (single source of truth)
+- [x] `/metrics` page on the portal is auto-generated from the Airlayer YAML — not hand-written  *(Plan 2 D3 — `scripts/generate_metrics_page.py`)*
+- [x] Every measure renders with its expanded SQL and any caveats from the YAML description  *(Plan 2 D3)*
 
 ### 4.3 Data quality is live, not narrative
 - [ ] `admin.fct_test_run` captures every test on every pipeline run
@@ -60,8 +60,8 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [ ] Page indicates whether the data is healthy enough to query today (a yes/no, not just a list)
 
 ### 4.4 Known limitations are first-class
-- [ ] A limitations registry exists in the repo — see [`docs/limitations/`](docs/limitations/) (format resolved §7; populating is ongoing)
-- [ ] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area
+- [x] A limitations registry exists in the repo — see [`docs/limitations/`](docs/limitations/) (format resolved §7; populating is ongoing)  *(Plan 2 D0)*
+- [ ] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area  *(Plan 4 — `/trust` page + Answer Agent trust contract)*
 
 ### 4.5 Reproducible
 - [ ] Repo is public (or at minimum clonable by collaborators)
@@ -114,11 +114,13 @@ Business-ready facts and dimensions — the finished product. What the semantic 
 ### 5.5 Admin (Data Quality)
 Infrastructure tables for observability and assertional tests — the inspector's clipboard.
 **Done done when:**
-- [ ] `admin.fct_data_profile` populated on every pipeline run (observational only — never fails the run)
-- [ ] `admin.dim_data_quality_test` populated with baselines, auto-generated `certified_by = 'system'` on first run
-- [ ] `admin.fct_test_run` captures both baseline comparisons and parsed dbt test results
-- [ ] Pipeline returns non-zero exit code on test failure beyond tolerance
-- [ ] `run.sh` enforces correct sequence (dlt → dbt → load_dbt_results → admin)
+- [x] `admin.fct_data_profile` populated on every pipeline run (observational only — never fails the run)  *(Plan 2 D2)*
+- [x] `admin.dim_data_quality_test` populated with baselines, auto-generated `certified_by = 'system'` on first run  *(Plan 2 D2)*
+- [x] `admin.fct_test_run` captures both baseline comparisons and parsed dbt test results  *(Plan 2 D2)*
+- [ ] Pipeline returns non-zero exit code on test failure beyond tolerance  *(Plan 3 D3 — drift-fail verification)*
+- [x] `run.sh` enforces correct sequence (dlt → dbt → load_dbt_results → admin)  *(Plan 2 D2)*
+
+**Plan 2 departures:** admin tables use natural keys (`test_id`, `run_id+test_id`) instead of surrogate keys (`test_sk`, `test_run_sk`). `bronze.raw_dbt_results_raw` is a dlt-managed landing table, not a dbt-managed bronze view (would name-conflict with dlt's table in the same schema). Both choices documented in [ARCHITECTURE.md](ARCHITECTURE.md) Admin Schema section.
 
 ### 5.6 Semantic (Airlayer)
 The semantic layer — Looker Explore-equivalent. Single source of truth for every metric.

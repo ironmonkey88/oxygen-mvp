@@ -10,10 +10,10 @@ In AWS Console → EC2 → Launch Instance:
 
 | Setting | Value |
 |---|---|
-| AMI | Ubuntu 22.04 LTS (64-bit ARM or x86) |
+| AMI | Ubuntu 24.04 LTS (64-bit ARM) |
 | Instance type | `t4g.medium` (ARM, 2 vCPU, 4 GB) — or `t3.medium` for x86 |
 | Storage | 20 GB gp3 |
-| Security group | SSH (22), HTTP (80), port 3000 inbound |
+| Security group | HTTP (80) inbound from `0.0.0.0/0` only. **Do not open SSH (22) or 3000 publicly** — they ride over Tailscale (see §12). For the very first connection (before Tailscale is up), open SSH (22) to your IP only, and remove the rule once Tailscale is verified working. |
 
 Note the Public IPv4 address.
 
@@ -209,40 +209,90 @@ sudo systemctl status oxy
 
 ---
 
+## 12. Tailscale Access (private SSH and `:3000`)
+
+After Plan 1 (Tailscale lockdown), public SSH and port 3000 are closed at the AWS security group; all access rides over Tailscale. To connect from a new device:
+
+```bash
+# 1. Install Tailscale (mac: brew install --cask tailscale-app | linux: curl -fsSL https://tailscale.com/install.sh | sh)
+# 2. Sign in to the same Tailnet (taildee698.ts.net) as the EC2 node
+tailscale up                       # follow the auth URL
+
+# 3. SSH via the alias (set up ~/.ssh/config to point oxygen-mvp at the Tailnet hostname)
+ssh oxygen-mvp                     # routes via 100.73.216.43 (MagicDNS: oxygen-mvp.taildee698.ts.net)
+```
+
+Required `~/.ssh/config` entry:
+
+```
+Host oxygen-mvp
+    HostName oxygen-mvp.taildee698.ts.net
+    User ubuntu
+    IdentityFile ~/.ssh/oxygen-mvp-server.pem
+    StrictHostKeyChecking no
+```
+
+**Tailscale SSH (`--ssh` flag) is intentionally OFF** on the EC2 node. It bypasses OpenSSH's PAM stack, which silently breaks `/etc/environment` env-var loading (PATH/`ANTHROPIC_API_KEY`/`OXY_DATABASE_URL` all missing in non-interactive SSH). Re-enable only when there's a real driver (multi-device, teammate) and rebuild the env-var path properly at the same time.
+
+`:3000` (Oxygen chat) is reachable from any Tailnet peer at `http://oxygen-mvp.taildee698.ts.net:3000/`. Public portal at port 80 is intentionally public (`http://18.224.151.49/`).
+
+---
+
+## 13. Portal and nginx
+
+Portal lives at `portal/index.html` in the repo and is deployed to nginx's docroot at `/var/www/somerville/`. The dbt docs at `/docs`, the metrics catalog at `/metrics`, and the project portal at `/` all serve from this nginx.
+
+**Quirks worth knowing:**
+
+- Active site is `sites-enabled/somerville → sites-available/somerville`. The legacy `default` site is **not enabled** — its `root /var/www/html` directive is unused. Don't deploy there. nginx docroot is `/var/www/somerville` (only).
+- `/home/ubuntu` is `chmod 755` (was 750 by default). nginx's www-data must traverse it to serve `dbt/target/index.html` from the in-repo location for the `/docs` route. Subdirs like `~/.ssh` keep their own 700.
+- Canonical nginx site config lives in repo at [`nginx/somerville.conf`](nginx/somerville.conf). Edit there, then deploy:
+
+  ```bash
+  scp nginx/somerville.conf oxygen-mvp:/tmp/somerville.conf
+  ssh oxygen-mvp 'sudo cp /tmp/somerville.conf /etc/nginx/sites-available/somerville \
+              && sudo nginx -t \
+              && sudo systemctl reload nginx'
+  ```
+
+- Portal HTML deploy follows the same pattern — `portal/index.html` and `portal/metrics.html` are the in-repo sources; deploy by copying to `/var/www/somerville/`. `run.sh` step 7 deploys `metrics.html` automatically; `index.html` is deployed by hand when changed.
+
+---
+
 ## Run Order (Important)
 
 **Before any work on EC2, pull first:** `cd ~/oxygen-mvp && git pull origin main`. GitHub `main` is the source of truth — EC2 is downstream. See CLAUDE.md "Session Start on EC2" for details.
 
-DuckDB only allows one writer at a time. Always run in this order:
+The pipeline has a single entry point: **`./run.sh`** at the repo root. Never invoke `dlt`, `dbt`, or `oxy` directly from the shell — `run.sh` activates the project venv, enforces the right order, captures the dbt-test exit code without halting, and ends with admin-table population and `/docs`/`/metrics` regeneration.
 
-```bash
-# 1. Ingest
-cd dlt && python somerville_311_pipeline.py
-
-# 2. Transform
-cd dbt && dbt run
-
-# 3. Serve
-oxy start
+```
+./run.sh
 ```
 
-Never run dlt or dbt while Oxygen is actively writing to the DuckDB file.
-See `ARCHITECTURE.md` for details on the file locking constraint.
+The seven steps:
+
+1. `python dlt/somerville_311_pipeline.py`
+2. `dbt run --select bronze gold`
+3. `dbt test --select bronze gold` *(exit captured, do not halt)*
+4. `python dlt/load_dbt_results.py` *(append run_results.json to `main_bronze.raw_dbt_results_raw`)*
+5. `dbt run --select admin`
+6. `dbt docs generate` *(regenerates `/docs`)*
+7. `python scripts/generate_metrics_page.py` + deploy *(regenerates `/metrics`)*
+
+Final exit code = the captured `dbt test` exit so a failing test surfaces but admin tables still get populated.
+
+DuckDB only allows one writer at a time, so don't run `oxy build` or `oxy start` operations that touch the DuckDB file in parallel with `./run.sh`. See `ARCHITECTURE.md` for the file locking constraint.
 
 ---
 
 ## Verify Everything Works
 
 ```bash
-# dlt
-python dlt/somerville_311_pipeline.py
-
-# dbt
-cd dbt && dbt debug && dbt run && dbt test
-
-# Oxygen
-oxy --version
-curl http://localhost:3000   # Should return Oxygen UI
+ssh oxygen-mvp 'cd ~/oxygen-mvp && ./run.sh'    # full pipeline, end-to-end
+curl http://18.224.151.49/                       # portal (public)
+curl http://18.224.151.49/docs/index.html        # dbt docs
+curl http://18.224.151.49/metrics                # metrics catalog
+ssh oxygen-mvp 'curl -sI http://localhost:3000'  # Oxygen chat (Tailnet only — won't work from public internet)
 ```
 
 ---

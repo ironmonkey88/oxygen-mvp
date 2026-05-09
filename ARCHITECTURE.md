@@ -121,12 +121,11 @@ Observational only. Runs every pipeline execution. Does not generate rows in `fc
 | `avg_length` | float | Average string length |
 
 ### `admin.dim_data_quality_test`
-One row per defined test. Covers baseline comparisons and dbt tests only — not profiling runs.
+One row per defined test. Covers baseline comparisons and dbt tests only — not profiling runs. **Plan 2 departure:** surrogate key `test_sk` skipped for MVP 1; `test_id` (varchar natural key) is the primary key. Add `test_sk` if joins later need a numeric key.
 
 | Column | Type | Description |
 |---|---|---|
-| `test_sk` | integer | Surrogate key |
-| `test_id` | varchar | Natural key — e.g. `baseline.raw_311_requests.year_2016.row_count` |
+| `test_id` | varchar | Natural primary key — e.g. `baseline.raw_311_requests.year_2016.row_count` |
 | `test_type` | varchar | `baseline`, `dbt_generic`, `dbt_singular` |
 | `table_name` | varchar | Table being tested |
 | `column_name` | varchar | Column being tested — null if table-level |
@@ -138,20 +137,38 @@ One row per defined test. Covers baseline comparisons and dbt tests only — not
 | `certified_at` | timestamp | When this baseline was signed off |
 | `certified_by` | varchar | `system` for auto-generated, `gordon` for manually certified |
 
+Materialized incremental with `is_incremental()` filter on `test_id` so baselines are seeded exactly once and remain frozen across runs.
+
 ### `admin.fct_test_run`
-One row per test per dbt run. Sources from both baseline comparisons and parsed dbt test results.
+One row per test per dbt run. Sources from both baseline comparisons and parsed dbt test results. **Plan 2 departure:** surrogate keys (`test_run_sk`, `test_sk`) skipped for MVP 1; the natural composite key (`run_id`, `test_id`) is sufficient.
 
 | Column | Type | Description |
 |---|---|---|
-| `test_run_sk` | integer | Surrogate key |
-| `test_sk` | integer | FK to `dim_data_quality_test` |
-| `run_id` | varchar | dbt run identifier |
+| `run_id` | varchar | dbt invocation_id |
+| `test_id` | varchar | FK to `dim_data_quality_test.test_id` (natural key — no surrogate) |
 | `run_at` | timestamp | When this run executed |
 | `actual_value` | varchar | What the data showed |
 | `expected_value` | varchar | Copied from dim at time of run |
-| `variance_pct` | float | Actual vs expected % difference |
+| `variance_pct` | float | Actual vs expected % difference (NULL for dbt tests) |
 | `status` | varchar | `pass`, `fail`, `warn` |
-| `failure_message` | varchar | Human-readable explanation on fail |
+| `failure_message` | varchar | Human-readable explanation on fail; NULL on pass |
+
+Materialized incremental with `is_incremental()` filter on `run_id` so a single run never double-counts.
+
+### `bronze.raw_dbt_results_raw` (Plan 2 departure: landing table, not a dbt model)
+The dbt run-results JSON is appended into `main_bronze.raw_dbt_results_raw` directly by `dlt/load_dbt_results.py` using plain duckdb (idempotent `CREATE TABLE IF NOT EXISTS`). There is **no** dbt-managed bronze view in front of it (would name-conflict with the dlt-created table in the same schema). Admin models reference the table directly — no `source()`/`ref()`.
+
+| Column | Type | Description |
+|---|---|---|
+| `loaded_at` | timestamptz | When the row was loaded |
+| `run_id` | varchar | `metadata.invocation_id` from run_results.json |
+| `run_started_at` | varchar | `metadata.generated_at` |
+| `node_id` | varchar | dbt unique_id (e.g. `test.somerville_311.unique_raw_311_requests_id.<hash>`) |
+| `node_name` | varchar | Readable name — 3rd segment of `node_id` for tests, last segment for models |
+| `status` | varchar | `pass` / `fail` / `warn` / `error` / etc. |
+| `failures` | integer | Failing rows for tests; 0 for models |
+| `message` | varchar | dbt failure message (NULL on success) |
+| `execution_time` | double | Seconds the node took |
 
 ---
 
@@ -171,29 +188,39 @@ Baselines are auto-generated on first run with `certified_by = 'system'`. Manual
 
 ## Run Order
 
-**Always use `run.sh` — never run steps manually.**
+**Always use `run.sh` — never run steps manually.** `run.sh` activates the project venv at the top, then runs seven steps:
 
 ```bash
-#!/bin/bash
-set -e
+# venv activation (top of run.sh)
+source .venv/bin/activate
 
 # 1. Ingest source data
 python dlt/somerville_311_pipeline.py
 
-# 2. Transform
-dbt run --project-dir dbt
+# 2. Transform bronze + gold
+dbt run --select bronze gold
 
-# 3. Test (capture exit code but don't halt — we want to record failures)
-dbt test --project-dir dbt || true
+# 3. Test bronze + gold (capture exit, do NOT halt — we want to record failures)
+dbt test --select bronze gold ; DBT_TEST_EXIT=$?
 
-# 4. Capture dbt test results
+# 4. Append run_results.json into bronze.raw_dbt_results_raw
 python dlt/load_dbt_results.py
 
-# 5. Parse results into admin schema
-dbt run --select admin --project-dir dbt
+# 5. Build admin schema from raw_dbt_results_raw + baseline comparisons
+dbt run --select admin
+
+# 6. Regenerate dbt docs (served at /docs)
+dbt docs generate
+
+# 7. Regenerate /metrics page (served at /metrics) and deploy to nginx docroot
+python scripts/generate_metrics_page.py
+cp portal/metrics.html /var/www/somerville/metrics.html
+
+# Final exit = the captured dbt-test exit code
+exit $DBT_TEST_EXIT
 ```
 
-`run.sh` in the project root is the single entry point. Never run dlt, dbt, or oxy commands individually.
+`run.sh` in the project root is the single entry point. Never run `dlt`, `dbt`, or `oxy` commands individually.
 
 If you see a `database is locked` error, check for competing processes:
 ```bash
@@ -251,24 +278,32 @@ lsof data/somerville.duckdb
 - **Platform:** AWS EC2, Ubuntu 24.04 LTS ARM
 - **Instance:** `t4g.medium` (ARM, 2 vCPU, 4 GB RAM) — suitable for 1–3 internal users
 - **Web portal:** nginx on port 80 — `http://18.224.151.49`
-- **Oxygen chat:** port 3000 — `http://18.224.151.49:3000`
-- **Security group:** SSH (22) locked to Gordon's IP; ports 80 and 3000 open to all
+- **Oxygen chat:** port 3000 — Tailnet-only at `http://oxygen-mvp.taildee698.ts.net:3000` (or `100.73.216.43:3000`)
+- **Security group (post Plan 1):** port 80 open to `0.0.0.0/0`; SSH (22) and `:3000` closed publicly. SSH and chat ride over Tailscale.
+- **Tailscale:** Tailnet `taildee698.ts.net`. Tailscale SSH (`--ssh`) intentionally **off** on the EC2 node — it bypasses OpenSSH PAM and silently breaks `/etc/environment` env-var loading. Re-enable only with a parallel env-var-path fix.
 - **Outbound:** Must reach `data.somervillema.gov` (SODA API) and `api.anthropic.com`
 - **Process management:** Run Oxygen as a systemd service (see SETUP.md)
 
-### Portal routes
-| Route | Content |
-|---|---|
-| `/` | Project portal — `portal/index.html` |
-| `/docs` | dbt docs — `dbt/target/docs/` |
-| `/erd` | ERD diagram — placeholder until generated |
-| `/tasks` | Project task tracker — placeholder until rendered |
+### nginx config
+- Active site: `sites-enabled/somerville → sites-available/somerville`. Default site **not enabled**.
+- Docroot: `/var/www/somerville` (NOT `/var/www/html` — that's the legacy default's unused docroot).
+- Canonical site config in repo: [`nginx/somerville.conf`](nginx/somerville.conf). Edit there, then deploy via `scp` + `sudo nginx -t` + `sudo systemctl reload nginx`. See [SETUP.md §13](SETUP.md).
+- `/home/ubuntu` is `chmod 755` so www-data can traverse to in-repo paths (notably `dbt/target/` for the `/docs` route). Sensitive subdirs (`.ssh`) keep their own 700.
 
-### Future (not in scope for MVP)
+### Portal routes
+| Route | Content | Source |
+|---|---|---|
+| `/` | Project portal | `portal/index.html` deployed to `/var/www/somerville/index.html` |
+| `/docs` | dbt docs | nginx alias → `/home/ubuntu/oxygen-mvp/dbt/target/` (regenerated by `run.sh` step 6) |
+| `/metrics` | Auto-generated metrics catalog | `portal/metrics.html` → `/var/www/somerville/metrics.html` (regenerated by `run.sh` step 7 via `scripts/generate_metrics_page.py`) |
+| `/trust` | Live data-quality status (next plan) | Driven by `admin.fct_test_run` |
+| `/erd` | ERD diagram — placeholder until generated | TBD |
+| `/tasks` | Project task tracker — placeholder until rendered | TBD |
+
+### Future (not in scope for MVP 1)
 - HTTPS via Caddy or nginx
 - Multi-workspace cloud mode for team access + GitHub integration
 - Amazon RDS for PostgreSQL (replace Docker-managed Postgres)
-- Tailscale for access control (planned for MVP 3)
 - `oxy serve` instead of `oxy start` for production
 
 ---

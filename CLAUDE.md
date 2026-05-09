@@ -176,6 +176,8 @@ Never assume column names from API documentation. Always derive from actual data
 
 ## Session Start on EC2
 
+EC2 is reached over Tailscale at the alias `oxygen-mvp` (HostName `oxygen-mvp.taildee698.ts.net`). Public SSH and `:3000` are closed at the AWS security group; only port 80 (portal) is publicly reachable. **Tailscale SSH (`--ssh`) is intentionally OFF** — it preempts OpenSSH and silently breaks `/etc/environment` env-var loading. See [SETUP.md §12](SETUP.md) for full Tailnet access setup.
+
 First command on EC2 every session, before any work:
 
 ```bash
@@ -198,12 +200,16 @@ GitHub `main` is the source of truth. EC2 is downstream of it. Skipping this ste
 ./run.sh
 ```
 
-`run.sh` enforces the correct sequence:
-1. dlt ingest
-2. dbt run
-3. dbt test (captures exit code, does not halt on failure)
-4. dlt load_dbt_results.py
-5. dbt run --select admin
+`run.sh` activates the project venv at the top, then enforces the correct sequence:
+1. `python dlt/somerville_311_pipeline.py`
+2. `dbt run --select bronze gold`
+3. `dbt test --select bronze gold` *(captures exit code, does not halt on failure)*
+4. `python dlt/load_dbt_results.py` *(appends run_results.json to `main_bronze.raw_dbt_results_raw`)*
+5. `dbt run --select admin`
+6. `dbt docs generate` *(regenerates `/docs`)*
+7. `python scripts/generate_metrics_page.py` + deploy to `/var/www/somerville/metrics.html` *(regenerates `/metrics`)*
+
+Final exit code = the captured `dbt test` exit (so a failing test surfaces, but admin tables still get populated).
 
 See `ARCHITECTURE.md` for the full annotated run order.
 
