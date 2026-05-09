@@ -54,10 +54,10 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [x] Every measure renders with its expanded SQL and any caveats from the YAML description  *(Plan 2 D3)*
 
 ### 4.3 Data quality is live, not narrative
-- [ ] `admin.fct_test_run` captures every test on every pipeline run
-- [ ] `/trust` page on the portal is driven by admin tables — not static text
-- [ ] Test failures surfaced with timestamps and human-readable explanations
-- [ ] Page indicates whether the data is healthy enough to query today (a yes/no, not just a list)
+- [x] `admin.fct_test_run` captures every test on every pipeline run  *(Plan 2 D2; Plan 3 D3 verified drift-fail capture)*
+- [x] `/trust` page on the portal is driven by admin tables — not static text  *(Plan 4 — `scripts/generate_trust_page.py` reads `main_admin.fct_test_run` ⨝ `dim_data_quality_test`)*
+- [x] Test failures surfaced with timestamps and human-readable explanations  *(Plan 4 — run_at + run_id in header; failure_message column in test results table)*
+- [x] Page indicates whether the data is healthy enough to query today (a yes/no, not just a list)  *(Plan 4 — green "All tests passed" / red "N tests failed" status banner; verified end-to-end via synthetic flip green → red → green on 2026-05-09)*
 
 ### 4.4 Known limitations are first-class
 - [x] A limitations registry exists in the repo — see [`docs/limitations/`](docs/limitations/) (format resolved §7; populating is ongoing)  *(Plan 2 D0)*
@@ -145,12 +145,12 @@ The interface — a research partner the analyst can trust.
 ### 5.8 Knowledge Product (Portal)
 Everything the analyst sees outside the chat — and the public window.
 **Done done when:**
-- [ ] Portal hosted on EC2 at port 80 (nginx)
-- [ ] Routes live: `/`, `/chat`, `/docs`, `/trust`, `/metrics`
-- [ ] Nav reflects the analyst workflow: chat-first, with `/docs`, `/trust`, `/metrics` one click away
-- [ ] `/trust` is dynamic — driven by the admin schema, not static copy
-- [ ] `/metrics` is generated from Airlayer YAML, not hand-written
-- [ ] Copy is engineering-honest — not marketing-friendly
+- [x] Portal hosted on EC2 at port 80 (nginx)  *(Session 4)*
+- [x] Routes live: `/`, `/chat`, `/docs`, `/trust`, `/metrics`  *(Plan 4 — `/`, `/docs/`, `/metrics`, `/trust` all 200; `/chat` is Tailnet-only at `:3000` per Plan 1 D4 and is advertised via the hero "Private beta" pill rather than a public-route link)*
+- [x] Nav reflects the analyst workflow: chat-first, with `/docs`, `/trust`, `/metrics` one click away  *(Plan 4 — three route links added to `portal/index.html` `.nav-links`; private-beta chat pill preserved on the hero)*
+- [x] `/trust` is dynamic — driven by the admin schema, not static copy  *(Plan 4)*
+- [x] `/metrics` is generated from Airlayer YAML, not hand-written  *(Plan 2 D3)*
+- [ ] Copy is engineering-honest — not marketing-friendly  *(Plan 7 — portal copy refresh)*
 
 ---
 
@@ -166,7 +166,7 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 **Extreme trustability:**
 - [ ] §4.1 Verifiability: 4/4
 - [ ] §4.2 Public metric definitions: 3/3
-- [ ] §4.3 Live data quality: 4/4
+- [x] §4.3 Live data quality: 4/4  *(Plan 4)*
 - [ ] §4.4 Limitations registry: 2/2
 - [ ] §4.5 Reproducibility: 3/3
 
@@ -182,7 +182,7 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 **End-to-end smoke:**
 - [ ] Analyst can ask "How many 311 requests were opened in 2024?" and receives a correct answer with SQL, row count, and citation
 - [ ] Analyst can ask "What are the most common request types?" and receives a correct answer with SQL, row count, and citation
-- [ ] `/trust` page is green for the most recent pipeline run
+- [x] `/trust` page is green for the most recent pipeline run  *(Plan 4 — run_id `5a421e8d-55e4-4731-a3a2-50ea0e88a0ee`, 36/36 tests pass)*
 - [ ] `/metrics` page lists every current measure with its expanded SQL and description
 - [ ] `/docs` page renders dbt documentation with no missing model or column descriptions
 

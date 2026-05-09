@@ -15,8 +15,11 @@
 | 1 | Tailscale | done | Session 12 |
 | 2 | Admin DQ Overnight | done | Session 13 |
 | 3 | MVP 1 Loose Ends + Doc Reconciliation | done | Session 14 |
-| 4 | Trust Page + Answer Agent | queued | — |
-| 5 | TBD (slot reserved by Session 9) | unscoped | — |
+| 4 | Trust Page | done | Session 15 |
+| 5 | Tech Debt Sweep | queued (rev 2 batch) | — |
+| 6 | Answer Agent + Trust Contract | queued (rev 2 batch) | — |
+| 7 | MVP 1 Sign-off Sweep | queued (rev 2 batch) | — |
+| 8 | Limitations Registry Expansion | queued (rev 2 batch) | — |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -25,13 +28,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 3 closed end-to-end. Allowlist hardened + regression investigated (was an incomplete commit, not a regression). Plan numbering reconciled — chat-introduced names fill Session 9's reserved slots; no relabeling. SETUP/CLAUDE/ARCHITECTURE/STANDARDS caught up with Plan 1 + Plan 2. Drift-fail guardrail wired (singular dbt test + run.sh step 5b) and verified end-to-end: synthetic 30% perturbation → status=fail, run.sh exit 1; baseline restored, exit 0; full arc preserved in `fct_test_run`. STANDARDS.md §5.5 fully ticked; §3.1 / §3.3 / §4.2 also closed. Next: **Plan 4 — Trust Page + Answer Agent**.
+**Phase:** Plan 4 closed — `/trust` page live and dynamic, driven by `admin.fct_test_run` ⨝ `dim_data_quality_test` with freshness from `gold.fct_311_requests`. `run.sh` extended to step 8/8 (generate + deploy `trust.html`, plus auto-sync `portal/index.html`). Portal nav surfaces `/docs/`, `/metrics`, `/trust`. STANDARDS.md §4.3 (4/4) ticked; §5.8 5-of-6 ticked (engineering-honest copy is Plan 7). Synthetic-fail render check verified the red banner branch end-to-end. Now in the rev 2 chat-batch chain: next is **Plan 5 — Tech Debt Sweep**.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 08:36 ET (Session 14 — Plan 3 closed)
+**Last Updated:** 2026-05-09 13:30 ET (Session 15 — Plan 4 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 15 — 2026-05-09 12:53 ET → 13:30 ET — Plan 4 — Trust Page
+[full narrative](docs/sessions/session-15-2026-05-09-plan-4-trust-page.md)
+
+- **Goal:** Ship `/trust` page driven by `admin.fct_test_run` with status banner, freshness stats, and per-test results table.
+- **Shipped:** `scripts/generate_trust_page.py`; `run.sh` extended to step 8/8 + auto-sync of portal index.html; `nginx/somerville.conf` `/trust` location; portal nav surfacing `/docs/` `/metrics` `/trust`; `scratch/run_sql.py` runner + synthetic-fail SQL pair; `.claude/settings.local.json` runner-pattern allowlist; STANDARDS.md §4.3 (4/4) + §5.8 5/6 ticked. Synthetic-fail render check verified green→red→green. Commit `300acee` plus the Plan 4 close commit.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 5 — Tech Debt Sweep (rev 2 batch chain).
 
 ### Session 14 — 2026-05-08 23:00 ET → 2026-05-09 08:36 ET — Plan 3 — MVP 1 Loose Ends + Doc Reconciliation
 [full narrative](docs/sessions/session-14-2026-05-08-plan-3-mvp1-loose-ends.md)
@@ -69,19 +81,11 @@
 - **Status:** complete (pending Gordon's browser confirmation)
 - **Next:** Plan 1 (Tailscale) — its Deliverable 4 will update the same hrefs to a Tailnet target.
 
-### Session 10 — 2026-05-08 11:15 ET — log-refactor
-[full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
-
-- **Goal:** Split LOG.md into bounded summary + docs/sessions/ archive; establish frontmatter, body, and rotation rules.
-- **Shipped:** LOG.md 682 → 161 lines; 9 session files migrated; docs/log-archive.md created; CLAUDE.md protocol rewritten; commit a72bd2a.
-- **Decisions:** 0 new (architectural choice made in Session 9) — see Decisions Log
-- **Status:** complete
-- **Next:** Hand Plan 0.5 to Code.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 10** — 2026-05-08 11:15 ET — Log refactor: LOG.md split into bounded summary + `docs/sessions/` archive; frontmatter/body/rotation rules established (commit `a72bd2a`). [full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
 - **Session 9** — 2026-05-08 11:30 ET — Plans 0.5 + 1 queued; sequencing locked (0.5→1→2→3→4→5); pre-flight rule for env-specific assumptions. [full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
 - **Session 8** — 2026-05-08 10:00 ET — Plan 0 loose ends; `/etc/environment` env-var contract; allowlist broadened (D7 tool-family + destructive-deny); commits `e5e94e3` `196cf28`. [full narrative](docs/sessions/session-08-2026-05-08-plan-0-loose-ends.md)
 - **Session 7** — 2026-05-08 morning ET — FR pass; Answer Agent live, agents/answer_agent.agent.yml; 2024=113,961 ✓, 2026=48,806 ✓. [full narrative](docs/sessions/session-07-2026-05-08-fr-answer-agent.md)
@@ -185,6 +189,10 @@
 | 2026-05-09 08:36 ET | Drift-fail flows to non-zero pipeline exit via singular dbt test + run.sh step 5b | `dq_drift_fail_guardrail.sql` fires on any `fct_test_run.status='fail'` for the latest run_id; `run.sh` final exit = max of bronze/gold-test-exit and admin-test-exit. Verified end-to-end via 30% synthetic perturbation. |
 | 2026-05-09 08:36 ET | Transcript-timestamp rule | Code emits `[YYYY-MM-DD HH:MM ET] <label>` markers at deliverable starts, pauses/blockers, and before long-running commands. Lives in CLAUDE.md LOG Logging Protocol. |
 | 2026-05-08 16:45 ET | Disable Tailscale SSH (`tailscale set --ssh=false`) — OpenSSH+pubkey only | Restores `/etc/environment` loading via PAM. We weren't using Tailscale SSH features (single dev, single MBP, `.pem` deployed). Re-enable + fix env-var path properly when a real driver appears (second device, teammate). |
+| 2026-05-09 13:30 ET | `/trust` deploy pattern mirrors `/metrics` exactly | `portal/trust.html` in repo, `run.sh` copies to `/var/www/somerville/trust.html`, nginx serves via `try_files` on `location = /trust`. Single pattern for both auto-generated trust artifacts. |
+| 2026-05-09 13:30 ET | `run.sh` syncs `portal/index.html` → `/var/www/somerville/index.html` as a final step | Static portal nav edits landed on EC2 only after a manual scp on first deploy; auto-syncing closes the gap so the canonical source-of-truth at `portal/index.html` stays in lock-step with what nginx serves. |
+| 2026-05-09 13:30 ET | `/chat` route satisfied by Private beta pill, not a public route link | Session 11/12 made chat Tailnet-only at `:3000`; portal advertises but doesn't link. STANDARDS.md §5.8 "Routes live: /chat" is interpreted as covered by that convention; Plan 7 sign-off owns any rewording. |
+| 2026-05-09 13:30 ET | Synthetic-fail render check is part of Plan 4 done-done | Plan 3 D3 verified the drift-fail mechanism produces fail rows in `fct_test_run`, but the trust page's red-branch CSS hadn't been exercised end-to-end. UPDATE → regen → curl → restore loop confirmed the visual flip green→red→green. |
 
 ---
 

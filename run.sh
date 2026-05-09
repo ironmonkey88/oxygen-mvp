@@ -69,6 +69,12 @@ if [ -d /var/www/somerville ] && [ -f portal/trust.html ]; then
     echo "    deployed to /var/www/somerville/trust.html"
 fi
 
+# Sync the static portal index too — so nav changes land without a manual scp.
+if [ -d /var/www/somerville ] && [ -f portal/index.html ]; then
+    cp portal/index.html /var/www/somerville/index.html
+    echo "    synced portal/index.html → /var/www/somerville/index.html"
+fi
+
 echo
 echo "===== run complete ====="
 echo "    dbt test exit code (bronze/gold): $DBT_TEST_EXIT"

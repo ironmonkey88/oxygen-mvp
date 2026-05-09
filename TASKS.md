@@ -140,9 +140,9 @@
 
 #### Portal pages for trust
 - [x] Build /metrics page generator (auto-generated from Airlayer YAML — every measure with definition and expanded SQL)  *(2026-05-08 D3 — `scripts/generate_metrics_page.py`; live at `/metrics`; 2 measures across 4 views)*
-- [ ] Build /trust page (driven by admin.fct_test_run — last run, pass/fail counts, test details, data freshness)
-- [ ] Update portal/index.html nav: surface /docs, /metrics, /trust alongside /chat
-- [ ] Update portal/index.html copy to reflect analyst persona (engineering-honest, not marketing)
+- [x] Build /trust page (driven by admin.fct_test_run — last run, pass/fail counts, test details, data freshness)  *(Plan 4 — `scripts/generate_trust_page.py`; live at `/trust`; 36 tests on the latest run; synthetic-fail render check verified green→red→green on 2026-05-09)*
+- [x] Update portal/index.html nav: surface /docs, /metrics, /trust alongside /chat  *(Plan 4 — three route links added to `.nav-links`; chat handled via existing hero "Private beta" pill per Session 11/12 decision)*
+- [ ] Update portal/index.html copy to reflect analyst persona (engineering-honest, not marketing)  *(Plan 7)*
 
 #### Limitations registry
 - [x] Decide location and format (open question in STANDARDS.md)  *(2026-05-08 D0 — Option b: `docs/limitations/` Markdown + YAML frontmatter)*
