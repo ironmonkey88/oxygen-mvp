@@ -1,0 +1,124 @@
+version: 2
+
+models:
+  - name: fct_data_profile
+    description: |
+      Column-level profile snapshots. One row per (table, column,
+      profiled_at). Materialized incremental (append) — every pipeline
+      run adds a fresh batch. Observational only — never generates rows
+      in fct_test_run. Profiles bronze.raw_311_requests plus all four
+      gold tables; columns introspected from information_schema at
+      compile time. All min/max cast to varchar for uniform schema.
+    columns:
+      - name: profiled_at
+        description: 'Timestamp the snapshot was generated.'
+        data_tests:
+          - not_null
+      - name: table_name
+        description: 'Name of the profiled table (without schema prefix).'
+        data_tests:
+          - not_null
+      - name: column_name
+        description: 'Name of the profiled column.'
+        data_tests:
+          - not_null
+      - name: row_count
+        description: 'Total rows in the table at time of profile.'
+      - name: null_count
+        description: 'Rows where the column is NULL.'
+      - name: pct_null
+        description: 'null_count / row_count.'
+      - name: distinct_count
+        description: 'Distinct non-null values in the column.'
+      - name: pct_distinct
+        description: 'distinct_count / row_count.'
+      - name: min_value
+        description: 'Minimum observed value, cast to varchar.'
+      - name: max_value
+        description: 'Maximum observed value, cast to varchar.'
+      - name: min_length
+        description: 'Shortest length(cast(value as varchar)) observed (chars).'
+      - name: max_length
+        description: 'Longest length(cast(value as varchar)) observed (chars).'
+      - name: avg_length
+        description: 'Mean length(cast(value as varchar)) observed.'
+
+  - name: dim_data_quality_test
+    description: |
+      Test catalog. One row per defined test. Append-only with
+      is_incremental() filter on test_id, so baselines are seeded once
+      and remain frozen. Three test_id families:
+        - `baseline.raw_311_requests.year_<YYYY>.row_count` — yearly
+        - `baseline.<table>.all.row_count`                  — per-table totals
+        - `dbt_test.<node_name>`                            — every dbt test
+      Re-certifying a baseline requires a manual update (out of scope
+      for MVP 1).
+    columns:
+      - name: test_id
+        description: 'Natural primary key. Globally unique across all test families.'
+        data_tests:
+          - not_null
+          - unique
+      - name: test_type
+        description: 'baseline | dbt_generic | dbt_singular.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['baseline', 'dbt_generic', 'dbt_singular']
+      - name: table_name
+        description: 'Table this test applies to (NULL for dbt tests, where the node_id captures it).'
+      - name: column_name
+        description: 'Column this test applies to (NULL for table-level tests).'
+      - name: metric
+        description: 'What is being measured: row_count | unique | not_null | etc.'
+      - name: grain
+        description: "Slice the test applies at: e.g. `year=2016`, `all`."
+      - name: expected_value
+        description: 'Certified known-good value as varchar. For baselines: row count at certification time. For dbt tests: `0` (zero failures expected).'
+        data_tests:
+          - not_null
+      - name: tolerance_pct
+        description: 'Acceptable drift before fail. e.g. 0.01 = 1%. Zero for dbt tests (must match exactly).'
+      - name: is_active
+        description: 'Soft-delete flag. Inactive tests are ignored at run time but kept for history.'
+      - name: certified_at
+        description: 'When this test row was created.'
+      - name: certified_by
+        description: "'system' (auto-generated baseline) or a human name when manually adjusted."
+
+  - name: fct_test_run
+    description: |
+      One row per test per run. Two row sources unioned together:
+        (a) baseline comparisons — yearly + total row counts compared
+            to frozen expected_value in dim_data_quality_test
+        (b) dbt test results — parsed from raw_dbt_results_raw, scoped
+            to the most recent run_id
+      Append-only with is_incremental() filter on run_id so we never
+      double-count a run.
+    columns:
+      - name: run_id
+        description: 'dbt invocation_id from the run that produced this test result.'
+        data_tests:
+          - not_null
+      - name: test_id
+        description: 'FK to dim_data_quality_test.test_id (natural key — no surrogate).'
+        data_tests:
+          - not_null
+      - name: run_at
+        description: 'Timestamp the run completed (max(loaded_at) for the run_id).'
+      - name: actual_value
+        description: 'What the data showed for this test, as varchar (e.g. row_count or failures).'
+      - name: expected_value
+        description: 'Expected value copied from dim_data_quality_test at run time.'
+      - name: variance_pct
+        description: 'Baselines only: (actual - expected) / expected. NULL for dbt tests.'
+      - name: status
+        description: 'pass | fail | warn — outcome of the test.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pass', 'fail', 'warn']
+      - name: failure_message
+        description: 'Human-readable explanation when status != pass; NULL on pass.'
