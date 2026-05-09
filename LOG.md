@@ -7,13 +7,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 1 (Tailscale) closed end-to-end. Public `:22` and `:3000` deleted from AWS SG; portal CTAs to chat dropped/replaced with `Private beta` pill. Public attack surface = port 80 only. FR pass intact. Next: doc updates (SETUP/CLAUDE/ARCHITECTURE), then trust contract pass or admin DQ.
+**Phase:** Overnight run D0–D3 closed end-to-end. Limitations registry seeded; dbt docs populated and live at `/docs`; admin DQ framework verified across two `./run.sh` runs (3 admin tables populating correctly, baselines frozen, dbt results captured); `/metrics` page generated and live. Public attack surface still port 80 only. FR pass still intact. Next: SETUP/CLAUDE/ARCHITECTURE doc updates, then `/trust` page + trust contract pass on the Answer Agent.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-08 13:56 ET (Session 12 — Plan 1 closed)
+**Last Updated:** 2026-05-08 22:55 ET (Session 13 — overnight D0–D3 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 13 — 2026-05-08 16:30 ET — overnight-d0-d3
+[full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
+
+- **Goal:** Land four overnight deliverables: limitations registry, dbt docs population + `/docs` route, admin DQ framework + `run.sh`, `/metrics` page.
+- **Shipped:** D0 limitations registry (README + 2 seeds, STANDARDS §7 resolved); D1 dbt docs (1+24 bronze, 4+47 gold descriptions; nginx `/docs` alias fixed; `/home/ubuntu` 750→755 for www-data traversal); D2 admin DQ (3 models + `dlt/load_dbt_results.py` + `run.sh`; verified across 2 `./run.sh` runs); D3 `/metrics` generator (live at `/metrics`); plus pre-flight `--ssh=false` revert + allowlist restore. Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`.
+- **Decisions:** 8 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Update SETUP/CLAUDE/ARCHITECTURE for Tailnet access + nginx docroot + venv pattern. Then `/trust` page and trust contract pass.
 
 ### Session 12 — 2026-05-08 13:30 ET — plan-1-tailscale
 [full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
@@ -51,19 +60,11 @@
 - **Status:** complete
 - **Next:** Hand Plan 0.5 to Code.
 
-### Session 8 — 2026-05-08 10:00 ET — plan-0-loose-ends
-[full narrative](docs/sessions/session-08-2026-05-08-plan-0-loose-ends.md)
-
-- **Goal:** Close FR loose ends (env vars, OXY_DATABASE_URL, allowlist, public :3000 flag).
-- **Shipped:** /etc/environment env-var contract; SETUP.md + CLAUDE.md updates; broadened allowlist (tool-family + destructive-deny); commits e5e94e3 + 196cf28.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 0.5 (portal /chat fix), then Plan 1 (Tailscale).
-
 ---
 
 ## Earlier Sessions
 
+- **Session 8** — 2026-05-08 10:00 ET — Plan 0 loose ends; `/etc/environment` env-var contract; allowlist broadened (D7 tool-family + destructive-deny); commits `e5e94e3` `196cf28`. [full narrative](docs/sessions/session-08-2026-05-08-plan-0-loose-ends.md)
 - **Session 7** — 2026-05-08 morning ET — FR pass; Answer Agent live, agents/answer_agent.agent.yml; 2024=113,961 ✓, 2026=48,806 ✓. [full narrative](docs/sessions/session-07-2026-05-08-fr-answer-agent.md)
 - **Session 6** — 2026-05-08 09:02 ET — MVP 1 scope sharpening + STANDARDS.md. [full narrative](docs/sessions/session-06-2026-05-08-mvp1-scope-sharpening.md)
 - **Session 5** — 2026-05-07 22:00 ET → 2026-05-08 07:00 ET — Cleanup + overnight run (gold + Airlayer + semantic). [full narrative](docs/sessions/session-05-2026-05-07-cleanup-and-overnight-run.md)
@@ -150,6 +151,13 @@
 | 2026-05-08 13:56 ET | SSH alias targets MagicDNS hostname, not Tailnet IP | IP-stable across node re-registrations |
 | 2026-05-08 13:56 ET | ~~Tailscale SSH (`--ssh`) enabled alongside OpenSSH pubkey~~ → reverted same day | Initial "belt-and-suspenders" framing was wrong: Tailscale SSH preempts port 22 for Tailnet peers via `tailscaled be-child`, bypassing OpenSSH PAM and silently breaking `/etc/environment` env-var loading (PATH/ANTHROPIC_API_KEY/OXY_DATABASE_URL all missing in non-interactive SSH). See 2026-05-08 16:45 ET row. |
 | 2026-05-08 13:58 ET | MVP 1 chat is private-beta-only; public portal advertises it but doesn't link to it | Tailnet-only access; no public hostname leak; portal shows `Private beta` pill instead of CTA |
+| 2026-05-08 17:05 ET | Limitations registry → `docs/limitations/` (Option b) | Markdown + YAML frontmatter; single canonical location for Answer Agent and `/trust` page; resolves STANDARDS.md §7 |
+| 2026-05-08 17:30 ET | nginx docroot is `/var/www/somerville` (active `somerville` site), NOT `/var/www/html` | Default site isn't enabled; `sites-enabled/somerville` is the only active server block; documented to avoid Plan 1 D4-style misdeploy recurrence |
+| 2026-05-08 17:35 ET | `/home/ubuntu` mode 750 → 755 | Allows nginx www-data to traverse and serve `/docs` from in-repo `dbt/target/`; single-user EC2; sensitive subdirs (`.ssh`) keep their own 700 |
+| 2026-05-08 18:00 ET | Admin DQ — dlt landing table at `main_bronze.raw_dbt_results_raw`; no bronze dbt view; natural keys (no `test_sk`/`test_run_sk`) | Avoids dbt-VIEW vs duckdb-TABLE name conflict; admin models reference the table directly. Surrogate keys can be added later if joins need them. |
+| 2026-05-08 18:15 ET | `dim_data_quality_test` uses `is_incremental()` filter on `test_id` | Baselines seeded exactly once and stay frozen. Re-certifying is a manual update; out of scope for MVP 1. |
+| 2026-05-08 22:10 ET | `/metrics` generator → `scripts/generate_metrics_page.py` | Pure-Python build tooling reading `semantics/views/*.view.yml`; portal stays static; runs as `run.sh` step 7/7; resolves STANDARDS.md §7 |
+| 2026-05-08 22:30 ET | Allowlist policy restored — Plan 0 D7 (tool-family-allow + destructive-deny) had regressed | settings.json now has `Bash(python3 *)`, `Bash(dbt *)`, etc. plus deny entries (`git reset --hard`, `git push --force`, `rm -rf`, `sudo rm/dd/bash/sh/-i/-s`); narrow `sudo nginx`/`sudo systemctl … nginx` allowed for ops-side work |
 | 2026-05-08 16:45 ET | Disable Tailscale SSH (`tailscale set --ssh=false`) — OpenSSH+pubkey only | Restores `/etc/environment` loading via PAM. We weren't using Tailscale SSH features (single dev, single MBP, `.pem` deployed). Re-enable + fix env-var path properly when a real driver appears (second device, teammate). |
 
 ---

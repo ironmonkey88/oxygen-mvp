@@ -24,7 +24,7 @@
 - [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
 - [x] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth
 - [ ] Trust contract on agent (SQL + row count + citations in every response)
-- [ ] Admin DQ framework in place
+- [x] Admin DQ framework in place  *(2026-05-08 — D2 of overnight; 3 admin models, run.sh, load_dbt_results.py; verified across 2 consecutive runs)*
 
 ### MVP 2 — Visual Data Product
 - [ ] Airapp `.app.yml` with charts
@@ -130,23 +130,23 @@
 - [x] D4 — portal `/chat` link decision  *(2026-05-08; hybrid: dropped nav CTA + asset-card link, replaced hero CTA with non-link `Private beta` pill matching nav-badge styling; removed 3 stale `:3000` comments + dead `.nav-cta`/`.hero-cta` CSS; deployed to `/var/www/somerville/index.html`; live portal clean)*
 
 #### dbt docs (production-strength documentation)
-- [ ] Audit all schema.yml files: every model has description, every column has description (no nulls)
-- [ ] Add bronze model + column descriptions
-- [ ] Add gold model + column descriptions
-- [ ] Add admin model + column descriptions (when admin schema lands)
-- [ ] Add `dbt docs generate` step to run.sh
-- [ ] Configure nginx /docs route to serve dbt/target/static_index.html
-- [ ] Verify /docs renders on portal
+- [x] Audit all schema.yml files: every model has description, every column has description (no nulls)  *(2026-05-08 D1)*
+- [x] Add bronze model + column descriptions  *(1/1 model + 24/24 cols)*
+- [x] Add gold model + column descriptions  *(4/4 models + 47/47 cols)*
+- [x] Add admin model + column descriptions  *(D2 — 3/3 models + all cols)*
+- [x] Add `dbt docs generate` step to run.sh  *(step 6/7)*
+- [x] Configure nginx /docs route to serve dbt/target/  *(alias fixed: dbt 1.11 emits index.html directly to dbt/target/, not a subdir; /home/ubuntu chmod 755 for www-data traversal)*
+- [x] Verify /docs renders on portal  *(`curl http://18.224.151.49/docs/index.html` → 200, title "dbt Docs")*
 
 #### Portal pages for trust
-- [ ] Build /metrics page generator (auto-generated from Airlayer YAML — every measure with definition and expanded SQL)
+- [x] Build /metrics page generator (auto-generated from Airlayer YAML — every measure with definition and expanded SQL)  *(2026-05-08 D3 — `scripts/generate_metrics_page.py`; live at `/metrics`; 2 measures across 4 views)*
 - [ ] Build /trust page (driven by admin.fct_test_run — last run, pass/fail counts, test details, data freshness)
 - [ ] Update portal/index.html nav: surface /docs, /metrics, /trust alongside /chat
 - [ ] Update portal/index.html copy to reflect analyst persona (engineering-honest, not marketing)
 
 #### Limitations registry
-- [ ] Decide location and format (open question in STANDARDS.md)
-- [ ] Document known 311 data limitations
+- [x] Decide location and format (open question in STANDARDS.md)  *(2026-05-08 D0 — Option b: `docs/limitations/` Markdown + YAML frontmatter)*
+- [~] Document known 311 data limitations  *(2 seeds: survey-columns-sparse, block-code-padded; more as they're discovered)*
 - [ ] Surface limitations on /trust page
 - [ ] Configure Answer Agent to reference limitations when relevant
 
@@ -179,15 +179,15 @@
 - [x] Verify row count — 1,168,959 of 1,168,959 loaded
 
 ### Data Profiling & Quality (dbt — admin schema)
-- [ ] Query raw Parquet files on EC2 and extract full column list with types and sample values
-- [ ] Create `admin` schema in `dbt_project.yml`
-- [ ] Write `admin/fct_data_profile.sql` — column-level profiling, observational only
-- [ ] Write `admin/dim_data_quality_test.sql` — one row per defined test
-- [ ] Write `admin/fct_test_run.sql` — one row per test per run, sourced from `raw_dbt_results`
-- [ ] Write `dlt/load_dbt_results.py` — loads `dbt/target/run_results.json` into `raw_dbt_results` in DuckDB
-- [ ] Write `run.sh` — single entry point, correct run order, captures dbt test exit code without halting
-- [ ] Auto-generate baselines on first run — `certified_by = 'system'`
-- [ ] Confirm baseline comparisons fail dbt run on drift beyond tolerance
+- [x] Query raw Parquet files on EC2 and extract full column list with types and sample values  *(via `information_schema.columns` Jinja introspection in fct_data_profile.sql)*
+- [x] Create `admin` schema in `dbt_project.yml`  *(already present from Session 5; admin models populate it)*
+- [x] Write `admin/fct_data_profile.sql` — column-level profiling, observational only
+- [x] Write `admin/dim_data_quality_test.sql` — one row per defined test
+- [x] Write `admin/fct_test_run.sql` — one row per test per run, sourced from `raw_dbt_results_raw`  *(landing table; no dbt-managed bronze view — design departure documented in session 13)*
+- [x] Write `dlt/load_dbt_results.py` — loads `dbt/target/run_results.json` into `main_bronze.raw_dbt_results_raw` in DuckDB  *(plain duckdb, not dlt — simpler, no metadata-column pollution)*
+- [x] Write `run.sh` — single entry point, correct run order, captures dbt test exit code without halting
+- [x] Auto-generate baselines on first run — `certified_by = 'system'`  *(17 baselines: 12 yearly + 5 totals; is_incremental filter freezes them)*
+- [ ] Confirm baseline comparisons fail dbt run on drift beyond tolerance  *(deferred — needs synthetic drift; out of overnight scope)*
 
 ### Transformation (dbt — bronze schema)
 - [x] Initialize dbt project (`dbt init`) in `dbt/` directory
