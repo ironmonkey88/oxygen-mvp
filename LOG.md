@@ -14,7 +14,7 @@
 | 0.5 | Portal /chat fix | done | Session 11 |
 | 1 | Tailscale | done | Session 12 |
 | 2 | Admin DQ Overnight | done | Session 13 |
-| 3 | MVP 1 Loose Ends + Doc Reconciliation | in progress | Session 14 |
+| 3 | MVP 1 Loose Ends + Doc Reconciliation | done | Session 14 |
 | 4 | Trust Page + Answer Agent | queued | — |
 | 5 | TBD (slot reserved by Session 9) | unscoped | — |
 
@@ -25,13 +25,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Overnight run D0–D3 closed end-to-end. Limitations registry seeded; dbt docs populated and live at `/docs`; admin DQ framework verified across two `./run.sh` runs (3 admin tables populating correctly, baselines frozen, dbt results captured); `/metrics` page generated and live. Public attack surface still port 80 only. FR pass still intact. Next: SETUP/CLAUDE/ARCHITECTURE doc updates, then `/trust` page + trust contract pass on the Answer Agent.
+**Phase:** Plan 3 closed end-to-end. Allowlist hardened + regression investigated (was an incomplete commit, not a regression). Plan numbering reconciled — chat-introduced names fill Session 9's reserved slots; no relabeling. SETUP/CLAUDE/ARCHITECTURE/STANDARDS caught up with Plan 1 + Plan 2. Drift-fail guardrail wired (singular dbt test + run.sh step 5b) and verified end-to-end: synthetic 30% perturbation → status=fail, run.sh exit 1; baseline restored, exit 0; full arc preserved in `fct_test_run`. STANDARDS.md §5.5 fully ticked; §3.1 / §3.3 / §4.2 also closed. Next: **Plan 4 — Trust Page + Answer Agent**.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-08 22:55 ET (Session 13 — overnight D0–D3 closed)
+**Last Updated:** 2026-05-09 08:36 ET (Session 14 — Plan 3 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 14 — 2026-05-08 23:00 ET → 2026-05-09 08:36 ET — Plan 3 — MVP 1 Loose Ends + Doc Reconciliation
+[full narrative](docs/sessions/session-14-2026-05-08-plan-3-mvp1-loose-ends.md)
+
+- **Goal:** Three hygiene-shaped efforts under Plan 3 — allowlist hardening + regression investigation, plan/session-numbering reconciliation, doc reconciliation; plus drift-fail verification (deferred from Plan 2).
+- **Shipped:** Allowlist patterns added to settings.json (Plan 0 D7b finding: never landed in committed file; partial commit, not a regression); Plans Registry in LOG.md + Rule 9 in session-starter.md; SETUP/CLAUDE/ARCHITECTURE/STANDARDS catch up with Plan 1 + Plan 2; new `nginx/somerville.conf` as canonical config; transcript-timestamp rule in CLAUDE.md; drift-fail seam (singular test + run.sh step 5b) wired and verified end-to-end. Commits `6e34fdc` `7346dde` `093b220` `e3a79bb` `0a4c53c` `ee4c488`.
+- **Decisions:** 7 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 4 — Trust Page + Answer Agent.
 
 ### Session 13 — 2026-05-08 16:30 ET — Plan 2 — Admin DQ Overnight
 [full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
@@ -69,19 +78,11 @@
 - **Status:** complete
 - **Next:** Hand Plan 0.5 to Code.
 
-### Session 9 — 2026-05-08 11:30 ET — plans-0.5-and-1-queued
-[full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
-
-- **Goal:** Close Plan 0 feedback, queue Plans 0.5 + 1, capture meta-lessons.
-- **Shipped:** Plan 0.5 (portal /chat fix) and Plan 1 (Tailscale) drafted with environment-assumption pre-flight; Plan 0 confirmed closed.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Hand Plan 0.5 to Code.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 9** — 2026-05-08 11:30 ET — Plans 0.5 + 1 queued; sequencing locked (0.5→1→2→3→4→5); pre-flight rule for env-specific assumptions. [full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
 - **Session 8** — 2026-05-08 10:00 ET — Plan 0 loose ends; `/etc/environment` env-var contract; allowlist broadened (D7 tool-family + destructive-deny); commits `e5e94e3` `196cf28`. [full narrative](docs/sessions/session-08-2026-05-08-plan-0-loose-ends.md)
 - **Session 7** — 2026-05-08 morning ET — FR pass; Answer Agent live, agents/answer_agent.agent.yml; 2024=113,961 ✓, 2026=48,806 ✓. [full narrative](docs/sessions/session-07-2026-05-08-fr-answer-agent.md)
 - **Session 6** — 2026-05-08 09:02 ET — MVP 1 scope sharpening + STANDARDS.md. [full narrative](docs/sessions/session-06-2026-05-08-mvp1-scope-sharpening.md)
@@ -180,6 +181,9 @@
 | 2026-05-08 23:00 ET | Session 9 plan sequence is canonical; chat-introduced names fill reserved slots | Plans 0.5 and 1 were fully scoped at Session 9; slots 2–5 were reserved without scope. Chat's later "Plan 2 / Plan 3 / Plan 4" naming aligns with those slots — no relabeling required. Plan 5 still unscoped. |
 | 2026-05-08 23:00 ET | Session counter is contiguous 1–N, tracked by Code (authoritative) | Chat-side planning notes may have a separate count that diverged after Session 6 (Code-led sessions weren't logged on Chat's side). Code's counter is the project record going forward. |
 | 2026-05-08 23:00 ET | Allowlist "regression" was an incomplete implementation, not a regression | Plan 0 D7b commit (196cf28) only added git write-op patterns; tool-family wildcards and deny list never landed in committed settings.json until Session 13's edb508d. TASKS.md `[x]` mark was based on settings.local.json (gitignored) edits that were never mirrored to settings.json. No active overwriter; root cause was a partial commit. |
+| 2026-05-09 08:36 ET | nginx config: `nginx/somerville.conf` in repo is canonical source of truth | Deploy via `scp` + `sudo cp` + `sudo nginx -t` + `sudo systemctl reload nginx`. Closes the implicit-knowledge gap that caused the Plan 1 D4 wrong-docroot detour. |
+| 2026-05-09 08:36 ET | Drift-fail flows to non-zero pipeline exit via singular dbt test + run.sh step 5b | `dq_drift_fail_guardrail.sql` fires on any `fct_test_run.status='fail'` for the latest run_id; `run.sh` final exit = max of bronze/gold-test-exit and admin-test-exit. Verified end-to-end via 30% synthetic perturbation. |
+| 2026-05-09 08:36 ET | Transcript-timestamp rule | Code emits `[YYYY-MM-DD HH:MM ET] <label>` markers at deliverable starts, pauses/blockers, and before long-running commands. Lives in CLAUDE.md LOG Logging Protocol. |
 | 2026-05-08 16:45 ET | Disable Tailscale SSH (`tailscale set --ssh=false`) — OpenSSH+pubkey only | Restores `/etc/environment` loading via PAM. We weren't using Tailscale SSH features (single dev, single MBP, `.pem` deployed). Re-enable + fix env-var path properly when a real driver appears (second device, teammate). |
 
 ---
