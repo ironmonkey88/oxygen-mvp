@@ -42,6 +42,13 @@ python dlt/load_dbt_results.py
 echo "==> 5/7 dbt run --select admin"
 ( cd dbt && dbt run --select admin )
 
+echo "==> 5b/7 dbt test --select admin (drift-fail guardrail; capture exit, do not halt)"
+set +e
+( cd dbt && dbt test --select admin )
+DBT_ADMIN_TEST_EXIT=$?
+set -e
+echo "    dbt admin-test exit code: $DBT_ADMIN_TEST_EXIT"
+
 echo "==> 6/7 dbt docs generate"
 ( cd dbt && dbt docs generate )
 
@@ -54,5 +61,10 @@ fi
 
 echo
 echo "===== run complete ====="
-echo "    dbt test exit code: $DBT_TEST_EXIT"
-exit $DBT_TEST_EXIT
+echo "    dbt test exit code (bronze/gold): $DBT_TEST_EXIT"
+echo "    dbt test exit code (admin):       $DBT_ADMIN_TEST_EXIT"
+# Final exit is the larger of the two captured exits — any failure surfaces.
+FINAL_EXIT=$DBT_TEST_EXIT
+if [ "$DBT_ADMIN_TEST_EXIT" -gt "$FINAL_EXIT" ]; then FINAL_EXIT=$DBT_ADMIN_TEST_EXIT; fi
+echo "    final exit code:                  $FINAL_EXIT"
+exit $FINAL_EXIT
