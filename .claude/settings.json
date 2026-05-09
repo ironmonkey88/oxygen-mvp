@@ -124,6 +124,8 @@
       "Bash(pip list *)",
       "Bash(pip show *)",
       "Bash(pip freeze *)",
+      "Bash(pip install *)",
+      "Bash(bash -n *)",
 
       "Bash(chmod *)",
       "Bash(touch *)",
@@ -132,6 +134,10 @@
       "Bash(echo *)",
       "Bash(printf *)",
       "Bash(test *)",
+      "Bash(./run.sh)",
+      "Bash(./run.sh *)",
+
+      "Bash(git -C * *)",
 
       "Bash(ssh -o * oxygen-mvp *)",
       "Bash(ssh -v oxygen-mvp *)",
@@ -145,7 +151,12 @@
       "Bash(sudo tail * /var/log/nginx/*)",
       "Bash(sudo cat /etc/nginx/*)",
       "Bash(sudo grep * /etc/nginx/*)",
-      "Bash(sudo sed -n * /etc/nginx/*)"
+      "Bash(sudo sed -n * /etc/nginx/*)",
+      "Bash(sudo cp *)",
+      "Bash(sudo mv *)",
+      "Bash(sudo ln -s *)",
+      "Bash(sudo chmod *)",
+      "Bash(sudo chown *)"
     ],
     "deny": [
       "Bash(git reset --hard *)",
@@ -170,7 +181,8 @@
       "Bash(sudo bash *)",
       "Bash(sudo sh *)",
       "Bash(sudo -i)",
-      "Bash(sudo -s)"
+      "Bash(sudo -s)",
+      "Bash(aws *)"
     ]
   },
   "hooks": {
