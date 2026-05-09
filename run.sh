@@ -8,11 +8,14 @@
 #   3. dbt test bronze gold (capture exit; do NOT halt)
 #   4. dlt load_dbt_results — append run_results.json into raw_dbt_results_raw
 #   5. dbt run admin     — fct_data_profile, dim_data_quality_test, fct_test_run
+#   5b. dbt test admin   — drift-fail guardrail (capture exit; do NOT halt)
 #   6. dbt docs generate — keep /docs current
 #   7. /metrics page     — regenerate from semantics/views/*.view.yml
+#   8. /trust page       — regenerate from main_admin.fct_test_run
 #
-# Exit code: the captured dbt-test exit. Tests can fail without losing
-# admin tables (which is the whole point of capturing run_results).
+# Exit code: max(bronze/gold-test exit, admin-test exit). Tests can fail
+# without losing admin tables or the trust page (which is the whole point
+# of capturing run_results before failing).
 
 set -euo pipefail
 
@@ -23,40 +26,47 @@ cd "$REPO_ROOT"
 # shellcheck disable=SC1091
 source "$REPO_ROOT/.venv/bin/activate"
 
-echo "==> 1/7 dlt ingest somerville 311"
+echo "==> 1/8 dlt ingest somerville 311"
 python dlt/somerville_311_pipeline.py
 
-echo "==> 2/7 dbt run --select bronze gold"
+echo "==> 2/8 dbt run --select bronze gold"
 ( cd dbt && dbt run --select bronze gold )
 
-echo "==> 3/7 dbt test --select bronze gold (capture exit, do not halt)"
+echo "==> 3/8 dbt test --select bronze gold (capture exit, do not halt)"
 set +e
 ( cd dbt && dbt test --select bronze gold )
 DBT_TEST_EXIT=$?
 set -e
 echo "    dbt test exit code: $DBT_TEST_EXIT"
 
-echo "==> 4/7 dlt load_dbt_results"
+echo "==> 4/8 dlt load_dbt_results"
 python dlt/load_dbt_results.py
 
-echo "==> 5/7 dbt run --select admin"
+echo "==> 5/8 dbt run --select admin"
 ( cd dbt && dbt run --select admin )
 
-echo "==> 5b/7 dbt test --select admin (drift-fail guardrail; capture exit, do not halt)"
+echo "==> 5b/8 dbt test --select admin (drift-fail guardrail; capture exit, do not halt)"
 set +e
 ( cd dbt && dbt test --select admin )
 DBT_ADMIN_TEST_EXIT=$?
 set -e
 echo "    dbt admin-test exit code: $DBT_ADMIN_TEST_EXIT"
 
-echo "==> 6/7 dbt docs generate"
+echo "==> 6/8 dbt docs generate"
 ( cd dbt && dbt docs generate )
 
-echo "==> 7/7 generate /metrics page"
+echo "==> 7/8 generate /metrics page"
 python scripts/generate_metrics_page.py
 if [ -d /var/www/somerville ]; then
     cp portal/metrics.html /var/www/somerville/metrics.html
     echo "    deployed to /var/www/somerville/metrics.html"
+fi
+
+echo "==> 8/8 generate /trust page"
+python scripts/generate_trust_page.py
+if [ -d /var/www/somerville ] && [ -f portal/trust.html ]; then
+    cp portal/trust.html /var/www/somerville/trust.html
+    echo "    deployed to /var/www/somerville/trust.html"
 fi
 
 echo
