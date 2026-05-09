@@ -4,6 +4,24 @@
 
 ---
 
+## Plans Registry
+
+> Canonical plan sequence locked in Session 9 (2026-05-08). Each plan is named `Plan <number> — <label>` per Rule 9 of [session-starter.md](session-starter.md). Reference plans by full name in commits and LOG entries. Plans 0–1 were scoped at Session 9; later slots had only their slot reserved, scoped when picked up.
+
+| # | Name | Status | Closed in |
+|---|------|--------|-----------|
+| 0 | FR loose ends | done | Session 8 |
+| 0.5 | Portal /chat fix | done | Session 11 |
+| 1 | Tailscale | done | Session 12 |
+| 2 | Admin DQ Overnight | done | Session 13 |
+| 3 | MVP 1 Loose Ends + Doc Reconciliation | in progress | Session 14 |
+| 4 | Trust Page + Answer Agent | queued | — |
+| 5 | TBD (slot reserved by Session 9) | unscoped | — |
+
+**Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
+
+---
+
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
@@ -15,10 +33,10 @@
 
 ## Recent Sessions
 
-### Session 13 — 2026-05-08 16:30 ET — overnight-d0-d3
+### Session 13 — 2026-05-08 16:30 ET — Plan 2 — Admin DQ Overnight
 [full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
 
-- **Goal:** Land four overnight deliverables: limitations registry, dbt docs population + `/docs` route, admin DQ framework + `run.sh`, `/metrics` page.
+- **Goal:** Land four overnight deliverables under Plan 2 — Admin DQ Overnight: limitations registry, dbt docs population + `/docs` route, admin DQ framework + `run.sh`, `/metrics` page.
 - **Shipped:** D0 limitations registry (README + 2 seeds, STANDARDS §7 resolved); D1 dbt docs (1+24 bronze, 4+47 gold descriptions; nginx `/docs` alias fixed; `/home/ubuntu` 750→755 for www-data traversal); D2 admin DQ (3 models + `dlt/load_dbt_results.py` + `run.sh`; verified across 2 `./run.sh` runs); D3 `/metrics` generator (live at `/metrics`); plus pre-flight `--ssh=false` revert + allowlist restore. Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`.
 - **Decisions:** 8 decisions — see Decisions Log
 - **Status:** complete
@@ -158,6 +176,10 @@
 | 2026-05-08 18:15 ET | `dim_data_quality_test` uses `is_incremental()` filter on `test_id` | Baselines seeded exactly once and stay frozen. Re-certifying is a manual update; out of scope for MVP 1. |
 | 2026-05-08 22:10 ET | `/metrics` generator → `scripts/generate_metrics_page.py` | Pure-Python build tooling reading `semantics/views/*.view.yml`; portal stays static; runs as `run.sh` step 7/7; resolves STANDARDS.md §7 |
 | 2026-05-08 22:30 ET | Allowlist policy restored — Plan 0 D7 (tool-family-allow + destructive-deny) had regressed | settings.json now has `Bash(python3 *)`, `Bash(dbt *)`, etc. plus deny entries (`git reset --hard`, `git push --force`, `rm -rf`, `sudo rm/dd/bash/sh/-i/-s`); narrow `sudo nginx`/`sudo systemctl … nginx` allowed for ops-side work |
+| 2026-05-08 23:00 ET | Plan-naming convention adopted (Rule 9) | Every plan gets a number + content-bearing label; full name used in commits and LOG; lives in session-starter.md |
+| 2026-05-08 23:00 ET | Session 9 plan sequence is canonical; chat-introduced names fill reserved slots | Plans 0.5 and 1 were fully scoped at Session 9; slots 2–5 were reserved without scope. Chat's later "Plan 2 / Plan 3 / Plan 4" naming aligns with those slots — no relabeling required. Plan 5 still unscoped. |
+| 2026-05-08 23:00 ET | Session counter is contiguous 1–N, tracked by Code (authoritative) | Chat-side planning notes may have a separate count that diverged after Session 6 (Code-led sessions weren't logged on Chat's side). Code's counter is the project record going forward. |
+| 2026-05-08 23:00 ET | Allowlist "regression" was an incomplete implementation, not a regression | Plan 0 D7b commit (196cf28) only added git write-op patterns; tool-family wildcards and deny list never landed in committed settings.json until Session 13's edb508d. TASKS.md `[x]` mark was based on settings.local.json (gitignored) edits that were never mirrored to settings.json. No active overwriter; root cause was a partial commit. |
 | 2026-05-08 16:45 ET | Disable Tailscale SSH (`tailscale set --ssh=false`) — OpenSSH+pubkey only | Restores `/etc/environment` loading via PAM. We weren't using Tailscale SSH features (single dev, single MBP, `.pem` deployed). Re-enable + fix env-var path properly when a real driver appears (second device, teammate). |
 
 ---

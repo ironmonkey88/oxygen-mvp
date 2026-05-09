@@ -4,13 +4,13 @@ date: 2026-05-08
 start_time: 16:30 ET
 end_time: 22:55 ET
 type: overnight
-plan: none
+plan: plan-2
 layers: [bronze, gold, admin, semantic, portal, infra, docs]
 work: [feature, bugfix, infra, docs, hardening]
 status: complete
 ---
 
-# Session 13 — Overnight run, D0–D3 (limitations registry, dbt docs, admin DQ, /metrics)
+# Session 13 — Plan 2 — Admin DQ Overnight (D0–D3)
 
 ## Goal
 Land four deliverables in a single overnight pass: limitations registry seeded, dbt docs populated and served, admin DQ framework end-to-end via `run.sh`, and a generated `/metrics` catalog page.
