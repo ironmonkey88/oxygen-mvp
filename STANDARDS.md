@@ -117,7 +117,7 @@ Infrastructure tables for observability and assertional tests — the inspector'
 - [x] `admin.fct_data_profile` populated on every pipeline run (observational only — never fails the run)  *(Plan 2 D2)*
 - [x] `admin.dim_data_quality_test` populated with baselines, auto-generated `certified_by = 'system'` on first run  *(Plan 2 D2)*
 - [x] `admin.fct_test_run` captures both baseline comparisons and parsed dbt test results  *(Plan 2 D2)*
-- [ ] Pipeline returns non-zero exit code on test failure beyond tolerance  *(Plan 3 D3 — drift-fail verification)*
+- [x] Pipeline returns non-zero exit code on test failure beyond tolerance  *(Plan 3 D3 — verified 2026-05-09: synthetic 30% perturbation on `baseline.raw_311_requests.year_2015.row_count` → variance 42.86%, status='fail', failure_message correct, `dq_drift_fail_guardrail` singular test fired, run.sh exit 1; baseline restored, exit 0; full arc preserved in `fct_test_run` history)*
 - [x] `run.sh` enforces correct sequence (dlt → dbt → load_dbt_results → admin)  *(Plan 2 D2)*
 
 **Plan 2 departures:** admin tables use natural keys (`test_id`, `run_id+test_id`) instead of surrogate keys (`test_sk`, `test_run_sk`). `bronze.raw_dbt_results_raw` is a dlt-managed landing table, not a dbt-managed bronze view (would name-conflict with dlt's table in the same schema). Both choices documented in [ARCHITECTURE.md](ARCHITECTURE.md) Admin Schema section.

@@ -187,7 +187,7 @@
 - [x] Write `dlt/load_dbt_results.py` — loads `dbt/target/run_results.json` into `main_bronze.raw_dbt_results_raw` in DuckDB  *(plain duckdb, not dlt — simpler, no metadata-column pollution)*
 - [x] Write `run.sh` — single entry point, correct run order, captures dbt test exit code without halting
 - [x] Auto-generate baselines on first run — `certified_by = 'system'`  *(17 baselines: 12 yearly + 5 totals; is_incremental filter freezes them)*
-- [ ] Confirm baseline comparisons fail dbt run on drift beyond tolerance  *(deferred — needs synthetic drift; out of overnight scope)*
+- [x] Confirm baseline comparisons fail dbt run on drift beyond tolerance  *(2026-05-09 Plan 3 D3 — synthetic 30% perturbation on 2015 row count baseline; `dq_drift_fail_guardrail` singular test fired; final exit 1; baseline restored; arc preserved in `fct_test_run`)*
 
 ### Transformation (dbt — bronze schema)
 - [x] Initialize dbt project (`dbt init`) in `dbt/` directory
