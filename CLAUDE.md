@@ -125,7 +125,11 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 - **Flag Oxygen limitations immediately** — surface problems before building workarounds
 - **Update TASKS.md** as work completes — `[x]` done · `[~]` in progress · `[!]` blocked
 - **Update LOG.md** after completing tasks, making decisions, or hitting blockers
-- **Allowlist policy:** `.claude/settings.local.json` is auto-editable by Code (per-machine, gitignored). `.claude/settings.json` requires Gordon's confirmation (committed, wider blast radius). Tool families are allowed wholesale (`Bash(git *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`); destructive subcommands (`git reset`, `git push --force`, `git branch -d`, `rm -rf`, `sudo`) are explicitly denied and will always prompt.
+- **Allowlist policy** — three tiers, never mix them:
+  - **`settings.json` (committed, git-tracked):** universal patterns — tool-family wildcards, verification idioms, deny list. Any pattern needed across sessions, machines, or by future teammates belongs here. Changing this file requires a commit (Gordon reviews and merges). Evidence rule: a `[x]` for any allowlist change must include `git show HEAD:.claude/settings.json | grep -F '<pattern>'`.
+  - **`settings.local.json` (per-machine, gitignored):** machine-specific only — SSH key paths (`Read(//Users/gordonwong/.ssh/**)`), local MCP tools (`mcp__Claude_in_Chrome__tabs_context_mcp`). Code may self-amend this file freely. Prune it whenever patterns accumulate; anything load-bearing should already be covered by a tool-family wildcard in `settings.json`.
+  - **`.claude/worktrees/*/.claude/settings.local.json` (also gitignored):** must mirror canonical `settings.local.json` exactly. Worktree drift is the bug. Never let session-specific patterns (`nc -zv`, `echo "$(git ...)"` with hardcoded paths) accumulate here. When a worktree session needs a new universal pattern, promote it to `settings.json` and mirror across all worktree locals.
+  - Destructive subcommands (`git reset`, `git push --force`, `git branch -d`, `rm -rf`, `sudo`) are explicitly denied in `settings.json` and will always prompt regardless of allow list.
 
 ---
 
