@@ -123,6 +123,19 @@ Closed STANDARDS §5.8 last row; STANDARDS §6 walk landed 9/10 Foundations + 16
 - [x] D3 — Sign-off determination: 2 boxes still `[ ]`, both Gordon-decision-shaped (systemd-as-MVP1-requirement, repo-public). LOG.md Active Blockers section has the table. MVP 1 is **sign-off-ready pending these two decisions** — not auto-flipping.
 - [x] D4 — Session file 19; LOG Plans Registry; commit `Plan 7 close`
 
+#### Plan 5 D1 follow-on — Git pipe pattern coverage (2026-05-10 16:45 ET — closed)
+Session 21. Root cause: `*` in allowlist patterns does not match `|`; piped git commands (`git log 2>&1 | head`) were prompting in unattended overnight sessions.
+- [x] Root cause identified: `Bash(git *)` covers non-piped forms only — `|` is not matched by `*` in Claude Code patterns
+- [x] Added `Bash(git * | *)` — single-pipe bare git forms (merge commit `997dc04`)
+- [x] Added `Bash(git -C * * | *)` — single-pipe worktree-path forms (merge commit `997dc04`)
+- [x] Added `Bash(git * | * | *)` — double-pipe fallback (merge commit `997dc04`)
+- [x] Added `Bash(git rev-list *)` + `Bash(git -C * rev-list *)` — commit counting (merge commit `997dc04`)
+- [x] Added `Bash(git ls-remote *)` + `Bash(git -C * ls-remote *)` — remote ref listing (merge commit `997dc04`)
+- [x] Added `Bash(git branch *)` + `Bash(git -C * branch *)` — broad branch coverage (merge commit `997dc04`)
+- [x] Removed duplicate `"Bash(bash *)"` entry from worktree `settings.json` (merge commit `997dc04`)
+- [x] CLAUDE.md Allowlist policy + Bash Safety sections updated with pipe-coverage note (merge resolution)
+- [x] Session 21 file, LOG.md, TASKS.md committed and pushed to `origin/claude/gifted-cartwright-9b6bac`
+
 #### Plan 5 — Tech Debt Sweep (2026-05-10 09:55 ET — closed)
 - [x] D1 — settings.local.json pruned to `{"permissions":{"allow":[]}}` (every pattern was redundant with tool-family allows in settings.json); added `Bash(bash *)` to settings.json so script invocations don't stall; CLAUDE.md "Allowlist policy" extended with "what belongs where" + periodic-prune subsection; commit `b274ae7`
 - [x] D2 — `dbt/profiles.example.yml` shipped; SETUP.md §8 rewritten to reference cp+edit pattern; closes the machine-specificity gap noted in 2026-05-07 22:13 ET decision; commit `1f0d05d`
