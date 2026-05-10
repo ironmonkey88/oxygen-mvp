@@ -93,6 +93,15 @@
 
 ### MVP 1 — Hardening for analyst trust
 
+#### Plan 5 D1 eager — Allowlist cleanup / schema fix (2026-05-10 15:00 ET — closed)
+- [x] Fix `autoMode.environment` schema: object → array  *(commit `4726183`; `git show HEAD:.claude/settings.json | grep -A2 autoMode` confirms `"environment": []`)*
+- [x] Universalize patterns from local/worktree into settings.json: `Skill(update-config)`, `Skill(update-config:*)`, `Bash(ssh -T git@github.com)`, `Bash(git init *)`, `Bash(git remote *)`, `Bash(./scripts/*.sh)`, `Bash(bash *)`  *(commit `6d101cc` + `4726183`)*
+- [x] Add explicit Write/Read for `.claude/settings.local.json` and `.claude/worktrees/*/.claude/settings.local.json`  *(commit `6d101cc`)*
+- [x] Reconcile canonical `settings.local.json` to machine-specific-only (2 entries)  *(local-only, gitignored)*
+- [x] Reconcile all 3 worktree settings files to mirror canonical local  *(local-only, gitignored)*
+- [x] CLAUDE.md: three-tier allowlist policy rule  *(commit `6b0bc00`)*
+- [x] Session file + LOG.md + Decisions Log updated; coverage check ran clean
+
 #### Plan 9 — Allowlist Coverage, Once and For All (2026-05-09 19:05 ET — closed)
 - [x] Layer 0: structural audit + add `defaultMode: acceptEdits`, top-level `Read`/`Write`/`Edit`/`WebFetch(*)`, `autoMode.environment.allowNetwork: true`, `$schema`, `Read(**/.env)` deny  *(verified via `jq '.permissions.defaultMode, ."$schema", .autoMode.environment.allowNetwork'`)*
 - [x] Layer 1: broaden allow patterns (verification idioms cohort) in `.claude/settings.json`  *(added wget/rsync/npm/pnpm/for/while/if/[/[[/cat/less/more/sed/cmp/yq/python3 -m json.tool/pwd/uptime/whoami; existing curl/jq/grep/head/tail/awk/find/stat already covered)*

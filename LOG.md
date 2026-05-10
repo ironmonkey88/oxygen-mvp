@@ -31,11 +31,20 @@
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
 **Phase:** Plan 9 closed — allowlist coverage hardened. `.claude/settings.json` now carries `defaultMode: "acceptEdits"`, top-level `Read`/`Write`/`Edit`/`WebFetch(*)`, `autoMode.environment.allowNetwork: true`, `Read(**/.env)` deny, plus a verification-idiom cohort (curl/for/while/if/sed/cat/wget/rsync/npm/pwd/whoami/etc.) on top of the existing tool-family allows. Granular sudo allows preserved. `scripts/check_allowlist_coverage.sh` ran clean — zero prompts. CLAUDE.md gained the Allowlist `[x]` rule + general `[x]` evidence rule under LOG Logging Protocol. Plan 4 (Trust Page) remains the last functional plan closed; rev 2 chat-batch resumes with **Plan 5 — Tech Debt Sweep** after a state-check pass.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 19:05 ET (Session 16 — Plan 9 closed)
+**Last Updated:** 2026-05-10 15:00 ET (Session 17 — allowlist cleanup, Plan 5 D1 eager)
 
 ---
 
 ## Recent Sessions
+
+### Session 17 — 2026-05-10 14:38 ET → 15:00 ET — allowlist-cleanup
+[full narrative](docs/sessions/session-17-2026-05-10-allowlist-cleanup.md)
+
+- **Goal:** Fix autoMode.environment schema error + universalize patterns that drifted into local/worktree files + reconcile all three worktree settings files.
+- **Shipped:** `autoMode.environment` fixed (object→array); 6 patterns promoted to settings.json; `Bash(bash *)` promoted mid-session; canonical local reduced to 2 machine-specific entries; 3 worktree files reconciled to mirror canonical local; CLAUDE.md three-tier allowlist policy written.
+- **Decisions:** 5 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Resume Plan 5 — Tech Debt Sweep; EC2 git pull before any pipeline work.
 
 ### Session 16 — 2026-05-09 17:30 ET → 19:05 ET — Plan 9 — Allowlist Coverage
 [full narrative](docs/sessions/session-16-2026-05-09-plan-9-allowlist-coverage.md)
@@ -73,19 +82,11 @@
 - **Status:** complete
 - **Next:** Update SETUP/CLAUDE/ARCHITECTURE for Tailnet access + nginx docroot + venv pattern. Then `/trust` page and trust contract pass.
 
-### Session 12 — 2026-05-08 13:30 ET — plan-1-tailscale
-[full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
-
-- **Goal:** Close public `:3000` gap via Tailscale; strip broken public chat CTAs.
-- **Shipped:** Tailscale 1.96.4 on EC2 (MagicDNS `oxygen-mvp.taildee698.ts.net`); SSH alias repointed; AWS SG `:22`/`:3000` deleted; portal hybrid update (drop nav+asset CTAs, hero `Private beta` pill); commit `ae20c94`.
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Update SETUP.md/CLAUDE.md/ARCHITECTURE.md for new access pattern + nginx docroot.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 12** — 2026-05-08 13:30 ET — Plan 1 Tailscale; closed public :3000; SSH alias to MagicDNS; AWS SG updated; portal `Private beta` pill. [full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
 - **Session 11** — 2026-05-08 11:35 ET — Plan 0.5 portal /chat fix; 3 hrefs repointed to `:3000`, nginx `location /chat` removed (commit `6d76594`); gates 1-4 green. [full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
 - **Session 10** — 2026-05-08 11:15 ET — Log refactor: LOG.md split into bounded summary + `docs/sessions/` archive; frontmatter/body/rotation rules established (commit `a72bd2a`). [full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
 - **Session 9** — 2026-05-08 11:30 ET — Plans 0.5 + 1 queued; sequencing locked (0.5→1→2→3→4→5); pre-flight rule for env-specific assumptions. [full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
@@ -200,6 +201,8 @@
 | 2026-05-09 19:05 ET | `Bash(sed *)` allowed despite Session 13 incident | Destructive-deny (`rm -rf`, `git reset --hard`, `sudo bash/sh`, `sudo rm/dd`) bounds blast radius; `sed -i` on tracked file is recoverable via `git restore`, on untracked file is a manual-typo class problem. |
 | 2026-05-09 19:05 ET | `Bash(npm *)` / `Bash(pnpm *)` allowed prophylactically | Agent and portal don't have Node deps today, but if they grow them, future sessions shouldn't stall on the first install. |
 | 2026-05-09 19:05 ET | No blanket `sudo *` deny | Granular deploy-path sudo allows (`sudo cp/mv/ln/chmod/chown/nginx/systemctl …`) used by `run.sh`; blanket deny would prompt every deploy. Granular allows + granular denies stay. |
+| 2026-05-10 15:00 ET | Worktree settings files mirror canonical local exactly; drift is the bug | Session-specific patterns (`nc -zv` with IPs, `echo "$(git -C <hardcoded-path>)"`) had accumulated across 3 worktree locals causing prompt stalls. Rule: any new universal pattern → settings.json; machine-specific only → canonical local; worktree locals mirror canonical local. |
+| 2026-05-10 15:00 ET | `autoMode.environment` was misconfigured as object, not array | Plan 9 session notes referenced `autoMode.environment.allowNetwork: true` as validated, but the object form violated the JSON schema (/doctor: "Expected array, but received object"). Fixed to `[]`; network access in auto mode is controlled by session-level permissions, not this field. |
 
 ---
 
