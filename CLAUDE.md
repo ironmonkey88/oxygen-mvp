@@ -125,10 +125,12 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 - **Flag Oxygen limitations immediately** — surface problems before building workarounds
 - **Update TASKS.md** as work completes — `[x]` done · `[~]` in progress · `[!]` blocked
 - **Update LOG.md** after completing tasks, making decisions, or hitting blockers
-- **Allowlist policy:** `.claude/settings.local.json` is auto-editable by Code (per-machine, gitignored). `.claude/settings.json` requires Gordon's confirmation (committed, wider blast radius). Tool families are allowed wholesale (`Bash(git *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`); destructive subcommands (`git reset`, `git push --force`, `git branch -d`, `rm -rf`, `sudo`) are explicitly denied and will always prompt.
-  - **What belongs in `settings.json` (committed):** patterns useful across sessions or machines — tool-family wildcards (`Bash(<tool> *)`), verification idioms (`Bash(curl *)`, `Bash(jq *)`), deny patterns. Add only when Gordon confirms; this file's blast radius is everyone who clones the repo.
-  - **What belongs in `settings.local.json` (per-machine, gitignored):** session-specific or experimental patterns Code adds to unblock its own work. This file accumulates over time; periodic pruning is fine — anything truly load-bearing should already be covered by a tool-family wildcard in `settings.json`.
-  - **Periodic prune:** Plan 5 (or any future tech-debt sweep) — diff local against committed, delete anything subsumed by a tool-family wildcard or by a verification-idiom cohort. Reset local to `{"permissions":{"allow":[]}}` if everything is covered.
+- **Allowlist policy** — three tiers, never mix them:
+  - **`settings.json` (committed, git-tracked):** universal patterns — tool-family wildcards, verification idioms, deny list. Any pattern needed across sessions, machines, or by future teammates belongs here. Changing this file requires a commit (Gordon reviews and merges). Evidence rule: a `[x]` for any allowlist change must include `git show HEAD:.claude/settings.json | grep -F '<pattern>'`.
+  - **`settings.local.json` (per-machine, gitignored):** machine-specific only — SSH key paths (`Read(//Users/gordonwong/.ssh/**)`), local MCP tools (`mcp__Claude_in_Chrome__tabs_context_mcp`). Code may self-amend this file freely. Prune it whenever patterns accumulate; anything load-bearing should already be covered by a tool-family wildcard in `settings.json`.
+  - **`.claude/worktrees/*/.claude/settings.local.json` (also gitignored):** must mirror canonical `settings.local.json` exactly. Worktree drift is the bug. Never let session-specific patterns (`nc -zv`, `echo "$(git ...)"` with hardcoded paths) accumulate here. When a worktree session needs a new universal pattern, promote it to `settings.json` and mirror across all worktree locals.
+  - Destructive subcommands (`git reset`, `git push --force`, `git branch -d`, `rm -rf`, `sudo`) are explicitly denied in `settings.json` and will always prompt regardless of allow list.
+  - **Pipe coverage:** `*` in allowlist patterns does NOT match `|`. Piped git commands (`git log | head`) need explicit pipe patterns: `Bash(git * | *)` and `Bash(git -C * * | *)` cover all single-pipe git forms. Double-pipe: `Bash(git * | * | *)`.
 
 ---
 
@@ -144,6 +146,7 @@ The Claude Code permission system evaluates each Bash tool call as a single stri
 - **Never use `export VAR=...`**. Use inline prefixing: `PATH=/opt/homebrew/bin:$PATH command`.
 - `for ... ; do ... ; done`, `while ... ; do ... ; done`, and `if ... ; then ... ; fi` ARE allowed — the hook carves out the loop keywords (`do`/`then`/`done`/`fi`/`else`/`elif`) after `;`.
 - `sed -i` IS allowed — destructive-deny still bounds the blast radius.
+- **Pipes `|` are allowed** — the hook does not block `|`. However, the allowlist pattern `*` does not match `|`, so piped commands need explicit patterns in `settings.json` (see Allowlist policy above).
 
 If the hook denies a command, the deny reason in the tool result tells you the fix. Re-issue as separate tool calls in the shape the hook expects.
 

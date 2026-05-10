@@ -134,8 +134,8 @@
       "Bash(pip show *)",
       "Bash(pip freeze *)",
       "Bash(pip install *)",
-      "Bash(bash -n *)",
       "Bash(bash *)",
+      "Bash(bash -n *)",
 
       "Bash(chmod *)",
       "Bash(touch *)",
@@ -149,6 +149,17 @@
 
       "Bash(git -C * *)",
       "Bash(git *)",
+
+      "Bash(git rev-list *)",
+      "Bash(git -C * rev-list *)",
+      "Bash(git ls-remote *)",
+      "Bash(git -C * ls-remote *)",
+      "Bash(git branch *)",
+      "Bash(git -C * branch *)",
+
+      "Bash(git * | *)",
+      "Bash(git -C * * | *)",
+      "Bash(git * | * | *)",
 
       "Bash(ssh -o * oxygen-mvp *)",
       "Bash(ssh -v oxygen-mvp *)",
@@ -188,7 +199,20 @@
       "Bash(python3 -m json.tool *)",
       "Bash(pwd)",
       "Bash(uptime)",
-      "Bash(whoami)"
+      "Bash(whoami)",
+
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+
+      "Bash(ssh -T git@github.com)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(./scripts/*.sh)",
+
+      "Write(.claude/settings.local.json)",
+      "Read(.claude/settings.local.json)",
+      "Write(.claude/worktrees/*/.claude/settings.local.json)",
+      "Read(.claude/worktrees/*/.claude/settings.local.json)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -227,9 +251,7 @@
     ]
   },
   "autoMode": {
-    "environment": {
-      "allowNetwork": true
-    }
+    "environment": []
   },
   "hooks": {
     "PreToolUse": [
