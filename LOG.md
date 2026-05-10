@@ -217,6 +217,7 @@
 | 2026-05-09 21:45 ET | MVP 1 sign-off held pending Gordon's call on systemd + repo-public | Plan 7 D3: every box automatable by Code is `[x]`. Two open boxes: §3.2 row 4 (Oxygen as systemd vs. nohup-stable) and §4.5 row 1 (repo public vs. private team-clonable). Both are non-Code decisions; not auto-flipped. Active Blockers table lists both with the question for Gordon. |
 | 2026-05-09 21:45 ET | Replaced /erd + /tasks asset cards with /trust + /metrics | The /erd and /tasks routes don't exist (TASKS.md still has them as `[ ]`). Linking from the portal to dead routes would be marketing-shaped — exactly what Plan 7 D2 was meant to fix. Swapped the cards for /trust and /metrics, which are live and central to the trust contract. /erd + /tasks can come back when the routes ship. |
 | 2026-05-10 09:55 ET | settings.local.json reset to empty allow array | Diff against settings.json showed every accumulated pattern was redundant with a tool-family wildcard or a verification-idiom cohort. Empty local + `Bash(bash *)` added to settings.json + new CLAUDE.md "what belongs where" subsection codifies the pattern: local is per-machine scratch, committed is project-wide policy. Future Code sessions should keep local empty until they actually need a session-specific exception. |
+| 2026-05-10 10:16 ET | Worktree-scoped settings.local.json writes allowed in committed settings.json | Plan 5 D1 hotfix; full Plan 5 D1 reconciliation still pending. |
 
 ---
 
