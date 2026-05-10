@@ -93,6 +93,18 @@
 
 ### MVP 1 — Hardening for analyst trust
 
+#### Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook (2026-05-09 19:35 ET — closed)
+- [x] Layer 0 audit: confirmed `defaultMode: acceptEdits`, bare `Read`/`Write`/`Edit`, `WebFetch(*)`, `Read(**/.env)` deny, `$schema` all intact from Plan 9 rev 1; no drift
+- [x] Layer 1 allow merge: added `Bash(git *)` (bare) + `Bash(sudo ln *)` (broader); all rev 1 patterns preserved
+- [x] Layer 1 deny merge: added `Read(~/.ssh/**)`, `Read(~/.gnupg/**)`, `Bash(launchctl *)`, `Bash(eval *)`, `Bash(curl * | bash*)`, `Bash(curl * | sh*)`, `Bash(wget * | bash*)`, `Bash(wget * | sh*)`
+- [x] Layer 2 hook: `.claude/hooks/block-dangerous.sh` — blocks `&&`, `||`, naked `;`, `$(...)` (arithmetic `$((...))` exempt via `\$\([^(]` regex), `<()`, `>()`, leading `cd `, leading `export `; loop keywords carve-out via `sed -E 's/;[[:space:]]+(do|then|done|fi|else|elif)([[:space:]]|$)/ \1\2/g'` strip
+- [x] Layer 2 wire: appended as second entry in `hooks.PreToolUse` (matcher Bash) — task-warning hook preserved
+- [x] Layer 2 chmod: hook is executable (`-rwxr-xr-x`)
+- [x] Layer 1 verify: `python3 -m json.tool .claude/settings.json` exits 0
+- [x] Layer 3 CLAUDE.md: "Bash Safety" section landed between Rules and Naming Standards
+- [x] Layer 4 audit: `scripts/check_allowlist_coverage.sh` rewritten — 11 idioms ran without prompting, 13/13 hook-deny/allow assertions passed
+- [x] Session 17 file written ([docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)); LOG.md Recent Sessions + Decisions updated; clean commit on `origin/main`
+
 #### Plan 9 — Allowlist Coverage, Once and For All (2026-05-09 19:05 ET — closed)
 - [x] Layer 0: structural audit + add `defaultMode: acceptEdits`, top-level `Read`/`Write`/`Edit`/`WebFetch(*)`, `autoMode.environment.allowNetwork: true`, `$schema`, `Read(**/.env)` deny  *(verified via `jq '.permissions.defaultMode, ."$schema", .autoMode.environment.allowNetwork'`)*
 - [x] Layer 1: broaden allow patterns (verification idioms cohort) in `.claude/settings.json`  *(added wget/rsync/npm/pnpm/for/while/if/[/[[/cat/less/more/sed/cmp/yq/python3 -m json.tool/pwd/uptime/whoami; existing curl/jq/grep/head/tail/awk/find/stat already covered)*

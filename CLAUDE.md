@@ -129,6 +129,25 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 
 ---
 
+## Bash Safety
+
+The Claude Code permission system evaluates each Bash tool call as a single string. Even when every component is allowlisted, a chain like `wc *.md && echo done && python3 -m json.tool x.json` does not match any single allow pattern and will prompt or deny. A PreToolUse hook (`.claude/hooks/block-dangerous.sh`) enforces this structurally; the rules below describe what to generate so the hook never fires.
+
+- **Never chain commands** with `&&`, `;`, or `||`. One Bash tool call = one command. Issue follow-up commands as separate tool calls.
+- **Never use command substitution** (`$(...)` or backticks). Run the inner command first; pass the result into the next call. Arithmetic `$((...))` is fine.
+- **Never use process substitution** (`<(...)`, `>(...)`). Write to a temp file instead.
+- **Never start a command with `cd`**. Use `git -C <path> ...` or absolute paths.
+- **Never use shell redirects to create files** (`echo > file`, `cat <<EOF > file`). Use the Write tool.
+- **Never use `export VAR=...`**. Use inline prefixing: `PATH=/opt/homebrew/bin:$PATH command`.
+- `for ... ; do ... ; done`, `while ... ; do ... ; done`, and `if ... ; then ... ; fi` ARE allowed — the hook carves out the loop keywords (`do`/`then`/`done`/`fi`/`else`/`elif`) after `;`.
+- `sed -i` IS allowed — destructive-deny still bounds the blast radius.
+
+If the hook denies a command, the deny reason in the tool result tells you the fix. Re-issue as separate tool calls in the shape the hook expects.
+
+Note on activation timing: settings are re-read per tool call, so editing `settings.json` mid-session activates the hook for subsequent calls in the *same* session — not just the next one.
+
+---
+
 ## Naming Standards
 
 ### Schemas

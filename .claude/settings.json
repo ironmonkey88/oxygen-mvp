@@ -145,6 +145,7 @@
       "Bash(./run.sh *)",
 
       "Bash(git -C * *)",
+      "Bash(git *)",
 
       "Bash(ssh -o * oxygen-mvp *)",
       "Bash(ssh -v oxygen-mvp *)",
@@ -162,6 +163,7 @@
       "Bash(sudo cp *)",
       "Bash(sudo mv *)",
       "Bash(sudo ln -s *)",
+      "Bash(sudo ln *)",
       "Bash(sudo chmod *)",
       "Bash(sudo chown *)",
 
@@ -187,6 +189,14 @@
     ],
     "deny": [
       "Read(**/.env)",
+      "Read(~/.ssh/**)",
+      "Read(~/.gnupg/**)",
+      "Bash(launchctl *)",
+      "Bash(eval *)",
+      "Bash(curl * | bash*)",
+      "Bash(curl * | sh*)",
+      "Bash(wget * | bash*)",
+      "Bash(wget * | sh*)",
       "Bash(git reset --hard *)",
       "Bash(git reset --hard)",
       "Bash(git -C * reset --hard *)",
@@ -227,6 +237,16 @@
             "type": "command",
             "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -q 'ssh oxygen-mvp'; then in_progress=$(grep -c '\\[~\\]' /Users/gordonwong/claude-projects/oxygen-mvp/TASKS.md 2>/dev/null || echo 0); if [ \"$in_progress\" -eq 0 ]; then echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"additionalContext\": \"TASK WARNING: You are about to run an EC2 command but there is no in-progress task ([~]) in TASKS.md. Create or mark a task [~] in TASKS.md before proceeding with EC2 work.\"}}'; else echo '{}'; fi; else echo '{}'; fi",
             "statusMessage": "Checking task status..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-dangerous.sh",
+            "statusMessage": "Checking shell shape..."
           }
         ]
       }

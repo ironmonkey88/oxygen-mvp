@@ -21,6 +21,7 @@
 | 7 | MVP 1 Sign-off Sweep | queued (rev 2 batch) | — |
 | 8 | Limitations Registry Expansion | queued (rev 2 batch) | — |
 | 9 | Allowlist Coverage, Once and For All | done | Session 16 |
+| 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -29,13 +30,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 9 closed — allowlist coverage hardened. `.claude/settings.json` now carries `defaultMode: "acceptEdits"`, top-level `Read`/`Write`/`Edit`/`WebFetch(*)`, `autoMode.environment.allowNetwork: true`, `Read(**/.env)` deny, plus a verification-idiom cohort (curl/for/while/if/sed/cat/wget/rsync/npm/pwd/whoami/etc.) on top of the existing tool-family allows. Granular sudo allows preserved. `scripts/check_allowlist_coverage.sh` ran clean — zero prompts. CLAUDE.md gained the Allowlist `[x]` rule + general `[x]` evidence rule under LOG Logging Protocol. Plan 4 (Trust Page) remains the last functional plan closed; rev 2 chat-batch resumes with **Plan 5 — Tech Debt Sweep** after a state-check pass.
+**Phase:** Plan 9 rev 2 closed — Bash Safety hook in place. `.claude/hooks/block-dangerous.sh` denies `&&`, `||`, naked `;`, `$(...)` (arithmetic `$((...))` exempt), `<()`/`>()`, leading `cd`, leading `export`, with loop-keyword carve-out (`do`/`then`/`done`/`fi`/`else`/`elif` after `;` allowed) so `for`/`while`/`if` work as single tool calls. Wired into `settings.json` PreToolUse alongside the task-warning hook. `.claude/settings.json` allow merged (added `Bash(git *)` bare, `Bash(sudo ln *)` broader); deny merged (added `Read(~/.ssh/**)`, `Read(~/.gnupg/**)`, `Bash(launchctl *)`, `Bash(eval *)`, `Bash(curl|wget * | bash/sh*)`). CLAUDE.md gained "Bash Safety" section between Rules and Naming Standards. `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom checks + 13 hook-deny/allow assertions — passed end-to-end. Plan 4 (Trust Page) remains the last functional plan closed; rev 2 chat-batch resumes with **Plan 5 — Tech Debt Sweep**.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 19:05 ET (Session 16 — Plan 9 closed)
+**Last Updated:** 2026-05-09 19:35 ET (Session 17 — Plan 9 rev 2 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 17 — 2026-05-09 19:18 ET → 19:35 ET — Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook
+[full narrative](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)
+
+- **Goal:** Replace Plan 9 rev 1's allow-pattern-only fix with the structural fix — a PreToolUse hook that denies risky shell *shapes* (chains, command/process substitution, leading `cd`/`export`) so the allowlist no longer has to model compound commands.
+- **Shipped:** `.claude/hooks/block-dangerous.sh` with loop-keyword carve-out (do/then/done/fi/else/elif) + arithmetic carve-out (`$((...))` allowed); wired into `settings.json` PreToolUse alongside the task-warning hook (not replacing it); merged 2 allow patterns + 8 deny patterns (Plan 9 rev 1 patterns preserved — no removals); CLAUDE.md "Bash Safety" section between Rules and Naming Standards; `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom checks + 13 hook-deny/allow assertions, all passing.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** State-check rev 2 batch (last clean plan was Plan 4); resume with Plan 5 — Tech Debt Sweep.
 
 ### Session 16 — 2026-05-09 17:30 ET → 19:05 ET — Plan 9 — Allowlist Coverage
 [full narrative](docs/sessions/session-16-2026-05-09-plan-9-allowlist-coverage.md)
@@ -73,19 +83,11 @@
 - **Status:** complete
 - **Next:** Update SETUP/CLAUDE/ARCHITECTURE for Tailnet access + nginx docroot + venv pattern. Then `/trust` page and trust contract pass.
 
-### Session 12 — 2026-05-08 13:30 ET — plan-1-tailscale
-[full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
-
-- **Goal:** Close public `:3000` gap via Tailscale; strip broken public chat CTAs.
-- **Shipped:** Tailscale 1.96.4 on EC2 (MagicDNS `oxygen-mvp.taildee698.ts.net`); SSH alias repointed; AWS SG `:22`/`:3000` deleted; portal hybrid update (drop nav+asset CTAs, hero `Private beta` pill); commit `ae20c94`.
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Update SETUP.md/CLAUDE.md/ARCHITECTURE.md for new access pattern + nginx docroot.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 12** — 2026-05-08 13:30 ET — Plan 1 Tailscale; 1.96.4 on EC2, MagicDNS hostname, SSH alias repointed, AWS SG `:22`/`:3000` closed, portal hybrid update (commit `ae20c94`). [full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
 - **Session 11** — 2026-05-08 11:35 ET — Plan 0.5 portal /chat fix; 3 hrefs repointed to `:3000`, nginx `location /chat` removed (commit `6d76594`); gates 1-4 green. [full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
 - **Session 10** — 2026-05-08 11:15 ET — Log refactor: LOG.md split into bounded summary + `docs/sessions/` archive; frontmatter/body/rotation rules established (commit `a72bd2a`). [full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
 - **Session 9** — 2026-05-08 11:30 ET — Plans 0.5 + 1 queued; sequencing locked (0.5→1→2→3→4→5); pre-flight rule for env-specific assumptions. [full narrative](docs/sessions/session-09-2026-05-08-plans-0.5-and-1-queued.md)
@@ -200,6 +202,10 @@
 | 2026-05-09 19:05 ET | `Bash(sed *)` allowed despite Session 13 incident | Destructive-deny (`rm -rf`, `git reset --hard`, `sudo bash/sh`, `sudo rm/dd`) bounds blast radius; `sed -i` on tracked file is recoverable via `git restore`, on untracked file is a manual-typo class problem. |
 | 2026-05-09 19:05 ET | `Bash(npm *)` / `Bash(pnpm *)` allowed prophylactically | Agent and portal don't have Node deps today, but if they grow them, future sessions shouldn't stall on the first install. |
 | 2026-05-09 19:05 ET | No blanket `sudo *` deny | Granular deploy-path sudo allows (`sudo cp/mv/ln/chmod/chown/nginx/systemctl …`) used by `run.sh`; blanket deny would prompt every deploy. Granular allows + granular denies stay. |
+| 2026-05-09 19:35 ET | Plan 9 rev 2 — structural fix (PreToolUse hook), not more allow patterns | Allowlist syntax cannot match compound commands (`safe-cmd && safe-cmd` matches no single rule). Adding more allow entries was the wrong shape. The hook denies risky structural shapes; the allowlist handles per-command policy. Per Anthropic docs and GitHub issue #20085. |
+| 2026-05-09 19:35 ET | Loop-keyword carve-out in the hook regex | Plan-as-handed-off would have blocked `for ... ; do ... ; done` because `; do` matches `;\s`. Hook strips `; (do\|then\|done\|fi\|else\|elif)` before checking for `;` chains. Verified end-to-end via 13 hook-deny/allow assertions. |
+| 2026-05-09 19:35 ET | Allow merge, not allow replace | Plan-as-handed-off proposed a "final shape" allow array that dropped ~40 patterns currently in `settings.json` (airlayer, duckdb, gh pr, run.sh, granular nginx sudo). Merge-not-replace preserves Plan 9 rev 1's surface area; rev 2 adds `Bash(git *)` bare and `Bash(sudo ln *)` broader, plus 8 new deny patterns. |
+| 2026-05-09 19:35 ET | Hook activates mid-session, not just on session start | Settings re-read per tool call (existing task-warning hook already demonstrates this). Documented in CLAUDE.md Bash Safety so Code knows the hook is live as soon as `settings.json` lands. |
 
 ---
 
