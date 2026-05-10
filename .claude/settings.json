@@ -133,6 +133,7 @@
       "Bash(pip freeze *)",
       "Bash(pip install *)",
       "Bash(bash -n *)",
+      "Bash(bash *)",
 
       "Bash(chmod *)",
       "Bash(touch *)",

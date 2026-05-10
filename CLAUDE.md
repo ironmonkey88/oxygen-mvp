@@ -126,6 +126,9 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 - **Update TASKS.md** as work completes — `[x]` done · `[~]` in progress · `[!]` blocked
 - **Update LOG.md** after completing tasks, making decisions, or hitting blockers
 - **Allowlist policy:** `.claude/settings.local.json` is auto-editable by Code (per-machine, gitignored). `.claude/settings.json` requires Gordon's confirmation (committed, wider blast radius). Tool families are allowed wholesale (`Bash(git *)`, `Bash(dbt *)`, `Bash(oxy *)`, `Bash(airlayer *)`, `Bash(python3 *)`, `Bash(duckdb *)`); destructive subcommands (`git reset`, `git push --force`, `git branch -d`, `rm -rf`, `sudo`) are explicitly denied and will always prompt.
+  - **What belongs in `settings.json` (committed):** patterns useful across sessions or machines — tool-family wildcards (`Bash(<tool> *)`), verification idioms (`Bash(curl *)`, `Bash(jq *)`), deny patterns. Add only when Gordon confirms; this file's blast radius is everyone who clones the repo.
+  - **What belongs in `settings.local.json` (per-machine, gitignored):** session-specific or experimental patterns Code adds to unblock its own work. This file accumulates over time; periodic pruning is fine — anything truly load-bearing should already be covered by a tool-family wildcard in `settings.json`.
+  - **Periodic prune:** Plan 5 (or any future tech-debt sweep) — diff local against committed, delete anything subsumed by a tool-family wildcard or by a verification-idiom cohort. Reset local to `{"permissions":{"allow":[]}}` if everything is covered.
 
 ---
 
