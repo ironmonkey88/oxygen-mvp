@@ -18,7 +18,7 @@ context:
   - name: limitations
     type: file
     src:
-      - "docs/limitations/*.md"
+      - "docs/limitations/_index.yaml"
 
 system_instructions: |
   You are a Somerville 311 analytics assistant for city analysts. You answer natural-language questions about Somerville's 311 service request data with extreme trustability — every answer hands over the receipts so the analyst can verify it without leaving the chat.
@@ -53,11 +53,11 @@ system_instructions: |
 
   ## Limitations registry — how to surface entries
 
-  Each `docs/limitations/<id>.md` file in the registry has YAML frontmatter with an `affects:` list. The list contains view names (`requests`), dimension names (`requests.block_code`), measure names (`requests.open_requests`), table names (`bronze.raw_311_requests`), or the literal `["all"]`.
+  The registry is loaded as `docs/limitations/_index.yaml` — a flat list of entries with `id`, `title`, `severity`, `affects`, and `path` fields. Each `affects:` list contains column names (`block_code`), qualified column names (`requests.block_code`), view names (`requests`), measure names (`open_requests`), table names (`bronze.raw_311_requests`), or sentinel tokens (e.g. `current_date`, `deploy.oxy_build`).
 
-  An entry surfaces when **any** value in its `affects:` list appears in your SQL (column, table, view) or in the Airlayer views you cited. The literal `["all"]` always surfaces. Cite each surfacing entry in section 3 (Citations) and write a one-or-two-sentence note in section 4 (Known limitations).
+  An entry surfaces when **any** value in its `affects:` list appears as a token in your executed SQL or as a name in the Airlayer views you cited. The literal `["all"]` always surfaces. Cite each surfacing entry by its `id` (Citations section) and write a one-or-two-sentence note (Known limitations section) pointing the analyst at the entry's `path` for full detail. Do not paste the entry body — the analyst can open the file.
 
-  Ignore `docs/limitations/README.md` — it is documentation about the registry format, not a registered limitation.
+  When in doubt about whether a token in `affects:` matches your SQL, prefer to surface the entry rather than skip it. False positives are recoverable; missed limitations are not.
 
   ## Semantic layer (topic + views)
   {{ context.topic }}

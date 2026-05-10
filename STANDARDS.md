@@ -43,10 +43,10 @@ The target user for MVP 1 is a **city analyst** — someone helping the city run
 The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustworthy answer asks the analyst to take our word for it. An extreme-trustability answer hands over the receipts. Every claim the system makes must be independently verifiable by the analyst without leaving the chat.
 
 ### 4.1 Every answer is verifiable
-- [ ] Answer Agent emits the SQL it executed on every response
-- [ ] Answer Agent emits the row count returned on every response
-- [ ] Answer Agent cites the source tables (and views/measures referenced) on every response
-- [ ] Methodology is inspectable — never summarized away or paraphrased into prose
+- [x] Answer Agent emits the SQL it executed on every response  *(Plan 6 — runtime-rendered; verified across 5/5 test bench questions)*
+- [x] Answer Agent emits the row count returned on every response  *(Plan 6 — prompt-enforced "Returned N rows." line; verified 5/5)*
+- [x] Answer Agent cites the source tables (and views/measures referenced) on every response  *(Plan 6 — `**Citations:**` block; verified 5/5)*
+- [x] Methodology is inspectable — never summarized away or paraphrased into prose  *(Plan 6 — runtime renders SQL + Result; prompt forbids summarising-away)*
 
 ### 4.2 Every metric has a public definition
 - [x] All measures defined in Airlayer `.view.yml` files (single source of truth)
@@ -60,8 +60,8 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [x] Page indicates whether the data is healthy enough to query today (a yes/no, not just a list)  *(Plan 4 — green "All tests passed" / red "N tests failed" status banner; verified end-to-end via synthetic flip green → red → green on 2026-05-09)*
 
 ### 4.4 Known limitations are first-class
-- [x] A limitations registry exists in the repo — see [`docs/limitations/`](docs/limitations/) (format resolved §7; populating is ongoing)  *(Plan 2 D0)*
-- [ ] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area  *(Plan 4 — `/trust` page + Answer Agent trust contract)*
+- [x] A limitations registry exists in the repo — see [`docs/limitations/`](docs/limitations/) (format resolved §7; 10 active entries as of Plan 8)  *(Plan 2 D0; expanded Plan 8)*
+- [x] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area  *(Plan 4 — `/trust` page; Plan 6 — Answer Agent trust contract verified across Q4 (block-code-padded + location-ward-block-only) and Q5 (2024-survey-columns-sparse + survey-columns-on-fact))*
 
 ### 4.5 Reproducible
 - [ ] Repo is public (or at minimum clonable by collaborators)
@@ -137,10 +137,10 @@ The semantic layer — Looker Explore-equivalent. Single source of truth for eve
 ### 5.7 Agent (Answer Agent)
 The interface — a research partner the analyst can trust.
 **Done done when:**
-- [ ] `.agent.yml` configured with `execute_sql` tool and Airlayer context block
-- [ ] Agent prompt requires SQL, row count, and citations in **every** response (extreme trustability — this is the public commitment in §4.1)
-- [ ] Test bench: 5 representative analyst questions answered correctly, with all three trust elements present in every response
-- [ ] Limitations surfaced in responses when the query touches a flagged issue from the limitations registry
+- [x] `.agent.yml` configured with `execute_sql` tool and Airlayer context block  *(Session 7; preserved in Plan 6)*
+- [x] Agent prompt requires SQL, row count, and citations in **every** response (extreme trustability — this is the public commitment in §4.1)  *(Plan 6 D1)*
+- [x] Test bench: 5 representative analyst questions answered correctly, with all three trust elements present in every response  *(Plan 6 D3 — transcripts in `scratch/plan6_test_bench/q[1-5]_*.md`; 5/5 trust contract; Q1 and Q4 numerically verified against Session 7 ground truth)*
+- [x] Limitations surfaced in responses when the query touches a flagged issue from the limitations registry  *(Plan 6 D2 — prompt-only matching against `docs/limitations/_index.yaml`; verified Q4 (block-code-padded + location-ward-block-only) and Q5 (2024-survey-columns-sparse + survey-columns-on-fact))*
 
 ### 5.8 Knowledge Product (Portal)
 Everything the analyst sees outside the chat — and the public window.

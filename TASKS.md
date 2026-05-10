@@ -23,7 +23,7 @@
 - [x] Env vars in `/etc/environment` — `ANTHROPIC_API_KEY`, `OXY_DATABASE_URL`, plus `~/.local/bin` on PATH; documented in [SETUP.md](SETUP.md) §7
 - [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
 - [x] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth
-- [ ] Trust contract on agent (SQL + row count + citations in every response)
+- [x] Trust contract on agent (SQL + row count + citations in every response)  *(Plan 6 — STANDARDS §4.1 4/4)*
 - [x] Admin DQ framework in place  *(2026-05-08 — D2 of overnight; 3 admin models, run.sh, load_dbt_results.py; verified across 2 consecutive runs)*
 
 ### MVP 2 — Visual Data Product
@@ -93,25 +93,28 @@
 
 ### MVP 1 — Hardening for analyst trust
 
-#### Plan 6 — Answer Agent + Trust Contract (2026-05-09 19:40 ET — in progress)
+#### Plan 6 — Answer Agent + Trust Contract (2026-05-09 21:00 ET — closed)
 Closes STANDARDS §4.1 (4/4) and §5.7 (4/4).
-- [~] Pre-flight: read agent yaml + limitations + Oxygen runtime check (sudo systemctl status oxy, curl :3000, agent API surface from oxy.tech docs); resolve §7 open question on native SQL+citation support
-- [ ] D1 — Trust contract in agent prompt: SQL block + Returned N rows + citations (tables/views/limitations); limitations registry index injected as static context block; commit `Plan 6 D1`
-- [ ] D2 — Limitations surfacing: prompt-only matching rule (entry surfaces when any value in `affects:` appears in SQL or referenced views; literal `["all"]` always surfaces); commit `Plan 6 D2`
-- [ ] D3 — 5-question test bench: 2024 = 113,961 (regression); current-year so-far; top-10 request types; block-level (must surface block-code-padded); satisfaction (must surface 2024-survey-columns-sparse). Capture transcripts in `scratch/plan6_test_bench/qN_*.md`
-- [ ] D4 — STANDARDS §4.1 4/4 + §5.7 4/4 flipped; TASKS Answer Agent rows flipped; session file; LOG.md; commit `Plan 6 close`
+- [x] Pre-flight: agent yaml + limitations read; Oxygen runtime confirmed up (curl :3000 → 200; `oxy start` running as nohup since May 8 — not as systemd, that's a §3.2 row 4 gap for Plan 7); STANDARDS §7 open question resolved (partial native — runtime renders SQL+result; citations/row-count/limitations are prompt-enforced); CLI invocation = `oxy run agents/answer_agent.agent.yml "<question>"`
+- [x] D1 — Trust contract in `agents/answer_agent.agent.yml` `system_instructions`: 4-section reply contract (Returned N rows / Answer / Citations / Known limitations); engineering-honest tone (no emoji, no marketing); limitations index loaded as `context.file` `docs/limitations/_index.yaml`; commit `b3b5217` + index-only follow-up
+- [x] D1 follow-up — switched from full-bodies `*.md` glob to `_index.yaml` after Q3+Q5 first-attempt rate-limited at 30K tokens/min (full-body context too large); index pipeline (`scripts/build_limitations_index.py` + `run.sh` step 9/9) generates the index from frontmatter
+- [x] D2 — Matching rule: substring of any `affects:` value appears in SQL or in cited views; prompt-only (no post-processing wrapper); verified Q4 surfaced `block-code-padded` + `location-ward-block-only` correctly with no false positives; verified Q5 surfaced `2024-survey-columns-sparse` + `survey-columns-on-fact` correctly
+- [x] D3 — 5/5 test bench passed (transcripts in `scratch/plan6_test_bench/q[1-5]_*.md`): Q1 2024=113,961 ✓ (regression match), Q2 partial-year 49,782 ✓ (SQL correct; agent prose hallucinated "2025" — knowledge-cutoff issue, follow-on for prompt hardening), Q3 top-10 ✓ (Pothole at #10 with 21,393), Q4 block-level ✓ (with diligent NA-sentinel callout), Q5 satisfaction ✓ (76.0% Very Satisfied, both survey limitations surfaced, percentage math reconciled)
+- [x] D4 — STANDARDS §4.1 4/4 + §5.7 4/4 flipped; STANDARDS §7 open question resolved; session 18 file; LOG.md updated; commits `b3b5217` (D1) + Plan 8/D1-followup commit + Plan 6 close commit
 
-#### Plan 8 — Limitations Registry Expansion (queued — runs between Plan 6 D2 and D3)
+#### Plan 8 — Limitations Registry Expansion (2026-05-09 21:00 ET — closed)
 Closes STANDARDS §4.4 row 2.
-- [ ] location-ward-block-only.md (warning, since 2026-05-07; affects requests.ward, requests.block_code, requests)
-- [ ] survey-columns-on-fact.md (info, since 2026-05-07; affects requests.satisfaction_rating, requests.satisfaction_comment) — verify column names against actual schema
-- [ ] dept-tags-as-booleans.md (info, since 2026-05-07; affects requests + boolean tag cols)
-- [ ] bronze-varchar-source-cols.md (info, since 2026-05-07; affects bronze.raw_311_requests)
-- [ ] open-status-not-just-open.md (warning, since 2026-05-07; affects requests.is_open, requests.open_requests)
-- [ ] open-requests-no-join-filter.md (info, since 2026-05-08; affects requests.open_requests)
-- [ ] current-year-partial.md (warning, since 2026-05-08; affects requests, requests.opened_dt)
-- [ ] oxy-build-postgres-dependency.md (info, since 2026-05-08; affects all, deploy-time only)
-- [ ] Plan 6 D2 surfacing verified against Plan 8 entries on test-bench q4/q5; STANDARDS §4.4 row 2 → [x]; session file; LOG; commit
+- [x] `2024-survey-columns-sparse.md` tightened from `affects: [requests]` (overfired on every requests-view query) to `affects: [accuracy, courtesy, ease, overallexperience]` (granular column names)
+- [x] `location-ward-block-only.md` (warning, 2026-05-07; affects ward, block_code)
+- [x] `survey-columns-on-fact.md` (info, 2026-05-07; affects accuracy, courtesy, ease, overallexperience — actual columns; brief had speculative names)
+- [x] `dept-tags-as-booleans.md` (info, 2026-05-07; affects 8 boolean tag column names)
+- [x] `bronze-varchar-source-cols.md` (info, 2026-05-07; affects bronze.raw_311_requests, main_bronze.raw_311_requests)
+- [x] `open-status-not-just-open.md` (warning, 2026-05-07; affects open_requests — note: brief referenced is_open which doesn't exist in current schema, reframed around the open_requests measure semantics)
+- [x] `open-requests-no-join-filter.md` (info, 2026-05-08; affects open_requests)
+- [x] `current-year-partial.md` (warning, 2026-05-08; affects current_date sentinel)
+- [x] `oxy-build-postgres-dependency.md` (info, 2026-05-08; affects deploy.oxy_build sentinel — does NOT auto-surface on analyst queries by design)
+- [x] `scripts/build_limitations_index.py` reads `*.md` frontmatter (stdlib-only — no PyYAML dep); `docs/limitations/_index.yaml` generated with 10 active entries; `run.sh` step 9/9 wires it into the pipeline
+- [x] Surfacing verified end-to-end via Plan 6 D3 test bench Q4 + Q5; STANDARDS §4.4 row 2 → [x]; session 18 file; LOG; commit
 
 #### Plan 7 — MVP 1 Sign-off Sweep (queued — runs after Plan 8)
 Closes STANDARDS §5.8 last row; ideally everything else in §6.
@@ -201,9 +204,9 @@ Closes STANDARDS §5.8 last row; ideally everything else in §6.
 
 #### Limitations registry
 - [x] Decide location and format (open question in STANDARDS.md)  *(2026-05-08 D0 — Option b: `docs/limitations/` Markdown + YAML frontmatter)*
-- [~] Document known 311 data limitations  *(2 seeds: survey-columns-sparse, block-code-padded; more as they're discovered)*
-- [ ] Surface limitations on /trust page
-- [ ] Configure Answer Agent to reference limitations when relevant
+- [x] Document known 311 data limitations  *(Plan 8 — 10 active entries; index at `docs/limitations/_index.yaml` generated by `scripts/build_limitations_index.py` as run.sh step 9/9)*
+- [ ] Surface limitations on /trust page  *(Plan 7 — `/trust` page is admin-DQ-driven today; surfacing limitations is a separate UI pass)*
+- [x] Configure Answer Agent to reference limitations when relevant  *(Plan 6 D2 — agent reads `_index.yaml`, matches affects against SQL/cited views, surfaces matches in Citations + Known limitations sections; verified Q4+Q5 of D3 test bench)*
 
 ### Documentation — MVP 1 scope sharpening
 - [x] Deliverable A: STANDARDS.md written, committed, pushed
@@ -286,10 +289,10 @@ Closes STANDARDS §5.8 last row; ideally everything else in §6.
 - [x] Review Answer Agent docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
 - [x] Create `agents/answer_agent.agent.yml`
 - [x] Configure `execute_sql` tool and Airlayer context block
-- [ ] Configure agent prompt to require SQL, row count, and citations in every response  *(extreme trustability — see STANDARDS.md §4.1; deferred — trust contract is a follow-up pass after FR smoke test)*
+- [x] Configure agent prompt to require SQL, row count, and citations in every response  *(Plan 6 D1 — STANDARDS §4.1; verified across 5/5 test bench)*
 - [x] Test with 3–5 sample questions in Oxygen chat UI  *(2026-05-08 09:31 ET — FR smoke test: Test A 2024 = 113,961 ✓ exact match, Test B 2026 "this year" = 48,806 ✓ exact match, agent correctly resolved current year via `year(current_date)`)*
 - [x] Confirm agent returns accurate answers  *(both smoke tests exact-match DuckDB ground truth)*
-- [ ] Test bench: 5 representative analyst questions, verify responses include SQL + row count + citation in every reply  *(deferred — trust contract pass)*
+- [x] Test bench: 5 representative analyst questions, verify responses include SQL + row count + citation in every reply  *(Plan 6 D3 — 5/5 trust contract; transcripts in `scratch/plan6_test_bench/q[1-5]_*.md`)*
 
 ### MVP 1 Sign-off
 - [ ] All checks in [STANDARDS.md](STANDARDS.md) MVP 1 sign-off checklist pass

@@ -12,6 +12,7 @@
 #   6. dbt docs generate — keep /docs current
 #   7. /metrics page     — regenerate from semantics/views/*.view.yml
 #   8. /trust page       — regenerate from main_admin.fct_test_run
+#   9. limitations index — regenerate docs/limitations/_index.yaml from .md frontmatter
 #
 # Exit code: max(bronze/gold-test exit, admin-test exit). Tests can fail
 # without losing admin tables or the trust page (which is the whole point
@@ -26,43 +27,43 @@ cd "$REPO_ROOT"
 # shellcheck disable=SC1091
 source "$REPO_ROOT/.venv/bin/activate"
 
-echo "==> 1/8 dlt ingest somerville 311"
+echo "==> 1/9 dlt ingest somerville 311"
 python dlt/somerville_311_pipeline.py
 
-echo "==> 2/8 dbt run --select bronze gold"
+echo "==> 2/9 dbt run --select bronze gold"
 ( cd dbt && dbt run --select bronze gold )
 
-echo "==> 3/8 dbt test --select bronze gold (capture exit, do not halt)"
+echo "==> 3/9 dbt test --select bronze gold (capture exit, do not halt)"
 set +e
 ( cd dbt && dbt test --select bronze gold )
 DBT_TEST_EXIT=$?
 set -e
 echo "    dbt test exit code: $DBT_TEST_EXIT"
 
-echo "==> 4/8 dlt load_dbt_results"
+echo "==> 4/9 dlt load_dbt_results"
 python dlt/load_dbt_results.py
 
-echo "==> 5/8 dbt run --select admin"
+echo "==> 5/9 dbt run --select admin"
 ( cd dbt && dbt run --select admin )
 
-echo "==> 5b/8 dbt test --select admin (drift-fail guardrail; capture exit, do not halt)"
+echo "==> 5b/9 dbt test --select admin (drift-fail guardrail; capture exit, do not halt)"
 set +e
 ( cd dbt && dbt test --select admin )
 DBT_ADMIN_TEST_EXIT=$?
 set -e
 echo "    dbt admin-test exit code: $DBT_ADMIN_TEST_EXIT"
 
-echo "==> 6/8 dbt docs generate"
+echo "==> 6/9 dbt docs generate"
 ( cd dbt && dbt docs generate )
 
-echo "==> 7/8 generate /metrics page"
+echo "==> 7/9 generate /metrics page"
 python scripts/generate_metrics_page.py
 if [ -d /var/www/somerville ]; then
     cp portal/metrics.html /var/www/somerville/metrics.html
     echo "    deployed to /var/www/somerville/metrics.html"
 fi
 
-echo "==> 8/8 generate /trust page"
+echo "==> 8/9 generate /trust page"
 python scripts/generate_trust_page.py
 if [ -d /var/www/somerville ] && [ -f portal/trust.html ]; then
     cp portal/trust.html /var/www/somerville/trust.html
@@ -74,6 +75,9 @@ if [ -d /var/www/somerville ] && [ -f portal/index.html ]; then
     cp portal/index.html /var/www/somerville/index.html
     echo "    synced portal/index.html → /var/www/somerville/index.html"
 fi
+
+echo "==> 9/9 build limitations index"
+python3 scripts/build_limitations_index.py
 
 echo
 echo "===== run complete ====="

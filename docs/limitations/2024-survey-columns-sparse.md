@@ -3,7 +3,10 @@ id: 2024-survey-columns-sparse
 title: Customer survey columns populated for <1% of rows
 severity: warning
 affects:
-  - requests
+  - accuracy
+  - courtesy
+  - ease
+  - overallexperience
 since: 2026-05-08
 status: active
 ---

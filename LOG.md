@@ -16,9 +16,9 @@
 | 2 | Admin DQ Overnight | done | Session 13 |
 | 3 | MVP 1 Loose Ends + Doc Reconciliation | done | Session 14 |
 | 4 | Trust Page | done | Session 15 |
-| 6 | Answer Agent + Trust Contract | in progress (rev 2 batch, 2026-05-09 overnight) | — |
-| 8 | Limitations Registry Expansion | queued (after Plan 6 D2; before Plan 6 D3) | — |
-| 7 | MVP 1 Sign-off Sweep | queued (after Plan 8) | — |
+| 6 | Answer Agent + Trust Contract | done | Session 18 |
+| 8 | Limitations Registry Expansion | done | Session 18 |
+| 7 | MVP 1 Sign-off Sweep | queued (next, rev 2 batch) | — |
 | 5 | Tech Debt Sweep | queued (deferred to last in batch) | — |
 | 9 | Allowlist Coverage, Once and For All | done | Session 16 |
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
@@ -30,13 +30,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 9 rev 2 closed — Bash Safety hook in place. `.claude/hooks/block-dangerous.sh` denies `&&`, `||`, naked `;`, `$(...)` (arithmetic `$((...))` exempt), `<()`/`>()`, leading `cd`, leading `export`, with loop-keyword carve-out (`do`/`then`/`done`/`fi`/`else`/`elif` after `;` allowed) so `for`/`while`/`if` work as single tool calls. Wired into `settings.json` PreToolUse alongside the task-warning hook. `.claude/settings.json` allow merged (added `Bash(git *)` bare, `Bash(sudo ln *)` broader); deny merged (added `Read(~/.ssh/**)`, `Read(~/.gnupg/**)`, `Bash(launchctl *)`, `Bash(eval *)`, `Bash(curl|wget * | bash/sh*)`). CLAUDE.md gained "Bash Safety" section between Rules and Naming Standards. `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom checks + 13 hook-deny/allow assertions — passed end-to-end. Plan 4 (Trust Page) remains the last functional plan closed; rev 2 chat-batch resumes with **Plan 5 — Tech Debt Sweep**.
+**Phase:** Plans 6 + 8 closed in Session 18 (overnight rev 2 batch). Answer Agent now carries the trust contract: every reply has "Returned N rows.", a 4-section structure (row count / answer / citations / known limitations), engineering-honest tone, and limitations surfacing keyed off `docs/limitations/_index.yaml`. STANDARDS §4.1 (4/4), §4.4 row 2, §5.7 (4/4) all flipped. Limitations registry expanded from 2 to 10 active entries (Plan 8). Test bench 5/5 passed (`scratch/plan6_test_bench/q[1-5]_*.md`); Q1 2024=113,961 regression match. Index pipeline (`scripts/build_limitations_index.py` + `run.sh` step 9/9) wires the index into every pipeline run. **Next:** Plan 7 — MVP 1 Sign-off Sweep, then Plan 5 — Tech Debt Sweep.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 19:35 ET (Session 17 — Plan 9 rev 2 closed)
+**Last Updated:** 2026-05-09 21:05 ET (Session 18 — Plans 6 + 8 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 18 — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion
+[full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
+
+- **Goal:** Wire the Answer Agent's trust contract (SQL + row count + citations + limitations) and expand the limitations registry so Plan 6's surfacing rule has real entries to match against. Closes STANDARDS §4.1 (4/4), §4.4 row 2, §5.7 (4/4).
+- **Shipped:** Trust contract in `agents/answer_agent.agent.yml` (4-section reply format, engineering-honest tone, runtime renders SQL+result, prompt enforces row-count + citations + limitations); 8 new limitation entries + 1 tightened (10 active total); `scripts/build_limitations_index.py` (stdlib-only YAML emitter) + `docs/limitations/_index.yaml` + `run.sh` step 9/9; 5/5 test bench pass with transcripts in `scratch/plan6_test_bench/`; STANDARDS §7 open question on native SQL+citation support resolved (partial native — runtime renders SQL+result, prompt-enforced for the rest).
+- **Decisions:** 6 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 7 — MVP 1 Sign-off Sweep.
 
 ### Session 17 — 2026-05-09 19:18 ET → 19:35 ET — Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook
 [full narrative](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)
@@ -74,19 +83,11 @@
 - **Status:** complete
 - **Next:** Plan 4 — Trust Page + Answer Agent.
 
-### Session 13 — 2026-05-08 16:30 ET — Plan 2 — Admin DQ Overnight
-[full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
-
-- **Goal:** Land four overnight deliverables under Plan 2 — Admin DQ Overnight: limitations registry, dbt docs population + `/docs` route, admin DQ framework + `run.sh`, `/metrics` page.
-- **Shipped:** D0 limitations registry (README + 2 seeds, STANDARDS §7 resolved); D1 dbt docs (1+24 bronze, 4+47 gold descriptions; nginx `/docs` alias fixed; `/home/ubuntu` 750→755 for www-data traversal); D2 admin DQ (3 models + `dlt/load_dbt_results.py` + `run.sh`; verified across 2 `./run.sh` runs); D3 `/metrics` generator (live at `/metrics`); plus pre-flight `--ssh=false` revert + allowlist restore. Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`.
-- **Decisions:** 8 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Update SETUP/CLAUDE/ARCHITECTURE for Tailnet access + nginx docroot + venv pattern. Then `/trust` page and trust contract pass.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 13** — 2026-05-08 16:30 ET — Plan 2 Admin DQ Overnight; D0–D3 (limitations registry seed, dbt docs population + `/docs` route, admin DQ framework + run.sh, `/metrics` page). Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`. [full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
 - **Session 12** — 2026-05-08 13:30 ET — Plan 1 Tailscale; 1.96.4 on EC2, MagicDNS hostname, SSH alias repointed, AWS SG `:22`/`:3000` closed, portal hybrid update (commit `ae20c94`). [full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
 - **Session 11** — 2026-05-08 11:35 ET — Plan 0.5 portal /chat fix; 3 hrefs repointed to `:3000`, nginx `location /chat` removed (commit `6d76594`); gates 1-4 green. [full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
 - **Session 10** — 2026-05-08 11:15 ET — Log refactor: LOG.md split into bounded summary + `docs/sessions/` archive; frontmatter/body/rotation rules established (commit `a72bd2a`). [full narrative](docs/sessions/session-10-2026-05-08-log-refactor.md)
@@ -206,6 +207,11 @@
 | 2026-05-09 19:35 ET | Loop-keyword carve-out in the hook regex | Plan-as-handed-off would have blocked `for ... ; do ... ; done` because `; do` matches `;\s`. Hook strips `; (do\|then\|done\|fi\|else\|elif)` before checking for `;` chains. Verified end-to-end via 13 hook-deny/allow assertions. |
 | 2026-05-09 19:35 ET | Allow merge, not allow replace | Plan-as-handed-off proposed a "final shape" allow array that dropped ~40 patterns currently in `settings.json` (airlayer, duckdb, gh pr, run.sh, granular nginx sudo). Merge-not-replace preserves Plan 9 rev 1's surface area; rev 2 adds `Bash(git *)` bare and `Bash(sudo ln *)` broader, plus 8 new deny patterns. |
 | 2026-05-09 19:35 ET | Hook activates mid-session, not just on session start | Settings re-read per tool call (existing task-warning hook already demonstrates this). Documented in CLAUDE.md Bash Safety so Code knows the hook is live as soon as `settings.json` lands. |
+| 2026-05-09 21:05 ET | Trust contract is prompt-only (no post-processing wrapper) | Oxygen runtime renders SQL + result-table natively; the agent's `Output:` section is fully prompt-controlled. Citations + row-count line + limitations live in `system_instructions`. Verified against 5/5 test bench questions. STANDARDS §7 open question resolved. |
+| 2026-05-09 21:05 ET | Limitations registry consumed via index file, not full bodies | Initial implementation glob'd `docs/limitations/*.md` into agent context; per-call input ballooned to ~30K tokens, hit Anthropic rate limit (30K/min) on multi-turn questions (Q3, Q5 both failed first attempt). Switched to `docs/limitations/_index.yaml` (id+title+severity+affects+path triples, ~2KB total) generated by `scripts/build_limitations_index.py`. Agent cites by id; analyst opens the file for full detail. |
+| 2026-05-09 21:05 ET | Limitation `affects:` use bare/granular tokens, not view-name-only | Initial seed `2024-survey-columns-sparse.md` had `affects: [requests]` which fired on every requests-view query. Tightened to specific column names (`accuracy`, `courtesy`, …). All Plan 8 entries follow this granular pattern: column names, qualified view.dim, or sentinel tokens (`current_date`, `deploy.oxy_build`). Rule of thumb: "would an analyst care about this on a query that touches THIS specific column?" |
+| 2026-05-09 21:05 ET | Test bench evidence is gitignored under `scratch/plan6_test_bench/` | Per the brief — these are evidence (proof of life), not artifacts (input to the system). The session file summarizes; the analyst can re-run the bench against the live agent at any time to regenerate. |
+| 2026-05-09 21:05 ET | Agent prose hallucinated "2025" for current year (Q2) — flagged but not blocking | Sonnet 4-6's knowledge cutoff defaults to 2025 even when SQL evaluates `year(current_date)` to 2026. SQL is correct (receipts intact); prose is misleading. Follow-on for prompt hardening: instruct agent to never state a calendar year in prose without having queried `year(current_date)` first. Tracked as Plan 7 candidate or Plan 5 D5 doc note. |
 
 ---
 
