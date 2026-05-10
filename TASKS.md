@@ -116,12 +116,12 @@ Closes STANDARDS §4.4 row 2.
 - [x] `scripts/build_limitations_index.py` reads `*.md` frontmatter (stdlib-only — no PyYAML dep); `docs/limitations/_index.yaml` generated with 10 active entries; `run.sh` step 9/9 wires it into the pipeline
 - [x] Surfacing verified end-to-end via Plan 6 D3 test bench Q4 + Q5; STANDARDS §4.4 row 2 → [x]; session 18 file; LOG; commit
 
-#### Plan 7 — MVP 1 Sign-off Sweep (queued — runs after Plan 8)
-Closes STANDARDS §5.8 last row; ideally everything else in §6.
-- [ ] D1 — STANDARDS §6 walk: verify each `[ ]` row, flip if done or annotate gap-and-owner
-- [ ] D2 — Engineering-honest portal copy refresh (hero, asset cards, taglines); deploy via run.sh; STANDARDS §5.8 last row → [x]; commit `Plan 7 D2`
-- [ ] D3 — Sign-off determination: either every box [x] → sign off MVP 1; or single LOG row listing blockers
-- [ ] D4 — Session file; LOG Plans Registry; commit `Plan 7 close`
+#### Plan 7 — MVP 1 Sign-off Sweep (2026-05-09 21:40 ET — closed)
+Closed STANDARDS §5.8 last row; STANDARDS §6 walk landed 9/10 Foundations + 16/16 trust + 7/7 layers + 5/5 E2E smoke.
+- [x] D1 — STANDARDS §6 walk: §3.2 (4/5 — systemd row open), §3.3 ✓, §4.5 (2/3 — repo-public row open), §5.1–5.8 all flipped with evidence (curl checks for /metrics, /docs, /trust live; dlt pipeline source URL + `4pyi-uqq6` + `replace` + `union_by_name=true` confirmed; bronze 25 descs + 1 unique + 3 not_null + 1 accepted_values; gold 51 descs + 4 unique + 7 not_null + 2 relationships + 1 accepted_values; semantic `oxy validate` 6/6 valid)
+- [x] D2 — Portal copy refreshed and deployed: hero ("Somerville 311, queryable in plain English"; analyst-honest blurb stating SQL+row count+citations on every reply); stats (date range / source columns / documented limitations count); replaced /erd + /tasks asset cards (routes don't exist) with /trust + /metrics cards; "Built on Oxygen" prose detoxed to factual stack description; verified live via curl
+- [x] D3 — Sign-off determination: 2 boxes still `[ ]`, both Gordon-decision-shaped (systemd-as-MVP1-requirement, repo-public). LOG.md Active Blockers section has the table. MVP 1 is **sign-off-ready pending these two decisions** — not auto-flipping.
+- [x] D4 — Session file 19; LOG Plans Registry; commit `Plan 7 close`
 
 #### Plan 5 — Tech Debt Sweep (queued — runs last)
 - [ ] D1 — settings.json/local.json reconciliation; CLAUDE.md policy subsection; commit

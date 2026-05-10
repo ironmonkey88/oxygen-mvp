@@ -18,7 +18,7 @@
 | 4 | Trust Page | done | Session 15 |
 | 6 | Answer Agent + Trust Contract | done | Session 18 |
 | 8 | Limitations Registry Expansion | done | Session 18 |
-| 7 | MVP 1 Sign-off Sweep | queued (next, rev 2 batch) | — |
+| 7 | MVP 1 Sign-off Sweep | done (sign-off pending Gordon's decisions on 2 rows) | Session 19 |
 | 5 | Tech Debt Sweep | queued (deferred to last in batch) | — |
 | 9 | Allowlist Coverage, Once and For All | done | Session 16 |
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
@@ -30,13 +30,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plans 6 + 8 closed in Session 18 (overnight rev 2 batch). Answer Agent now carries the trust contract: every reply has "Returned N rows.", a 4-section structure (row count / answer / citations / known limitations), engineering-honest tone, and limitations surfacing keyed off `docs/limitations/_index.yaml`. STANDARDS §4.1 (4/4), §4.4 row 2, §5.7 (4/4) all flipped. Limitations registry expanded from 2 to 10 active entries (Plan 8). Test bench 5/5 passed (`scratch/plan6_test_bench/q[1-5]_*.md`); Q1 2024=113,961 regression match. Index pipeline (`scripts/build_limitations_index.py` + `run.sh` step 9/9) wires the index into every pipeline run. **Next:** Plan 7 — MVP 1 Sign-off Sweep, then Plan 5 — Tech Debt Sweep.
+**Phase:** Plan 7 closed in Session 19. STANDARDS §6 walk evidenced 9/10 Foundations, 16/16 trustability rows automatable by Code, 7/7 layer sections, 5/5 E2E smoke. Two boxes remain `[ ]` and both are Gordon-decision-shaped: §3.2 row 4 (systemd) and §4.5 row 1 (repo public). MVP 1 is **sign-off-ready pending these two decisions**; see Active Blockers table for the punch list. Plan 7 D2 also shipped portal copy refresh: hero rewritten ("Somerville 311, queryable in plain English"), stats reframed (date range / source columns / 10 documented limitations), /erd + /tasks asset cards swapped for /trust + /metrics, "Built on Oxygen" prose detoxed to factual stack description; verified live at `http://18.224.151.49/`. **Next:** Plan 5 — Tech Debt Sweep.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 21:05 ET (Session 18 — Plans 6 + 8 closed)
+**Last Updated:** 2026-05-09 21:45 ET (Session 19 — Plan 7 closed)
 
 ---
 
 ## Recent Sessions
+
+### Session 19 — 2026-05-09 21:05 ET → 21:45 ET — Plan 7 — MVP 1 Sign-off Sweep
+[full narrative](docs/sessions/session-19-2026-05-09-plan-7-signoff-sweep.md)
+
+- **Goal:** Walk STANDARDS §6 end-to-end, refresh portal copy to engineering-honest tone, and either sign off MVP 1 or produce a clean blocker list.
+- **Shipped:** STANDARDS §6 walked — 23/25 boxes `[x]` with evidence (curl checks for live routes, dlt/dbt config audits, schema.yml description+test counts, `oxy validate` 6/6); §3.2/§3.3/§4.5/§5.1/§5.2/§5.4/§5.6/§5.8 sections all flipped where automatable. Portal copy refresh: hero h1 + blurb, stats block, asset card grid (replaced /erd + /tasks placeholder cards with /trust + /metrics), "Built on Oxygen" prose; verified live at `http://18.224.151.49/`. Sign-off blocker row written in LOG Active Blockers (2 open §6 boxes, both Gordon-decision-shaped).
+- **Decisions:** 2 decisions — see Decisions Log
+- **Status:** complete (MVP 1 sign-off pending 2 Gordon decisions, not blocked on any Code work)
+- **Next:** Plan 5 — Tech Debt Sweep.
 
 ### Session 18 — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion
 [full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
@@ -74,19 +83,11 @@
 - **Status:** complete
 - **Next:** Plan 5 — Tech Debt Sweep (rev 2 batch chain).
 
-### Session 14 — 2026-05-08 23:00 ET → 2026-05-09 08:36 ET — Plan 3 — MVP 1 Loose Ends + Doc Reconciliation
-[full narrative](docs/sessions/session-14-2026-05-08-plan-3-mvp1-loose-ends.md)
-
-- **Goal:** Three hygiene-shaped efforts under Plan 3 — allowlist hardening + regression investigation, plan/session-numbering reconciliation, doc reconciliation; plus drift-fail verification (deferred from Plan 2).
-- **Shipped:** Allowlist patterns added to settings.json (Plan 0 D7b finding: never landed in committed file; partial commit, not a regression); Plans Registry in LOG.md + Rule 9 in session-starter.md; SETUP/CLAUDE/ARCHITECTURE/STANDARDS catch up with Plan 1 + Plan 2; new `nginx/somerville.conf` as canonical config; transcript-timestamp rule in CLAUDE.md; drift-fail seam (singular test + run.sh step 5b) wired and verified end-to-end. Commits `6e34fdc` `7346dde` `093b220` `e3a79bb` `0a4c53c` `ee4c488`.
-- **Decisions:** 7 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 4 — Trust Page + Answer Agent.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 14** — 2026-05-08 23:00 ET → 2026-05-09 08:36 ET — Plan 3 hygiene + drift-fail verification; allowlist patterns in committed settings.json, Plans Registry + Rule 9, SETUP/CLAUDE/ARCHITECTURE/STANDARDS catch-up, `nginx/somerville.conf` canonical config, transcript-timestamp rule, drift-fail end-to-end. Commits `6e34fdc` `7346dde` `093b220` `e3a79bb` `0a4c53c` `ee4c488`. [full narrative](docs/sessions/session-14-2026-05-08-plan-3-mvp1-loose-ends.md)
 - **Session 13** — 2026-05-08 16:30 ET — Plan 2 Admin DQ Overnight; D0–D3 (limitations registry seed, dbt docs population + `/docs` route, admin DQ framework + run.sh, `/metrics` page). Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`. [full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
 - **Session 12** — 2026-05-08 13:30 ET — Plan 1 Tailscale; 1.96.4 on EC2, MagicDNS hostname, SSH alias repointed, AWS SG `:22`/`:3000` closed, portal hybrid update (commit `ae20c94`). [full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
 - **Session 11** — 2026-05-08 11:35 ET — Plan 0.5 portal /chat fix; 3 hrefs repointed to `:3000`, nginx `location /chat` removed (commit `6d76594`); gates 1-4 green. [full narrative](docs/sessions/session-11-2026-05-08-portal-chat-fix.md)
@@ -212,6 +213,8 @@
 | 2026-05-09 21:05 ET | Limitation `affects:` use bare/granular tokens, not view-name-only | Initial seed `2024-survey-columns-sparse.md` had `affects: [requests]` which fired on every requests-view query. Tightened to specific column names (`accuracy`, `courtesy`, …). All Plan 8 entries follow this granular pattern: column names, qualified view.dim, or sentinel tokens (`current_date`, `deploy.oxy_build`). Rule of thumb: "would an analyst care about this on a query that touches THIS specific column?" |
 | 2026-05-09 21:05 ET | Test bench evidence is gitignored under `scratch/plan6_test_bench/` | Per the brief — these are evidence (proof of life), not artifacts (input to the system). The session file summarizes; the analyst can re-run the bench against the live agent at any time to regenerate. |
 | 2026-05-09 21:05 ET | Agent prose hallucinated "2025" for current year (Q2) — flagged but not blocking | Sonnet 4-6's knowledge cutoff defaults to 2025 even when SQL evaluates `year(current_date)` to 2026. SQL is correct (receipts intact); prose is misleading. Follow-on for prompt hardening: instruct agent to never state a calendar year in prose without having queried `year(current_date)` first. Tracked as Plan 7 candidate or Plan 5 D5 doc note. |
+| 2026-05-09 21:45 ET | MVP 1 sign-off held pending Gordon's call on systemd + repo-public | Plan 7 D3: every box automatable by Code is `[x]`. Two open boxes: §3.2 row 4 (Oxygen as systemd vs. nohup-stable) and §4.5 row 1 (repo public vs. private team-clonable). Both are non-Code decisions; not auto-flipped. Active Blockers table lists both with the question for Gordon. |
+| 2026-05-09 21:45 ET | Replaced /erd + /tasks asset cards with /trust + /metrics | The /erd and /tasks routes don't exist (TASKS.md still has them as `[ ]`). Linking from the portal to dead routes would be marketing-shaped — exactly what Plan 7 D2 was meant to fix. Swapped the cards for /trust and /metrics, which are live and central to the trust contract. /erd + /tasks can come back when the routes ship. |
 
 ---
 
@@ -219,7 +222,16 @@
 
 > Resolved blockers live in [`docs/log-archive.md`](docs/log-archive.md).
 
-None at this time.
+### MVP 1 sign-off blockers as of 2026-05-09 21:35 ET
+
+After Plan 7's STANDARDS §6 walk, every checklist box is `[x]` except:
+
+| Box | Status | Owner | Notes |
+|-----|--------|-------|-------|
+| §3.2 row 4 — Oxygen runs as a systemd service | open | Gordon decision | Runtime is stable: `oxy start` running as a nohup background process since 2026-05-08 (PID 29429), Postgres container up via `oxy start`'s Docker management, web app on `:3000` returns 200. SETUP.md §11 has the systemd unit recipe. Question for Gordon: is systemd required for MVP 1 sign-off, or acceptable to slip to a hardening pass after sign-off? |
+| §4.5 row 1 — Repo is public (or at minimum clonable by collaborators) | open | Gordon decision | Repo is currently private (GitHub `ironmonkey88/oxygen-mvp`); clonable by Gordon's team only. Move-to-public is a non-Code decision; needs Gordon to flip the GitHub setting and confirm here. |
+
+All other §6 boxes (Foundations 9/10, Trustability 16/16 of automatable rows, Layers 7/7 sections, E2E smoke 5/5) are `[x]` with evidence. **MVP 1 is sign-off-ready pending these two decisions.**
 
 ---
 

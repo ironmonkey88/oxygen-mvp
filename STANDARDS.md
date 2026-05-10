@@ -22,11 +22,11 @@ The target user for MVP 1 is a **city analyst** — someone helping the city run
 - [x] AWS security group: port 80 open to `0.0.0.0/0`; SSH (22) and :3000 closed to public  *(Plan 1)*
 
 ### 3.2 Reliability
-- [ ] All pipeline steps idempotent
-- [ ] Single entry point: `run.sh`
-- [ ] Sequential DuckDB access enforced (`dlt → dbt → oxy`); no concurrent writers
-- [ ] Oxygen runs as a `systemd` service
-- [ ] Pipeline exit codes captured even when tests fail (run continues to record failures, then propagates failure)
+- [x] All pipeline steps idempotent  *(verified Plan 2 + Plan 3 — `dlt` write_disposition=replace, `dbt run` idempotent by design, admin uses `is_incremental()` filter; multiple `./run.sh` re-runs give stable row counts)*
+- [x] Single entry point: `run.sh`  *(verified — 9-step pipeline; CLAUDE.md Run Order section)*
+- [x] Sequential DuckDB access enforced (`dlt → dbt → oxy`); no concurrent writers  *(run.sh enforces order; ARCHITECTURE.md documents the lock contention rationale)*
+- [ ] Oxygen runs as a `systemd` service  *(GAP — `oxy.service` not installed on EC2; `oxy start` runs as a nohup background process since Session 7. SETUP.md §11 has the unit-file recipe; deferred to a hardening plan post-MVP-1 sign-off because the runtime is stable as-is)*
+- [x] Pipeline exit codes captured even when tests fail (run continues to record failures, then propagates failure)  *(Plan 3 D3 — run.sh `set +e` around dbt test calls, `FINAL_EXIT = max(bronze/gold-test, admin-test)`; verified end-to-end via synthetic drift-fail)*
 
 ### 3.3 Usability
 - [x] All `schema.yml` files have non-null descriptions on every model and every column  *(Plan 2 D1: bronze 1+24, gold 4+47, admin 3+all)*
@@ -64,9 +64,9 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [x] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area  *(Plan 4 — `/trust` page; Plan 6 — Answer Agent trust contract verified across Q4 (block-code-padded + location-ward-block-only) and Q5 (2024-survey-columns-sparse + survey-columns-on-fact))*
 
 ### 4.5 Reproducible
-- [ ] Repo is public (or at minimum clonable by collaborators)
-- [ ] Pipeline runs end-to-end with one command (`./run.sh`)
-- [ ] All transformations expressed declaratively (SQL, YAML) — no opaque scripts in the data path
+- [ ] Repo is public (or at minimum clonable by collaborators)  *(Gordon decision — repo is private; clonable by Gordon's team only. Move to public is a non-Code decision; flagged for sign-off conversation rather than auto-flipped.)*
+- [x] Pipeline runs end-to-end with one command (`./run.sh`)  *(verified across Sessions 7, 13, 14, 17 — full run completes; 9 steps; FINAL_EXIT propagates test failures)*
+- [x] All transformations expressed declaratively (SQL, YAML) — no opaque scripts in the data path  *(audit: dbt SQL models, dlt-Python pipeline (declarative resource pattern), Airlayer YAML, agent YAML, run.sh as orchestrator only — no "magic" data-mutation scripts outside this surface)*
 
 ---
 
@@ -75,20 +75,20 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 ### 5.1 Ingestion (dlt)
 Pulls source data into Parquet files at `data/raw/`, ready for dbt to read.
 **Done done when:**
-- [ ] Source documented (URL, dataset ID, auth requirements) in the pipeline file
-- [ ] Idempotent — write disposition (`replace` or `merge`) explicit in the pipeline
-- [ ] Output format storage-agnostic — Parquet on filesystem, not DuckDB destination
-- [ ] Row count verified against source after each run
-- [ ] Schema drift handled (`union_by_name=true` for cross-year files where shape changes)
+- [x] Source documented (URL, dataset ID, auth requirements) in the pipeline file  *(`dlt/somerville_311_pipeline.py:6` — `SODA_BASE = "https://data.somervillema.gov/resource/4pyi-uqq6.json"`; auth-free public SODA endpoint)*
+- [x] Idempotent — write disposition (`replace` or `merge`) explicit in the pipeline  *(`write_disposition="replace"` per resource per year)*
+- [x] Output format storage-agnostic — Parquet on filesystem, not DuckDB destination  *(`dlt.destinations.filesystem(bucket_url=RAW_PATH)` + `loader_file_format="parquet"`; readable by Snowflake/Spark/etc.)*
+- [x] Row count verified against source after each run  *(1,168,959 rows confirmed across multiple runs; matches source feed)*
+- [x] Schema drift handled (`union_by_name=true` for cross-year files where shape changes)  *(`dbt/models/bronze/raw_311_requests.sql:34` — `read_parquet(..., union_by_name=true)`; older Parquet files are missing newer survey/dept columns)*
 
 ### 5.2 Bronze
 Exact mirror of source — the receiving dock. No transforms.
 **Done done when:**
-- [ ] Exact mirror of source — no value transforms
-- [ ] All source columns retained as `VARCHAR` (per `docs/schema.sql`)
-- [ ] dlt metadata columns (`_dlt_load_id`, `_dlt_id`) retained for lineage
-- [ ] Arrival checks only — `not_null` on PK, `not_null` on critical date columns, `accepted_values` on enum-like columns
-- [ ] Model and column descriptions populated in `schema.yml`
+- [x] Exact mirror of source — no value transforms  *(bronze model selects each source column with no value-mutation; only `::VARCHAR` casts on date columns, which are already VARCHAR-shaped from SODA)*
+- [x] All source columns retained as `VARCHAR` (per `docs/schema.sql`)  *(`raw_311_requests.sql` keeps every source column; bronze model is a `view`)*
+- [x] dlt metadata columns (`_dlt_load_id`, `_dlt_id`) retained for lineage  *(both columns surfaced in the bronze view)*
+- [x] Arrival checks only — `not_null` on PK, `not_null` on critical date columns, `accepted_values` on enum-like columns  *(bronze schema.yml: 1 unique + 3 not_null + 1 accepted_values; matches Plan 3 D3 hardening)*
+- [x] Model and column descriptions populated in `schema.yml`  *(25 description lines = 1 model + 24 columns)*
 
 ### 5.3 Silver *(placeholder — full standards land in MVP 3)*
 Cleaned, typed, deduplicated, PII-redacted — the parts shop.
@@ -103,13 +103,13 @@ Standards we already commit to:
 ### 5.4 Gold
 Business-ready facts and dimensions — the finished product. What the semantic layer points at.
 **Done done when:**
-- [ ] All models have model-level descriptions in `schema.yml`
-- [ ] All columns have column-level descriptions — no nulls
-- [ ] All surrogate/primary keys have `unique` + `not_null` tests
-- [ ] All foreign keys to dims have `relationships` tests
-- [ ] Business rule tests defined where applicable (`accepted_values` on bounded enums, range checks where natural)
-- [ ] Models surfaced in `dbt docs`
-- [ ] Models referenced from at least one `.view.yml` in the semantic layer
+- [x] All models have model-level descriptions in `schema.yml`  *(4 models, all described)*
+- [x] All columns have column-level descriptions — no nulls  *(47 column descriptions across the 4 models; total 51 description lines counting model-level)*
+- [x] All surrogate/primary keys have `unique` + `not_null` tests  *(gold schema.yml: 4 unique + 7 not_null tests)*
+- [x] All foreign keys to dims have `relationships` tests  *(2 relationships tests on `request_type_id` and `status_id`)*
+- [x] Business rule tests defined where applicable (`accepted_values` on bounded enums, range checks where natural)  *(`accepted_values` on `dim_status.status` ∈ Open/In Progress/On Hold/Closed)*
+- [x] Models surfaced in `dbt docs`  *(verified live at portal `/docs/index.html` returns 200 with title "dbt Docs")*
+- [x] Models referenced from at least one `.view.yml` in the semantic layer  *(`requests`/`request_types`/`statuses`/`dates` views point at the four gold models)*
 
 ### 5.5 Admin (Data Quality)
 Infrastructure tables for observability and assertional tests — the inspector's clipboard.
@@ -125,14 +125,14 @@ Infrastructure tables for observability and assertional tests — the inspector'
 ### 5.6 Semantic (Airlayer)
 The semantic layer — Looker Explore-equivalent. Single source of truth for every metric.
 **Done done when:**
-- [ ] All views have `description:` populated
-- [ ] All dimensions have `description:` populated
-- [ ] All measures have `description:` populated (this becomes the public definition on `/metrics`)
-- [ ] Entities declared correctly — primary on PK, foreign on FK — for join inference
-- [ ] `airlayer validate` exits 0
-- [ ] `airlayer query -x` returns rows for at least one representative cross-view query
-- [ ] `oxy validate` exits 0
-- [ ] `oxy build` exits 0 *(deferred to the Answer Agent session per existing decision — `oxy start` brings up the Postgres backing store needed for embeddings)*
+- [x] All views have `description:` populated  *(4 views in `semantics/views/`: requests, request_types, statuses, dates)*
+- [x] All dimensions have `description:` populated  *(verified at `airlayer validate` time)*
+- [x] All measures have `description:` populated (this becomes the public definition on `/metrics`)  *(`/metrics` page renders SQL + description for `total_requests` and `open_requests`)*
+- [x] Entities declared correctly — primary on PK, foreign on FK — for join inference  *(`requests` view declares primary on `id`, foreign on `date_created_dt`/`request_type_id`/`status_id`)*
+- [x] `airlayer validate` exits 0  *(verified at Plan 2 close; re-confirmed Plan 6 pre-flight)*
+- [x] `airlayer query -x` returns rows for at least one representative cross-view query  *(Plan 2 — auto-join across `requests` + `dim_request_type` returned 5 rows)*
+- [x] `oxy validate` exits 0  *(Plan 6 pre-flight — "All 6 config files are valid"; re-verified post-Plan-8)*
+- [x] `oxy build` exits 0 *(closed in Plan 0 — embeddings built during FR pass)*
 
 ### 5.7 Agent (Answer Agent)
 The interface — a research partner the analyst can trust.
@@ -150,7 +150,7 @@ Everything the analyst sees outside the chat — and the public window.
 - [x] Nav reflects the analyst workflow: chat-first, with `/docs`, `/trust`, `/metrics` one click away  *(Plan 4 — three route links added to `portal/index.html` `.nav-links`; private-beta chat pill preserved on the hero)*
 - [x] `/trust` is dynamic — driven by the admin schema, not static copy  *(Plan 4)*
 - [x] `/metrics` is generated from Airlayer YAML, not hand-written  *(Plan 2 D3)*
-- [ ] Copy is engineering-honest — not marketing-friendly  *(Plan 7 — portal copy refresh)*
+- [x] Copy is engineering-honest — not marketing-friendly  *(Plan 7 D2 — hero rewritten ("Somerville 311, queryable in plain English"; 1.17M / 2015 / SQL+row count+citations); stats now show date range + source columns + documented limitations count, not "NL / No SQL required"; replaced /erd + /tasks asset cards (routes don't exist) with /trust + /metrics cards; "Built on Oxygen" prose detoxed to factual stack description; verified live at `http://18.224.151.49/`)*
 
 ---
 
@@ -159,32 +159,32 @@ Everything the analyst sees outside the chat — and the public window.
 Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 1 is called done.
 
 **Foundations:**
-- [ ] §3.1 Security: 5/5
-- [ ] §3.2 Reliability: 5/5
-- [ ] §3.3 Usability: 4/4
+- [x] §3.1 Security: 5/5  *(Plan 1)*
+- [ ] §3.2 Reliability: 4/5  *(systemd-service row open — gap; SETUP.md §11 has the recipe; runtime stable as nohup, deferred)*
+- [x] §3.3 Usability: 4/4  *(Plan 2)*
 
 **Extreme trustability:**
-- [ ] §4.1 Verifiability: 4/4
-- [ ] §4.2 Public metric definitions: 3/3
+- [x] §4.1 Verifiability: 4/4  *(Plan 6)*
+- [x] §4.2 Public metric definitions: 3/3  *(Plan 2 D3)*
 - [x] §4.3 Live data quality: 4/4  *(Plan 4)*
-- [ ] §4.4 Limitations registry: 2/2
-- [ ] §4.5 Reproducibility: 3/3
+- [x] §4.4 Limitations registry: 2/2  *(Plan 8)*
+- [ ] §4.5 Reproducibility: 2/3  *(repo-public row open — Gordon decision, not Code's to flip)*
 
 **Layers:**
-- [ ] §5.1 Ingestion (dlt): 5/5
-- [ ] §5.2 Bronze: 5/5
-- [ ] §5.4 Gold: 7/7
-- [ ] §5.5 Admin (DQ): 5/5
-- [ ] §5.6 Semantic (Airlayer): 7/7 (with `oxy build` deferred caveat)
-- [ ] §5.7 Agent: 4/4
-- [ ] §5.8 Knowledge Product (Portal): 6/6
+- [x] §5.1 Ingestion (dlt): 5/5  *(Plan 7 verified)*
+- [x] §5.2 Bronze: 5/5  *(Plan 7 verified)*
+- [x] §5.4 Gold: 7/7  *(Plan 7 verified)*
+- [x] §5.5 Admin (DQ): 5/5  *(Plan 2 + Plan 3)*
+- [x] §5.6 Semantic (Airlayer): 7/7  *(Plan 7 — `oxy build` deferred caveat closed in Plan 0)*
+- [x] §5.7 Agent: 4/4  *(Plan 6)*
+- [x] §5.8 Knowledge Product (Portal): 6/6  *(Plan 7 D2)*
 
 **End-to-end smoke:**
-- [ ] Analyst can ask "How many 311 requests were opened in 2024?" and receives a correct answer with SQL, row count, and citation
-- [ ] Analyst can ask "What are the most common request types?" and receives a correct answer with SQL, row count, and citation
-- [x] `/trust` page is green for the most recent pipeline run  *(Plan 4 — run_id `5a421e8d-55e4-4731-a3a2-50ea0e88a0ee`, 36/36 tests pass)*
-- [ ] `/metrics` page lists every current measure with its expanded SQL and description
-- [ ] `/docs` page renders dbt documentation with no missing model or column descriptions
+- [x] Analyst can ask "How many 311 requests were opened in 2024?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q1 — 113,961, transcript in `scratch/plan6_test_bench/q1_2024_regression.md`)*
+- [x] Analyst can ask "What are the most common request types?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q3 — Welcome desk-information / Obtain a parking permit inquiry / Temporary no parking sign posting top 3, transcript in q3_top_request_types.md)*
+- [x] `/trust` page is green for the most recent pipeline run  *(Plan 4 — run_id `5a421e8d-55e4-4731-a3a2-50ea0e88a0ee`, 36/36 tests pass; re-verified Plan 7 — `curl http://18.224.151.49/trust` → 200)*
+- [x] `/metrics` page lists every current measure with its expanded SQL and description  *(Plan 7 verified — `curl http://18.224.151.49/metrics` shows `total_requests` and `open_requests` with `<pre class="sql"><code>` SQL blocks)*
+- [x] `/docs` page renders dbt documentation with no missing model or column descriptions  *(Plan 7 verified — `curl http://18.224.151.49/docs/index.html` returns 200 with title "dbt Docs"; no missing descriptions per Plan 2 D1)*
 
 ---
 
