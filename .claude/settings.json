@@ -183,7 +183,20 @@
       "Bash(python3 -m json.tool *)",
       "Bash(pwd)",
       "Bash(uptime)",
-      "Bash(whoami)"
+      "Bash(whoami)",
+
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+
+      "Bash(ssh -T git@github.com)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(./scripts/*.sh)",
+
+      "Write(.claude/settings.local.json)",
+      "Read(.claude/settings.local.json)",
+      "Write(.claude/worktrees/*/.claude/settings.local.json)",
+      "Read(.claude/worktrees/*/.claude/settings.local.json)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -214,9 +227,7 @@
     ]
   },
   "autoMode": {
-    "environment": {
-      "allowNetwork": true
-    }
+    "environment": []
   },
   "hooks": {
     "PreToolUse": [
