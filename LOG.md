@@ -19,7 +19,7 @@
 | 6 | Answer Agent + Trust Contract | done | Session 18 |
 | 8 | Limitations Registry Expansion | done | Session 18 |
 | 7 | MVP 1 Sign-off Sweep | done (sign-off pending Gordon's decisions on 2 rows) | Session 19 |
-| 5 | Tech Debt Sweep | queued (deferred to last in batch) | — |
+| 5 | Tech Debt Sweep | done | Session 20 |
 | 9 | Allowlist Coverage, Once and For All | done | Session 16 |
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
 
@@ -30,13 +30,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Plan 7 closed in Session 19. STANDARDS §6 walk evidenced 9/10 Foundations, 16/16 trustability rows automatable by Code, 7/7 layer sections, 5/5 E2E smoke. Two boxes remain `[ ]` and both are Gordon-decision-shaped: §3.2 row 4 (systemd) and §4.5 row 1 (repo public). MVP 1 is **sign-off-ready pending these two decisions**; see Active Blockers table for the punch list. Plan 7 D2 also shipped portal copy refresh: hero rewritten ("Somerville 311, queryable in plain English"), stats reframed (date range / source columns / 10 documented limitations), /erd + /tasks asset cards swapped for /trust + /metrics, "Built on Oxygen" prose detoxed to factual stack description; verified live at `http://18.224.151.49/`. **Next:** Plan 5 — Tech Debt Sweep.
+**Phase:** Rev 2 overnight batch complete. Plans 6, 8, 7, 5 all closed across Sessions 18–20. **MVP 1 is sign-off-ready** — every automatable STANDARDS §6 box is `[x]`. Two boxes wait on Gordon: §3.2 row 4 (Oxygen as systemd vs. nohup-stable) and §4.5 row 1 (repo public vs. private). Active Blockers table has the punch-list. Plan 5 (Tech Debt Sweep) hardening: settings.local.json pruned, `Bash(bash *)` added, `dbt/profiles.example.yml` shipped, SETUP §8 rewritten, run.sh step text aligned, CLAUDE.md + ARCHITECTURE.md run-order sections refreshed 7→9. **Next:** Gordon decisions on the two open §6 rows; whatever Plan 10/11 ships next.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-09 21:45 ET (Session 19 — Plan 7 closed)
+**Last Updated:** 2026-05-10 09:55 ET (Session 20 — Plan 5 closed; rev 2 batch complete)
 
 ---
 
 ## Recent Sessions
+
+### Session 20 — 2026-05-09 21:45 ET → 2026-05-10 09:55 ET — Plan 5 — Tech Debt Sweep
+[full narrative](docs/sessions/session-20-2026-05-09-plan-5-tech-debt.md)
+
+- **Goal:** Hygiene pass to close out the rev 2 overnight batch — settings reconciliation, dbt profiles example, scratch hygiene, run.sh step-text consistency, doc reconciliation.
+- **Shipped:** D1 settings: pruned settings.local.json to empty, added `Bash(bash *)` to settings.json, CLAUDE.md "what belongs where" subsection (commit `b274ae7`); D2 dbt: `dbt/profiles.example.yml` + SETUP §8 rewrite (commit `1f0d05d`); D3 scratch: nothing to prune; D4 run.sh: no drift to fix; D5 docs: CLAUDE.md Run Order 7→9 steps + 5b, ARCHITECTURE.md Run Order bash block + Portal routes table + Process management line corrected, TASKS.md "Deliverable B" closed.
+- **Decisions:** 1 decision — see Decisions Log
+- **Status:** complete
+- **Next:** Gordon's call on the two open MVP 1 sign-off boxes (systemd, repo-public). Then whatever new plan he stacks.
 
 ### Session 19 — 2026-05-09 21:05 ET → 21:45 ET — Plan 7 — MVP 1 Sign-off Sweep
 [full narrative](docs/sessions/session-19-2026-05-09-plan-7-signoff-sweep.md)
@@ -74,19 +83,11 @@
 - **Status:** complete
 - **Next:** State-check rev 2 batch (last clean plan was Plan 4); resume with Plan 5 — Tech Debt Sweep or recovery pass on whatever stalled.
 
-### Session 15 — 2026-05-09 12:53 ET → 13:30 ET — Plan 4 — Trust Page
-[full narrative](docs/sessions/session-15-2026-05-09-plan-4-trust-page.md)
-
-- **Goal:** Ship `/trust` page driven by `admin.fct_test_run` with status banner, freshness stats, and per-test results table.
-- **Shipped:** `scripts/generate_trust_page.py`; `run.sh` extended to step 8/8 + auto-sync of portal index.html; `nginx/somerville.conf` `/trust` location; portal nav surfacing `/docs/` `/metrics` `/trust`; `scratch/run_sql.py` runner + synthetic-fail SQL pair; `.claude/settings.local.json` runner-pattern allowlist; STANDARDS.md §4.3 (4/4) + §5.8 5/6 ticked. Synthetic-fail render check verified green→red→green. Commit `300acee` plus the Plan 4 close commit.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 5 — Tech Debt Sweep (rev 2 batch chain).
-
 ---
 
 ## Earlier Sessions
 
+- **Session 15** — 2026-05-09 12:53 ET → 13:30 ET — Plan 4 Trust Page; `scripts/generate_trust_page.py`, run.sh step 8/8 + portal index sync, nginx /trust location, portal nav links, synthetic-fail render check green→red→green. Commits `300acee` + close. [full narrative](docs/sessions/session-15-2026-05-09-plan-4-trust-page.md)
 - **Session 14** — 2026-05-08 23:00 ET → 2026-05-09 08:36 ET — Plan 3 hygiene + drift-fail verification; allowlist patterns in committed settings.json, Plans Registry + Rule 9, SETUP/CLAUDE/ARCHITECTURE/STANDARDS catch-up, `nginx/somerville.conf` canonical config, transcript-timestamp rule, drift-fail end-to-end. Commits `6e34fdc` `7346dde` `093b220` `e3a79bb` `0a4c53c` `ee4c488`. [full narrative](docs/sessions/session-14-2026-05-08-plan-3-mvp1-loose-ends.md)
 - **Session 13** — 2026-05-08 16:30 ET — Plan 2 Admin DQ Overnight; D0–D3 (limitations registry seed, dbt docs population + `/docs` route, admin DQ framework + run.sh, `/metrics` page). Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`. [full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
 - **Session 12** — 2026-05-08 13:30 ET — Plan 1 Tailscale; 1.96.4 on EC2, MagicDNS hostname, SSH alias repointed, AWS SG `:22`/`:3000` closed, portal hybrid update (commit `ae20c94`). [full narrative](docs/sessions/session-12-2026-05-08-plan-1-tailscale.md)
@@ -215,6 +216,7 @@
 | 2026-05-09 21:05 ET | Agent prose hallucinated "2025" for current year (Q2) — flagged but not blocking | Sonnet 4-6's knowledge cutoff defaults to 2025 even when SQL evaluates `year(current_date)` to 2026. SQL is correct (receipts intact); prose is misleading. Follow-on for prompt hardening: instruct agent to never state a calendar year in prose without having queried `year(current_date)` first. Tracked as Plan 7 candidate or Plan 5 D5 doc note. |
 | 2026-05-09 21:45 ET | MVP 1 sign-off held pending Gordon's call on systemd + repo-public | Plan 7 D3: every box automatable by Code is `[x]`. Two open boxes: §3.2 row 4 (Oxygen as systemd vs. nohup-stable) and §4.5 row 1 (repo public vs. private team-clonable). Both are non-Code decisions; not auto-flipped. Active Blockers table lists both with the question for Gordon. |
 | 2026-05-09 21:45 ET | Replaced /erd + /tasks asset cards with /trust + /metrics | The /erd and /tasks routes don't exist (TASKS.md still has them as `[ ]`). Linking from the portal to dead routes would be marketing-shaped — exactly what Plan 7 D2 was meant to fix. Swapped the cards for /trust and /metrics, which are live and central to the trust contract. /erd + /tasks can come back when the routes ship. |
+| 2026-05-10 09:55 ET | settings.local.json reset to empty allow array | Diff against settings.json showed every accumulated pattern was redundant with a tool-family wildcard or a verification-idiom cohort. Empty local + `Bash(bash *)` added to settings.json + new CLAUDE.md "what belongs where" subsection codifies the pattern: local is per-machine scratch, committed is project-wide policy. Future Code sessions should keep local empty until they actually need a session-specific exception. |
 
 ---
 

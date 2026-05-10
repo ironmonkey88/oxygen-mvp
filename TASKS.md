@@ -123,13 +123,13 @@ Closed STANDARDS §5.8 last row; STANDARDS §6 walk landed 9/10 Foundations + 16
 - [x] D3 — Sign-off determination: 2 boxes still `[ ]`, both Gordon-decision-shaped (systemd-as-MVP1-requirement, repo-public). LOG.md Active Blockers section has the table. MVP 1 is **sign-off-ready pending these two decisions** — not auto-flipping.
 - [x] D4 — Session file 19; LOG Plans Registry; commit `Plan 7 close`
 
-#### Plan 5 — Tech Debt Sweep (queued — runs last)
-- [ ] D1 — settings.json/local.json reconciliation; CLAUDE.md policy subsection; commit
-- [ ] D2 — dbt/profiles.example.yml + SETUP reference; commit
-- [ ] D3 — scratch/ hygiene; commit
-- [ ] D4 — run.sh step-text consistency check; commit if drift
-- [ ] D5 — doc reconciliation pass (LOG/TASKS/ARCHITECTURE/SETUP/CLAUDE); commit if drift
-- [ ] D6 — Session file; LOG; commit `Plan 5 close`; WAKE-UP BRIEF commit on top
+#### Plan 5 — Tech Debt Sweep (2026-05-10 09:55 ET — closed)
+- [x] D1 — settings.local.json pruned to `{"permissions":{"allow":[]}}` (every pattern was redundant with tool-family allows in settings.json); added `Bash(bash *)` to settings.json so script invocations don't stall; CLAUDE.md "Allowlist policy" extended with "what belongs where" + periodic-prune subsection; commit `b274ae7`
+- [x] D2 — `dbt/profiles.example.yml` shipped; SETUP.md §8 rewritten to reference cp+edit pattern; closes the machine-specificity gap noted in 2026-05-07 22:13 ET decision; commit `1f0d05d`
+- [x] D3 — scratch/ hygiene check: only `plan6_test_bench/` exists (just-created in Session 18); no old runner files, no stale ad-hoc SQL; nothing to prune; commit `1f0d05d`
+- [x] D4 — run.sh step-text consistency: already aligned in Session 18 when step 9 was added (1/9 through 9/9, plus 5b/9 sub-step); no drift to fix; verified via grep
+- [x] D5 — doc reconciliation: CLAUDE.md Run Order section updated 7→9 steps (with 5b sub-step); ARCHITECTURE.md Run Order code block updated 7→9 steps with full bash-shape; ARCHITECTURE.md Portal routes table updated (/trust now Plan 4 done; /erd + /tasks marked deferred-from-MVP-1 + portal-card-removed); ARCHITECTURE.md "Process management" line corrected (Oxygen is nohup, not systemd — STANDARDS §3.2 row 4 open); TASKS.md "Deliverable B [~]" closed
+- [x] D6 — Session 20 file; LOG.md updates; commit `Plan 5 close`; WAKE-UP BRIEF commit on top
 
 #### Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook (2026-05-09 19:35 ET — closed)
 - [x] Layer 0 audit: confirmed `defaultMode: acceptEdits`, bare `Read`/`Write`/`Edit`, `WebFetch(*)`, `Read(**/.env)` deny, `$schema` all intact from Plan 9 rev 1; no drift
@@ -210,7 +210,7 @@ Closed STANDARDS §5.8 last row; STANDARDS §6 walk landed 9/10 Foundations + 16
 
 ### Documentation — MVP 1 scope sharpening
 - [x] Deliverable A: STANDARDS.md written, committed, pushed
-- [~] Deliverable B: TASKS.md updates (scope statement, Hardening section, Answer Agent + Sign-off updates, marks done)
+- [x] Deliverable B: TASKS.md updates (scope statement, Hardening section, Answer Agent + Sign-off updates, marks done)  *(Plans 6/7/8/5 closed via the rev 2 batch — all relevant rows reconciled)*
 - [ ] Deliverable C: LOG.md session entry + Decisions Log + Current Status
 
 ### Environment Setup

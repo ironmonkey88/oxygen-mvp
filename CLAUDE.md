@@ -228,10 +228,13 @@ GitHub `main` is the source of truth. EC2 is downstream of it. Skipping this ste
 3. `dbt test --select bronze gold` *(captures exit code, does not halt on failure)*
 4. `python dlt/load_dbt_results.py` *(appends run_results.json to `main_bronze.raw_dbt_results_raw`)*
 5. `dbt run --select admin`
+5b. `dbt test --select admin` *(drift-fail guardrail; captures exit, does not halt — Plan 3 D3)*
 6. `dbt docs generate` *(regenerates `/docs`)*
-7. `python scripts/generate_metrics_page.py` + deploy to `/var/www/somerville/metrics.html` *(regenerates `/metrics`)*
+7. `python scripts/generate_metrics_page.py` + deploy to `/var/www/somerville/metrics.html` *(regenerates `/metrics` — Plan 2 D3)*
+8. `python scripts/generate_trust_page.py` + deploy to `/var/www/somerville/trust.html` + sync `portal/index.html` *(regenerates `/trust` — Plan 4)*
+9. `python scripts/build_limitations_index.py` *(regenerates `docs/limitations/_index.yaml` from `*.md` frontmatter — Plan 8)*
 
-Final exit code = the captured `dbt test` exit (so a failing test surfaces, but admin tables still get populated).
+Final exit code = `max(bronze/gold-test exit, admin-test exit)` — any failing test surfaces, but admin tables and the trust page still get populated.
 
 See `ARCHITECTURE.md` for the full annotated run order.
 
