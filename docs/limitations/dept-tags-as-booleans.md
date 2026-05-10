@@ -28,8 +28,9 @@ multiple tags simultaneously.
 
 - Cannot easily ask "which department fielded the most requests" — that
   question is ambiguous when a single request carries multiple tags.
-- Tag coverage is sparse: only 4,187 of 1.17M rows (~0.36%) carry any
-  tag. Tag-based aggregations cover a tiny minority of requests.
+- Tag coverage is sparse: only 987 of 1,169,935 rows (~0.08%) carry any
+  tag (verified 2026-05-10). Tag-based aggregations cover a tiny minority
+  of requests.
 - Adding a new department requires a schema change to the fact table.
 
 ## Workaround
@@ -37,7 +38,7 @@ multiple tags simultaneously.
 For "tag is set" filters, query the boolean directly
 (`WHERE is_noise_tag = true`). For "any tag set" queries, OR all eight
 booleans together. For analyst-level questions about department, frame
-results as "of the 0.36% of requests that carry a tag…" rather than
+results as "of the 0.08% of requests that carry a tag…" rather than
 "of all requests."
 
 ## Resolution path
