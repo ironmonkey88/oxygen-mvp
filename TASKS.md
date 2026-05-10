@@ -93,6 +93,41 @@
 
 ### MVP 1 — Hardening for analyst trust
 
+#### Plan 6 — Answer Agent + Trust Contract (2026-05-09 19:40 ET — in progress)
+Closes STANDARDS §4.1 (4/4) and §5.7 (4/4).
+- [~] Pre-flight: read agent yaml + limitations + Oxygen runtime check (sudo systemctl status oxy, curl :3000, agent API surface from oxy.tech docs); resolve §7 open question on native SQL+citation support
+- [ ] D1 — Trust contract in agent prompt: SQL block + Returned N rows + citations (tables/views/limitations); limitations registry index injected as static context block; commit `Plan 6 D1`
+- [ ] D2 — Limitations surfacing: prompt-only matching rule (entry surfaces when any value in `affects:` appears in SQL or referenced views; literal `["all"]` always surfaces); commit `Plan 6 D2`
+- [ ] D3 — 5-question test bench: 2024 = 113,961 (regression); current-year so-far; top-10 request types; block-level (must surface block-code-padded); satisfaction (must surface 2024-survey-columns-sparse). Capture transcripts in `scratch/plan6_test_bench/qN_*.md`
+- [ ] D4 — STANDARDS §4.1 4/4 + §5.7 4/4 flipped; TASKS Answer Agent rows flipped; session file; LOG.md; commit `Plan 6 close`
+
+#### Plan 8 — Limitations Registry Expansion (queued — runs between Plan 6 D2 and D3)
+Closes STANDARDS §4.4 row 2.
+- [ ] location-ward-block-only.md (warning, since 2026-05-07; affects requests.ward, requests.block_code, requests)
+- [ ] survey-columns-on-fact.md (info, since 2026-05-07; affects requests.satisfaction_rating, requests.satisfaction_comment) — verify column names against actual schema
+- [ ] dept-tags-as-booleans.md (info, since 2026-05-07; affects requests + boolean tag cols)
+- [ ] bronze-varchar-source-cols.md (info, since 2026-05-07; affects bronze.raw_311_requests)
+- [ ] open-status-not-just-open.md (warning, since 2026-05-07; affects requests.is_open, requests.open_requests)
+- [ ] open-requests-no-join-filter.md (info, since 2026-05-08; affects requests.open_requests)
+- [ ] current-year-partial.md (warning, since 2026-05-08; affects requests, requests.opened_dt)
+- [ ] oxy-build-postgres-dependency.md (info, since 2026-05-08; affects all, deploy-time only)
+- [ ] Plan 6 D2 surfacing verified against Plan 8 entries on test-bench q4/q5; STANDARDS §4.4 row 2 → [x]; session file; LOG; commit
+
+#### Plan 7 — MVP 1 Sign-off Sweep (queued — runs after Plan 8)
+Closes STANDARDS §5.8 last row; ideally everything else in §6.
+- [ ] D1 — STANDARDS §6 walk: verify each `[ ]` row, flip if done or annotate gap-and-owner
+- [ ] D2 — Engineering-honest portal copy refresh (hero, asset cards, taglines); deploy via run.sh; STANDARDS §5.8 last row → [x]; commit `Plan 7 D2`
+- [ ] D3 — Sign-off determination: either every box [x] → sign off MVP 1; or single LOG row listing blockers
+- [ ] D4 — Session file; LOG Plans Registry; commit `Plan 7 close`
+
+#### Plan 5 — Tech Debt Sweep (queued — runs last)
+- [ ] D1 — settings.json/local.json reconciliation; CLAUDE.md policy subsection; commit
+- [ ] D2 — dbt/profiles.example.yml + SETUP reference; commit
+- [ ] D3 — scratch/ hygiene; commit
+- [ ] D4 — run.sh step-text consistency check; commit if drift
+- [ ] D5 — doc reconciliation pass (LOG/TASKS/ARCHITECTURE/SETUP/CLAUDE); commit if drift
+- [ ] D6 — Session file; LOG; commit `Plan 5 close`; WAKE-UP BRIEF commit on top
+
 #### Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook (2026-05-09 19:35 ET — closed)
 - [x] Layer 0 audit: confirmed `defaultMode: acceptEdits`, bare `Read`/`Write`/`Edit`, `WebFetch(*)`, `Read(**/.env)` deny, `$schema` all intact from Plan 9 rev 1; no drift
 - [x] Layer 1 allow merge: added `Bash(git *)` (bare) + `Bash(sudo ln *)` (broader); all rev 1 patterns preserved

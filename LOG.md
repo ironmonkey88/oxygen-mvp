@@ -16,10 +16,10 @@
 | 2 | Admin DQ Overnight | done | Session 13 |
 | 3 | MVP 1 Loose Ends + Doc Reconciliation | done | Session 14 |
 | 4 | Trust Page | done | Session 15 |
-| 5 | Tech Debt Sweep | queued (rev 2 batch) | — |
-| 6 | Answer Agent + Trust Contract | queued (rev 2 batch) | — |
-| 7 | MVP 1 Sign-off Sweep | queued (rev 2 batch) | — |
-| 8 | Limitations Registry Expansion | queued (rev 2 batch) | — |
+| 6 | Answer Agent + Trust Contract | in progress (rev 2 batch, 2026-05-09 overnight) | — |
+| 8 | Limitations Registry Expansion | queued (after Plan 6 D2; before Plan 6 D3) | — |
+| 7 | MVP 1 Sign-off Sweep | queued (after Plan 8) | — |
+| 5 | Tech Debt Sweep | queued (deferred to last in batch) | — |
 | 9 | Allowlist Coverage, Once and For All | done | Session 16 |
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
 
