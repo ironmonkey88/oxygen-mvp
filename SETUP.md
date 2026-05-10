@@ -125,17 +125,15 @@ ssh ec2 'oxy --version'                            # should resolve oxy on PATH
 
 ## 8. Configure dbt Profile
 
-Create `~/.dbt/profiles.yml` (user-local — never check this into the repo):
+The repo ships [`dbt/profiles.example.yml`](dbt/profiles.example.yml) as a template. Copy it into place and edit the `path:` for your environment:
 
-```yaml
-somerville_311:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: /home/ubuntu/oxygen-mvp/data/somerville.duckdb
-      threads: 4
+```bash
+mkdir -p ~/.dbt
+cp dbt/profiles.example.yml ~/.dbt/profiles.yml
+# edit ~/.dbt/profiles.yml — set `path:` to the absolute DuckDB file location
 ```
+
+The live `~/.dbt/profiles.yml` is intentionally user-local and is **not** checked into the repo (machine-specific paths). The example file is the canonical template; if its shape changes, update the example, then re-copy on the affected boxes.
 
 The profile name must match the `profile:` field in `dbt/dbt_project.yml`.
 

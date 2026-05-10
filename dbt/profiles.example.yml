@@ -1,0 +1,23 @@
+# dbt/profiles.example.yml — template for ~/.dbt/profiles.yml on a fresh box.
+#
+# This file is *not* the live profile. dbt reads from ~/.dbt/profiles.yml
+# (per CLAUDE.md decision 2026-05-07 22:13 ET). On a new EC2 box or local
+# clone:
+#
+#   1. mkdir -p ~/.dbt
+#   2. cp dbt/profiles.example.yml ~/.dbt/profiles.yml
+#   3. Edit the `path:` to point at your local DuckDB file.
+#
+# The project name on the left side of the top-level mapping must match
+# `profile:` in dbt_project.yml (`somerville_311`).
+
+somerville_311:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Adjust this path for your environment. On EC2 it is
+      #   /home/ubuntu/oxygen-mvp/data/somerville.duckdb
+      # On a local clone it is typically <repo-root>/data/somerville.duckdb
+      path: /home/ubuntu/oxygen-mvp/data/somerville.duckdb
+      threads: 4
