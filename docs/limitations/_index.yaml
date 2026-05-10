@@ -10,8 +10,8 @@
     - overallexperience
   path: docs/limitations/2024-survey-columns-sparse.md
 - id: block-code-padded
-  title: block_code padded with spaces when unknown
-  severity: info
+  title: "block_code uses \"NA\" space-padded to 15 chars when unknown"
+  severity: warning
   affects:
     - requests.block_code
   path: docs/limitations/block-code-padded.md
