@@ -1,23 +1,31 @@
 # CLAUDE.md — Instructions for Claude Code
 
-This file is instructions for Claude Code. For project context, read these files first:
-- `MVP.md` — strategic analysis: who this is for, what success looks like, the four-MVP roadmap
-- `BUILD.md` — construction logic: why this stack, why this sequence, the disciplines that hold the work together, the compass for every architectural decision
+This file is instructions for Claude Code. The project has a hierarchy of documents — read in this order:
+
+**Foundational (not project-specific):**
+- `docs/Analytics_Platform_Primer.docx` — analytics-platform knowledge the project builds on (Knowledge Products, the Hierarchy of Needs, the Maturity Lifecycle, the medallion architecture, Working Backwards). Read once.
+
+**Strategic + construction (project authorities):**
+- `MVP.md` — the *why*: protagonist, emotional arc (relief → momentum → ownership → pride → sharing), success test ("you have to try this"), the compass, the portal as opening note, the four-MVP roadmap.
+- `BUILD.md` — the *how*: Knowledge Product Pipeline instantiated stage-by-stage, Component Trajectory (best-of-breed today, Oxygen-native at the destination), the four-MVP build sequence with what each retires/produces, disciplines that hold the work together, scope boundaries, glossary.
+
+**Operational (this file and downstream):**
+- `CLAUDE.md` — operating instructions for Claude Code (this file)
 - `ARCHITECTURE.md` — stack decisions, component map, data flow, constraints
-- `STANDARDS.md` — "done done" spec by layer; MVP 1 sign-off checklist
+- `STANDARDS.md` — "done done" gates by layer; MVP 1 sign-off checklist
 - `SETUP.md` — environment setup, install commands, config files
 - `LOG.md` — current status, decisions, blockers
-- `TASKS.md` — task tracker
+- `TASKS.md` — task tracker (the "Next Focus" section at the top is the active pointer)
 
 ---
 
 ## What You Are Building
 
-A public-facing analytics platform for Somerville, MA open data, built on Oxygen (oxy.tech).
-Users ask natural language questions about 311 service request data via a chat UI.
+[MVP.md](MVP.md) defines what this project is for — the analyst experience the build commits to creating. [BUILD.md](BUILD.md) defines how every layer is constructed to deliver that experience. Read both before doing substantive work; this file is operational and assumes you have.
 
-**Your job:** Configure and wire together Oxygen's components using declarative YAML and SQL.
-**Not your job:** Write custom agents, ETL logic, or application code unless Oxygen cannot do it natively.
+**Your job:** Configure and wire together Oxygen's components using declarative YAML and SQL, in service of the MVP.md compass — *does this protect the path through the analyst's emotional arc, or does it leak friction back in?* BUILD.md §3 names what each pipeline stage constructs; BUILD.md §4 names when to migrate custom scaffolding to Oxygen-native; BUILD.md §7 names the disciplines that keep the work coherent.
+
+**Not your job:** Write custom agents, ETL logic, or application code unless Oxygen cannot do it natively. Configuration over custom code is the default per BUILD.md §7.
 
 ---
 
@@ -94,10 +102,14 @@ oxygen-mvp/
 
 ## MVP Sequence — Do Not Skip Ahead
 
-1. **MVP 1** — dlt snapshot → DuckDB → Airlayer → Answer Agent chat UI
-2. **MVP 2** — Add Airapp charts and dashboards
-3. **MVP 3** — dbt Bronze/Silver/Gold pipeline with PII redaction
-4. **MVP 4** — Full Airlayer metric library + Routing Agent
+The four nested MVPs are defined in [BUILD.md §5](BUILD.md) with analyst outcomes, layers added, configuration produced, scaffolding retired, maturity stage, and demo moment. One-line summaries:
+
+1. **MVP 1 — First Knowledge Product.** The analyst asks a question and gets a verifiable answer with SQL, row count, and citation. Trusts it enough to put in a report.
+2. **MVP 2 — Visual Knowledge Products.** The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
+3. **MVP 3 — Governance and Trust.** The analyst trusts the underlying data without having to verify it themselves. Verified Queries, full medallion, native agent testing.
+4. **MVP 4 — Semantic Depth and Sharing.** The analyst's findings move from personal to shared via Slack, MCP, A2A, BI tools, and public chat.
+
+Complete each MVP fully before starting the next.
 
 Complete each MVP fully before starting the next.
 

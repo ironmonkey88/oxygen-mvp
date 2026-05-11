@@ -5,6 +5,31 @@
 
 ---
 
+## Next Focus — Working Chat Agent in the Portal
+
+**Goal:** Get a working chat agent in the portal against Somerville 311 data, with Gordon as the user. This is the single focused next move for the project. Resolving it closes MVP 1's last open box (STANDARDS §5.8 row 2 — `Routes live: /chat`) and gives the SPA the surface MVP 2's Builder Agent + Data Apps will live in too.
+
+**Sub-goal:** The analyst (Gordon) opens the portal, follows the chat link, lands on a working chat surface, and asks the 2024 question. The reply lands with SQL, row count, citations, and any matched limitations. The MVP 1 demo moment — *"How many 311 requests in 2024?"* → 113,961 — lands in a browser, not just a terminal.
+
+**Open path-choice (Gordon's decision):**
+
+- **Option A — `oxy serve --local`.** Switch Oxygen from `oxy serve` / `oxy start` (multi-workspace, requires org creation) to `oxy serve --local` (single-workspace, no org creation). Matches the single-user EC2 reality and eliminates the onboarding gate. Structurally simpler.
+- **Option B — walk the multi-workspace onboarding wizard once.** Create org, connect somerville datasource, register agent, ask the 2024 question, confirm 113,961, re-tick §5.8 row 2. More operationally minimal but preserves multi-tenant readiness for MVP 4 (per BUILD.md §5 MVP 4 outcome).
+
+Either decision unblocks the work. A is the recommended default because it matches what the deployment actually is today.
+
+**Task list:**
+
+- [ ] Path-choice decision (A or B above)
+- [ ] Implementation (Code session — full task breakdown scoped at kickoff with full context)
+- [ ] Verification: Gordon opens the portal, follows the chat link, asks "How many 311 requests in 2024?", receives 113,961 with full trust contract (SQL + row count + citations + any matched limitations)
+- [ ] STANDARDS §5.8 row 2 re-tick with verification evidence (command output, browser screenshot, or both — per CLAUDE.md "Verification gates for `[x]` ticks")
+- [ ] MVP 1 sign-off ritual: STANDARDS §6 header note ("MVP 1 signed off YYYY-MM-DD"), LOG Current Status flip (Active MVP → MVP 2), CLAUDE.md MVP Sequence flip (MVP 1 done), TASKS.md Sign-off Status MVP 1 section all `[x]`
+
+**Out of scope** for this focus: MVP 2 dashboards, MVP 3 governance, any portal copy refresh beyond what the chat link requires, any new semantic-layer content, any AWS infrastructure changes. When MVP 1 signs off, this section gets replaced with the MVP 2 focus.
+
+---
+
 ## Sign-off Status
 
 ### MVP 1 — 1st Data Product
@@ -26,15 +51,15 @@
 - [x] Trust contract on agent (SQL + row count + citations in every response)  *(Plan 6 — STANDARDS §4.1 4/4)*
 - [x] Admin DQ framework in place  *(2026-05-08 — D2 of overnight; 3 admin models, run.sh, load_dbt_results.py; verified across 2 consecutive runs)*
 
-### MVP 2 — Visual Data Product
+### MVP 2 — Visual Knowledge Products
 - [ ] Airapp `.app.yml` with charts
 
-### MVP 3 — Governance Layer
+### MVP 3 — Governance and Trust
 - [ ] dbt Silver model with PII redaction
 - [ ] dbt Gold model updated with dim_location
 - [ ] Tailscale access control
 
-### MVP 4 — Semantics
+### MVP 4 — Semantic Depth and Sharing
 - [ ] Full Airlayer metric library
 - [ ] Routing Agent configured
 
@@ -317,8 +342,8 @@ Session 21. Root cause: `*` in allowlist patterns does not match `|`; piped git 
 
 ---
 
-## MVP 2 — Visual Data Product
-**Goal:** Add charts and visual output to the conversational experience
+## MVP 2 — Visual Knowledge Products
+**Goal:** The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
 
 - [ ] Review Airapp docs: https://oxy.tech/docs/guide/learn-about-oxy/data-apps.md
 - [ ] Create `apps/somerville_dashboard.app.yml`
@@ -330,8 +355,8 @@ Session 21. Root cause: `*` in allowlist patterns does not match `|`; piped git 
 
 ---
 
-## MVP 3 — Governance Layer
-**Goal:** Star schema, PII redaction, data quality guardrails
+## MVP 3 — Governance and Trust
+**Goal:** The analyst trusts the underlying data without having to verify it themselves. Verified Queries badges, full medallion architecture, native agent testing.
 
 - [ ] Write Silver model: `models/silver/stg_311_requests.sql`
   - [ ] Normalize field names
@@ -347,8 +372,8 @@ Session 21. Root cause: `*` in allowlist patterns does not match `|`; piped git 
 
 ---
 
-## MVP 4 — Semantics
-**Goal:** Rich metric library + Routing Agent
+## MVP 4 — Semantic Depth and Sharing
+**Goal:** The analyst's findings move from personal to shared via Slack, MCP, A2A, BI tools, and public chat.
 
 - [ ] Audit existing Airlayer metrics — identify gaps
 - [ ] Expand `somerville_311.sem.yml` with full metric library

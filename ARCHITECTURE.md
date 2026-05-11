@@ -2,6 +2,8 @@
 
 ## Stack Decisions
 
+> For the layer-by-layer migration plan from best-of-breed today to Oxygen-native at the destination — including the trigger condition and migration shape for each layer — see [BUILD.md §4 Component Trajectory](BUILD.md).
+
 | Layer | Tool | Why |
 |---|---|---|
 | Ingestion | **dlt** | Python-native, declarative, mature REST API support. Chosen over Oxygen's native Airway. |
@@ -295,7 +297,7 @@ lsof data/somerville.duckdb
 - **Security group (post Plan 1):** port 80 open to `0.0.0.0/0`; SSH (22) and `:3000` closed publicly. SSH and chat ride over Tailscale.
 - **Tailscale:** Tailnet `taildee698.ts.net`. Tailscale SSH (`--ssh`) intentionally **off** on the EC2 node — it bypasses OpenSSH PAM and silently breaks `/etc/environment` env-var loading. Re-enable only with a parallel env-var-path fix.
 - **Outbound:** Must reach `data.somervillema.gov` (SODA API) and `api.anthropic.com`
-- **Process management:** Oxygen is currently running as a `nohup oxy start` background process (since 2026-05-08). SETUP.md §11 has the systemd unit recipe; switching to systemd is an MVP 1 sign-off open box (STANDARDS §3.2 row 4).
+- **Process management:** Oxygen runs as a systemd service (`oxy.service`) with `After=docker.service`, `Requires=docker.service`, `EnvironmentFile=/etc/environment`, `Restart=always RestartSec=10`. Reboot test verified Session 24. [SETUP.md §11](SETUP.md) has the unit definition.
 
 ### nginx config
 - Active site: `sites-enabled/somerville → sites-available/somerville`. Default site **not enabled**.

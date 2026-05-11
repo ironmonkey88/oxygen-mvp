@@ -29,7 +29,7 @@
 
 ## Current Status
 
-**Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
+**Active MVP:** MVP 1 — First Knowledge Product (verifiable answers)
 **Phase:** Overnight pass complete (Sessions 22–24). Session 22 surfaced the Oxygen onboarding gate; Session 23 codified the verification-gates standard + retroactive swept §6; Session 24 closed Sessions C D1 + D2 (systemd deploy + reboot test PASS, repo-clonable tick) and completed the 5/5 bench re-verification + `./run.sh` end-to-end clean. **MVP 1 sign-off now has 1 open box**: §5.8 row 2 (`/chat` UI walkthrough or CLI-only reinterpretation). Every other §6 box is `[x]` with re-verified evidence from this overnight pass.
 **Open security gap:** None. Closed in Plan 1.
 **Last Updated:** 2026-05-11 00:15 ET (Session 24 — systemd deploy + reboot test + bench 5/5 + run.sh re-verify)
@@ -233,6 +233,7 @@
 | 2026-05-10 23:39 ET | Oxygen deployed as systemd service; reboot test PASSED | `/etc/systemd/system/oxy.service` with hardened `After=network.target docker.service` + `Requires=docker.service` + `EnvironmentFile=/etc/environment` + `Restart=always RestartSec=10`. `systemctl enable` symlinked into `multi-user.target.wants`. Reboot test: `sudo reboot` → instance back, oxy active 7s after kernel up, oxy-postgres container recreated against persistent volume, user record from Session 22 survived intact (volume persistence proven). curl :3000 → 200; agent regression 113,961. Hardening beyond SETUP.md §11's original — SETUP.md updated to match what shipped. STANDARDS §3.2 row 4 + §6 §3.2 4/5 → 5/5. |
 | 2026-05-10 23:45 ET | STANDARDS §4.5 row 1 (repo-public) reinterpreted as team-clonable; ticked | Pre-authorized by Gordon in overnight brief: "Private, clonable by team — public flip deferred as a separate launch decision, not a sign-off blocker." Inline note added; §6 §4.5 2/3 → 3/3. |
 | 2026-05-10 23:55 ET | Bench Q5 re-verified post-reboot after two earlier rate-limit retries | Anthropic 30K/min cap hit during Q4+Q5 parallel batch and the immediate retry (Q5 is heavy — multiple queries, full context including all view files). After ~10 min cooldown during reboot validation, Q5 ran clean: Accuracy 4.39 / Courtesy 4.67 / Ease 4.63 / Overall 4.28, blended 4.44/5.0; both survey-related limitations surfaced. Lesson: bench questions should run sequentially, not parallel, to stay inside the 30K/min input-token window. Plan 6 D3 bench 5/5 fully re-verified across Sessions 23 + 24. |
+| 2026-05-11 | Operational docs aligned to MVP.md and BUILD.md; TASKS.md "Next Focus" added pointing at working chat agent in the portal | MVP.md and BUILD.md are now the strategic and construction authorities. Operational docs (CLAUDE.md reading list + What You Are Building + MVP Sequence, ARCHITECTURE.md Component Trajectory pointer + Process management line updated for systemd, STANDARDS.md §1 purpose pointer, TASKS.md MVP 2/3/4 framings + Next Focus section, LOG.md Active MVP line) reconciled to match. The active pointer for Code is now TASKS.md "Next Focus" — a working chat agent in the portal with Gordon as the user, which closes STANDARDS §5.8 row 2 and unlocks MVP 1 sign-off. |
 
 ---
 

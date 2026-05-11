@@ -2,6 +2,8 @@
 
 ## 1. Purpose
 
+For the analyst experience this project commits to creating, see [MVP.md](MVP.md). For the construction logic of each layer, see [BUILD.md](BUILD.md). STANDARDS.md owns the *gates* — the done-done criteria each layer must clear to be considered complete. The bar exists to protect the analyst's emotional arc and the trust contract MVP.md defines; this file is where that protection is made auditable.
+
 This file defines "done done" for each layer of the Oxygen MVP pipeline. It is the gate that any layer must clear before being considered complete, and it is the single source of truth for project standards. Scope is MVP 1 plus a small forward lean — Silver and Knowledge Product sections are stubbed so the structure does not need to change at MVP boundaries. Edit this file when standards change; do not duplicate them in CLAUDE.md, ARCHITECTURE.md, or in-line in code.
 
 ---
