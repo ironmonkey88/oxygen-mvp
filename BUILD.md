@@ -12,23 +12,7 @@ The protagonist is the data analyst — not the executive who reads the dashboar
 
 This project returns to that analyst the expectation that their expertise will carry the day.
 
-### The success test
-
-The single sentence that tells us we landed is: **"you have to try this."** Said by an analyst, unprompted, to a colleague, after a session with the Knowledge Product we're building. Not metrics, not engagement numbers, not feature checklists — that sentence.
-
-It is the cleanest test the project has because it cannot be gamed. You don't tell your friends about useful tools; useful tools are silent. You tell your friends about an experience that gave you something back. The whole architecture is engineered backward from that sentence.
-
-### The emotional arc
-
-What produces "you have to try this" is a specific emotional sequence the analyst goes through in a session:
-
-1. **Relief.** The first verifiable answer lands with SQL, row count, and citation. The analyst sees they don't have to spot-check. The platform isn't asking them to trust it — it's showing its work. Shoulders drop.
-2. **Momentum.** The second question comes faster than the first. The third faster still. They chase instincts they'd normally suppress because the cost of chasing was too high. Curiosity floods back.
-3. **Ownership.** Halfway in, the answer is *theirs*. Their subject-matter judgment found it, their question framed it, the platform kept up. They're producing their own work, not consuming a vendor's output.
-4. **Pride.** They imagine showing this to the colleague who keeps asking for things the BI team won't build. They imagine being the person who had this first.
-5. **Sharing.** The sentence comes out. They tell their friends.
-
-Every architectural decision in this build answers to one test: *does this protect the path through the arc, or does it leak friction back in?*
+[MVP.md](MVP.md) defines the experience this project commits to creating: the emotional arc the analyst moves through in a session (relief → momentum → ownership → pride → sharing), the role of the public portal as the opening note of that experience, and the success test for the whole project — an analyst saying *"you have to try this"* to a colleague, unprompted. BUILD.md inherits MVP.md's compass — *does this protect the path through the arc, or does it leak friction back in?* — as the single question every architectural, configuration, and scope decision in this guide passes through. For the strategic framing, read MVP.md; this guide is how every layer is constructed to deliver on it.
 
 ### Why "extreme trustability" is the bar
 
@@ -132,7 +116,7 @@ The Builder Agent — Oxygen's project-file copilot — is the construction tool
 - **MCP server** — exposes agents, workflows, semantic topics, and SQL files as tools to other AI assistants. Lands in MVP 4.
 - **A2A protocol** — programmatic agent-to-agent interrogation. Lands in MVP 4.
 - **Looker integration** — bridges to existing BI infrastructure where it exists. Lands in MVP 4 if relevant.
-- **Public portal** — the public window for the project; static pages plus dynamic `/metrics`, `/trust`, `/docs`, and (eventually) public chat behind Magic Link auth.
+- **Public portal** — the public window for the project; static pages plus dynamic `/metrics`, `/trust`, `/docs`, and (eventually) public chat behind Magic Link auth. The portal's *strategic* role — why it looks the way it does, why it carries familiar-but-impressive surfaces, why it's tuned by analyst reaction rather than specified up front — is defined in [MVP.md](MVP.md) under "The opening note." This guide constructs the portal; MVP.md says what it's for.
 
 **Architectural role.** Every sharing surface routes back to the same semantic layer and the same DuckDB. The promise is consistency across surfaces: ask in chat, ask in Slack, ask via MCP — the answer is the same and the citation chain is the same. This is what protects the metric-drift problem the primer warned about.
 
@@ -175,7 +159,7 @@ The build proceeds in four nested MVPs, each delivering a complete Knowledge Pro
 
 **Layers built.** Ingestion + Warehouse + minimal Semantic Layer + Knowledge Product (chat).
 
-**Configuration produced.** A working pipeline (`run.sh`), the medallion schemas (bronze + gold + admin), a starting semantic layer (4 views + 1 topic + 2 measures), an Answer Agent with the trust contract enforced, and a public portal exposing the metric definitions, data-quality state, and limitations registry.
+**Configuration produced.** A working pipeline (`run.sh`), the medallion schemas (bronze + gold + admin), a starting semantic layer (4 views + 1 topic + 2 measures), an Answer Agent with the trust contract enforced, and a public portal (strategic role defined in [MVP.md](MVP.md)) exposing the metric definitions, data-quality state, and limitations registry.
 
 **Scaffolding retired.** None — this is the foundation.
 
@@ -306,9 +290,7 @@ Every plan begins with a check against the Oxygen changelog. New native componen
 
 ### The compass
 
-Every architectural decision answers a single test: **does this protect the path through the analyst's emotional arc, or does it leak friction back in?**
-
-The arc — suppressed frustration → relief → momentum → ownership → pride → sharing — is what produces "you have to try this." Anything that interrupts it is suspect. Anything that protects it is justified. Convenience is not the goal; *agency* is. The platform's job is to make the analyst feel more like themselves, not to make them feel grateful for our tool. When in doubt, ask whether the decision serves the arc.
+Every architectural, configuration, and scope decision in this guide passes through MVP.md's compass — *does this protect the path through the emotional arc, or does it leak friction back in?* — before it lands. Layer-by-layer choices in §3, migration triggers in §4 Component Trajectory, MVP-by-MVP construction in §5, scope deferrals in §8: all of them. The compass is articulated in MVP.md; here, it is the operational test.
 
 ---
 
@@ -364,7 +346,9 @@ Terms used in this build, anchored to the primer and Oxygen documentation where 
 
 **Data Apps** — *(Oxygen)* Declarative dashboards via `.app.yml`. Built through conversation with Builder Agent from MVP 2.
 
-**The compass** — *(project)* The single test every architectural decision passes: *does this protect the path through the analyst's emotional arc?* The arc — suppressed frustration → relief → momentum → ownership → pride → sharing — is what produces "you have to try this."
+**The arc / emotional arc** — *(project, defined in [MVP.md](MVP.md))* The experiential progression an analyst moves through in a session: relief → momentum → ownership → pride → sharing. Bridges "contribution magnified" to "you have to try this." Referenced throughout BUILD.md as the experience every layer is constructed to deliver.
+
+**The compass** — *(project, defined in [MVP.md](MVP.md))* The test every architectural, configuration, and scope decision passes: *does this protect the path through the emotional arc?* Operationally applied in §7 of this guide.
 
 ---
 
