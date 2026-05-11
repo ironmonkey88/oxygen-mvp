@@ -281,7 +281,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"additionalContext\": \"LOGGING REMINDER: Before ending this session, verify LOG.md and TASKS.md are current. Log format: HH:MM ET timestamp. Check: (1) any completed tasks marked [x] in TASKS.md, (2) decisions/blockers added to LOG.md, (3) Current Status and Last Updated fields updated.\"}}'",
+            "command": "echo '{\"systemMessage\": \"LOGGING REMINDER: Before ending this session, verify LOG.md and TASKS.md are current. Log format: HH:MM ET timestamp. Check: (1) any completed tasks marked [x] in TASKS.md, (2) decisions/blockers added to LOG.md, (3) Current Status and Last Updated fields updated.\"}'",
             "statusMessage": "Checking log compliance..."
           }
         ]
