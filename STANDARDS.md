@@ -146,7 +146,7 @@ The interface — a research partner the analyst can trust.
 Everything the analyst sees outside the chat — and the public window.
 **Done done when:**
 - [x] Portal hosted on EC2 at port 80 (nginx)  *(Session 4)*
-- [x] Routes live: `/`, `/chat`, `/docs`, `/trust`, `/metrics`  *(Plan 4 — `/`, `/docs/`, `/metrics`, `/trust` all 200; `/chat` is Tailnet-only at `:3000` per Plan 1 D4 and is advertised via the hero "Private beta" pill rather than a public-route link)*
+- [ ] Routes live: `/`, `/chat`, `/docs`, `/trust`, `/metrics`  *(Session 23 retroactive sweep flipped this from `[x]` to `[ ]`. `/`, `/docs/`, `/metrics`, `/trust` all return 200. `/chat` is 404 on port 80 — the nginx `location /chat` block was removed in Plan 1 D4 when chat went Tailnet-only at `:3000`. The original interpretation was that the portal advertises chat via the hero "Private beta" pill, which is structurally true. But Session 22 found the Tailnet `:3000` chat itself is at the "Welcome to Oxygen / Create organization" onboarding screen — postgres has 0 orgs, the SPA can't render a chat surface. So the pill currently advertises a broken chat. Gordon's call at MVP 1 sign-off: (a) walk the UI wizard and re-tick this row on a passing SPA query, or (b) reinterpret the row as definitively CLI-only and re-tick with an inline note.)*
 - [x] Nav reflects the analyst workflow: chat-first, with `/docs`, `/trust`, `/metrics` one click away  *(Plan 4 — three route links added to `portal/index.html` `.nav-links`; private-beta chat pill preserved on the hero)*
 - [x] `/trust` is dynamic — driven by the admin schema, not static copy  *(Plan 4)*
 - [x] `/metrics` is generated from Airlayer YAML, not hand-written  *(Plan 2 D3)*
@@ -157,6 +157,8 @@ Everything the analyst sees outside the chat — and the public window.
 ## 6. MVP 1 sign-off checklist
 
 Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 1 is called done.
+
+> **Session 23 retroactive verification (2026-05-10 22:30 ET):** all CLI-verifiable live-functional boxes re-passed against the running runtime — `oxy run` for §4.1/§5.7/§6 smoke rows 1+2 (Q1 2024 → 113,961, Q3 top types → Welcome desk / Obtain a parking permit / Temporary no parking as top 3), curl for `/trust`/`/metrics`/`/docs`/`/` (all 200; `/trust` shows "All tests passed" 36/36; `/metrics` lists `total_requests` + `open_requests`; `/docs` title "dbt Docs"), `oxy validate` clean (6/6). One row flipped to `[ ]`: §5.8 row 2 (`/chat`) — see inline note. Procedure codified in CLAUDE.md "Verification gates for `[x]` ticks".
 
 **Foundations:**
 - [x] §3.1 Security: 5/5  *(Plan 1)*
@@ -177,14 +179,14 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 - [x] §5.5 Admin (DQ): 5/5  *(Plan 2 + Plan 3)*
 - [x] §5.6 Semantic (Airlayer): 7/7  *(Plan 7 — `oxy build` deferred caveat closed in Plan 0)*
 - [x] §5.7 Agent: 4/4  *(Plan 6)*
-- [x] §5.8 Knowledge Product (Portal): 6/6  *(Plan 7 D2)*
+- [ ] §5.8 Knowledge Product (Portal): 5/6  *(Plan 7 D2; Session 23 flipped row 2 `/chat` to `[ ]` — see §5.8 inline note)*
 
 **End-to-end smoke:**
-- [x] Analyst can ask "How many 311 requests were opened in 2024?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q1 — 113,961, transcript in `scratch/plan6_test_bench/q1_2024_regression.md`)*
-- [x] Analyst can ask "What are the most common request types?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q3 — Welcome desk-information / Obtain a parking permit inquiry / Temporary no parking sign posting top 3, transcript in q3_top_request_types.md)*
-- [x] `/trust` page is green for the most recent pipeline run  *(Plan 4 — run_id `5a421e8d-55e4-4731-a3a2-50ea0e88a0ee`, 36/36 tests pass; re-verified Plan 7 — `curl http://18.224.151.49/trust` → 200)*
-- [x] `/metrics` page lists every current measure with its expanded SQL and description  *(Plan 7 verified — `curl http://18.224.151.49/metrics` shows `total_requests` and `open_requests` with `<pre class="sql"><code>` SQL blocks)*
-- [x] `/docs` page renders dbt documentation with no missing model or column descriptions  *(Plan 7 verified — `curl http://18.224.151.49/docs/index.html` returns 200 with title "dbt Docs"; no missing descriptions per Plan 2 D1)*
+- [x] Analyst can ask "How many 311 requests were opened in 2024?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q1 — 113,961, transcript in `scratch/plan6_test_bench/q1_2024_regression.md`; Session 23 CLI re-verified 2026-05-10 22:00 ET — exact 113,961 with full trust contract; SPA chat path blocked by Session 22 onboarding gate, so this row is CLI-only at present)*
+- [x] Analyst can ask "What are the most common request types?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q3 — Welcome desk-information / Obtain a parking permit inquiry / Temporary no parking sign posting top 3, transcript in q3_top_request_types.md; Session 23 CLI re-verified 2026-05-10 22:00 ET — same top 3, same shape; SPA chat path same caveat as Q1)*
+- [x] `/trust` page is green for the most recent pipeline run  *(Plan 4 — run_id `5a421e8d-55e4-4731-a3a2-50ea0e88a0ee`, 36/36 tests pass; re-verified Plan 7 — `curl http://18.224.151.49/trust` → 200; Session 23 re-verified 2026-05-10 22:05 ET — banner-label "All tests passed", 36 pass chip)*
+- [x] `/metrics` page lists every current measure with its expanded SQL and description  *(Plan 7 verified — `curl http://18.224.151.49/metrics` shows `total_requests` and `open_requests` with `<pre class="sql"><code>` SQL blocks; Session 23 re-verified 2026-05-10 22:05 ET)*
+- [x] `/docs` page renders dbt documentation with no missing model or column descriptions  *(Plan 7 verified — `curl http://18.224.151.49/docs/index.html` returns 200 with title "dbt Docs"; no missing descriptions per Plan 2 D1; Session 23 re-verified 2026-05-10 22:05 ET — title "dbt Docs", 1.8MB body)*
 
 ---
 

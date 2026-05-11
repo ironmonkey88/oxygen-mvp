@@ -30,13 +30,31 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Rev 2 overnight batch complete. Plans 6, 8, 7, 5 all closed across Sessions 18–20. **MVP 1 is sign-off-ready** — every automatable STANDARDS §6 box is `[x]`. Two boxes wait on Gordon: §3.2 row 4 (Oxygen as systemd vs. nohup-stable) and §4.5 row 1 (repo public vs. private). Session 21 added pipe-coverage patterns to `settings.json` on `claude/gifted-cartwright-9b6bac` — **pending Gordon's merge to main** so overnight unattended sessions no longer stall on piped git reads. **Next:** Gordon merges the branch, then decisions on the two open §6 rows.
+**Phase:** Overnight Session 22 hit a hard stop at the Oxygen onboarding gate — Gordon found the web UI at "Welcome to Oxygen / Create organization" tonight (postgres has 0 orgs; the SPA can't render a chat surface). CLI path (`oxy run`) is fully healthy: re-verified 2024 → 113,961 and top request types match Session 18's Q3. Session 23 added a verification-gates standard to CLAUDE.md and ran a retroactive sweep — 1 row flipped (§5.8 row 2 `/chat`), all other live-functional boxes re-pass. **MVP 1 sign-off now has 3 open boxes**: §3.2 row 4 (systemd), §4.5 row 1 (repo-public), §5.8 row 2 (`/chat` UI walkthrough or CLI-only reinterpretation). gifted-cartwright merged to main this morning (`5ebb569`).
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-10 16:45 ET (Session 21 — git pipe patterns; merge pending)
+**Last Updated:** 2026-05-10 22:45 ET (Session 23 — verification-gates standard + retroactive sweep)
 
 ---
 
 ## Recent Sessions
+
+### Session 23 — 2026-05-10 22:05 ET → 22:45 ET — verification-gates-standard
+[full narrative](docs/sessions/session-23-2026-05-10-verification-gates-standard.md)
+
+- **Goal:** Codify a self-verification standard for live-functional `[x]` ticks in CLAUDE.md, then sweep STANDARDS §6 boxes ticked since Session 15 and flip any that no longer hold.
+- **Shipped:** CLAUDE.md "Verification gates for `[x]` ticks" subsection appended; STANDARDS §6 retroactive-verification banner + inline timestamps on smoke rows 1-5; §5.8 row 2 (`/chat`) flipped `[x]` → `[ ]` (port-80 404, Tailnet `:3000` at onboarding screen); §6 Layers Knowledge Product roll-up 6/6 → 5/6; TASKS.md MVP 1 sign-off chat-UI row flipped `[x]` → `[!]`.
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** MVP 1 sign-off session re-runs all 5 Plan 6 D3 bench questions + `./run.sh` end-to-end + re-verifies every §6 `[x]` against the new standard.
+
+### Session 22 — 2026-05-10 21:40 ET → 22:05 ET — oxygen-onboarding-gate
+[full narrative](docs/sessions/session-22-2026-05-10-oxygen-onboarding-gate.md)
+
+- **Goal:** Diagnose Oxygen's chat-UI onboarding screen (Gordon hit "Welcome to Oxygen / Create organization" tonight) and restore the org/workspace state so the web UI works again.
+- **Shipped:** Pre-flight EC2 sync resolved (drop-and-pull pattern, 4 files matched origin/main, 1 was the stale 4,187 dept-tags version); Oxygen state recon — DuckDB intact (1,169,935 rows), postgres container up with persistent volume but `organizations` = 0, only user is tonight's `local-user@example.com`; CLI agent regression PASS (2024 → 113,961 with full trust contract); decision gate hit "STOP — Code can't drive a browser."
+- **Decisions:** 2 decisions — see Decisions Log
+- **Status:** blocked (browser-only onboarding flow required; Code-safe path doesn't exist)
+- **Next:** Gordon decides — walk the UI wizard tomorrow (then re-tick §5.8 row 2 on a passing SPA query), OR reinterpret §5.8 row 2 as CLI-only and sign off on the `oxy run` evidence.
 
 ### Session 21 — 2026-05-10 16:00 ET → 16:45 ET — git-allowlist-fix
 [full narrative](docs/sessions/session-21-2026-05-10-git-allowlist-fix.md)
@@ -45,7 +63,7 @@
 - **Shipped:** Pipe patterns added to worktree `settings.json` in merge commit `997dc04` (`Bash(git * | *)`, `Bash(git -C * * | *)`, `Bash(git * | * | *)`); missing read-ops added (`rev-list`, `ls-remote`, broad `branch *`); duplicate `Bash(bash *)` removed; CLAUDE.md pipe-coverage notes added.
 - **Decisions:** 1 decision — see Decisions Log
 - **Status:** complete
-- **Next:** Gordon merges `claude/gifted-cartwright-9b6bac` to main so pipe patterns reach all branches; then resume Plan 10/11.
+- **Next:** Gordon merges `claude/gifted-cartwright-9b6bac` to main so pipe patterns reach all branches; then resume Plan 10/11. *(merge landed 2026-05-10 21:30 ET — `d71e7d0..5ebb569` pushed to origin/main)*
 
 ### Session 20 — 2026-05-09 21:45 ET → 2026-05-10 09:55 ET — Plan 5 — Tech Debt Sweep
 [full narrative](docs/sessions/session-20-2026-05-09-plan-5-tech-debt.md)
@@ -65,28 +83,13 @@
 - **Status:** complete (MVP 1 sign-off pending 2 Gordon decisions, not blocked on any Code work)
 - **Next:** Plan 5 — Tech Debt Sweep.
 
-### Session 18 — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion
-[full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
-
-- **Goal:** Wire the Answer Agent's trust contract (SQL + row count + citations + limitations) and expand the limitations registry so Plan 6's surfacing rule has real entries to match against. Closes STANDARDS §4.1 (4/4), §4.4 row 2, §5.7 (4/4).
-- **Shipped:** Trust contract in `agents/answer_agent.agent.yml` (4-section reply format, engineering-honest tone, runtime renders SQL+result, prompt enforces row-count + citations + limitations); 8 new limitation entries + 1 tightened (10 active total); `scripts/build_limitations_index.py` (stdlib-only YAML emitter) + `docs/limitations/_index.yaml` + `run.sh` step 9/9; 5/5 test bench pass with transcripts in `scratch/plan6_test_bench/`; STANDARDS §7 open question on native SQL+citation support resolved (partial native — runtime renders SQL+result, prompt-enforced for the rest).
-- **Decisions:** 6 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 7 — MVP 1 Sign-off Sweep.
-
-### Session 17 — 2026-05-09 19:18 ET → 19:35 ET — Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook
-[full narrative](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)
-
-- **Goal:** Replace Plan 9 rev 1's allow-pattern-only fix with the structural fix — a PreToolUse hook that denies risky shell *shapes* (chains, command/process substitution, leading `cd`/`export`) so the allowlist no longer has to model compound commands.
-- **Shipped:** `.claude/hooks/block-dangerous.sh` with loop-keyword carve-out (do/then/done/fi/else/elif) + arithmetic carve-out (`$((...))` allowed); wired into `settings.json` PreToolUse alongside the task-warning hook (not replacing it); merged 2 allow patterns + 8 deny patterns (Plan 9 rev 1 patterns preserved — no removals); CLAUDE.md "Bash Safety" section between Rules and Naming Standards; `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom checks + 13 hook-deny/allow assertions, all passing.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** State-check rev 2 batch (last clean plan was Plan 4); resume with Plan 5 — Tech Debt Sweep.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 18** — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion; trust contract in `agents/answer_agent.agent.yml` (4-section reply, runtime renders SQL+result, prompt-enforced citations + limitations); 10 limitation entries + `_index.yaml` + `scripts/build_limitations_index.py` + run.sh step 9/9; 5/5 test bench pass with transcripts in `scratch/plan6_test_bench/`; STANDARDS §4.1 4/4, §4.4 row 2, §5.7 4/4. [full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
+- **Session 17** — 2026-05-09 19:18 ET → 19:35 ET — Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook; `.claude/hooks/block-dangerous.sh` denies risky shell shapes (chains, `$(...)`, leading `cd`/`export`) with loop-keyword + arithmetic carve-outs; wired into PreToolUse alongside the task-warning hook; merged 2 allow + 8 deny patterns; `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom + 13 hook assertions. [full narrative](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)
+- **Session 16** — 2026-05-09 ~17:30 ET — Plan 9 — Allowlist Coverage, Once and For All; structural restructure (defaultMode acceptEdits, top-level Read/Write/Edit, $schema), broaden allow patterns (verification-idiom cohort), `scripts/check_allowlist_coverage.sh` first pass clean. [full narrative](docs/sessions/session-16-2026-05-09-plan-9-allowlist-coverage.md)
 - **Session 15** — 2026-05-09 12:53 ET → 13:30 ET — Plan 4 Trust Page; `scripts/generate_trust_page.py`, run.sh step 8/8 + portal index sync, nginx /trust location, portal nav links, synthetic-fail render check green→red→green. Commits `300acee` + close. [full narrative](docs/sessions/session-15-2026-05-09-plan-4-trust-page.md)
 - **Session 14** — 2026-05-08 23:00 ET → 2026-05-09 08:36 ET — Plan 3 hygiene + drift-fail verification; allowlist patterns in committed settings.json, Plans Registry + Rule 9, SETUP/CLAUDE/ARCHITECTURE/STANDARDS catch-up, `nginx/somerville.conf` canonical config, transcript-timestamp rule, drift-fail end-to-end. Commits `6e34fdc` `7346dde` `093b220` `e3a79bb` `0a4c53c` `ee4c488`. [full narrative](docs/sessions/session-14-2026-05-08-plan-3-mvp1-loose-ends.md)
 - **Session 13** — 2026-05-08 16:30 ET — Plan 2 Admin DQ Overnight; D0–D3 (limitations registry seed, dbt docs population + `/docs` route, admin DQ framework + run.sh, `/metrics` page). Commits `6c75210` `d3a1778` `06f1776` `72345c4` `edb508d` `fddec4e`. [full narrative](docs/sessions/session-13-2026-05-08-overnight-d0-d3.md)
@@ -221,6 +224,10 @@
 | 2026-05-10 10:35 ET | Agent prompt: never state a calendar year in prose without querying it | Plan 6 follow-on (commit `3603136`). Q2 test bench exposed Sonnet 4-6 hallucinating "2025" when SQL evaluated `year(current_date)` to 2026. Hard rule: if SQL uses `current_date` and prose needs the year, run `SELECT year(current_date)` first. |
 | 2026-05-10 10:55 ET | block-code-padded sentinel form corrected: "NA"-space-padded, not whitespace | Plan 8 follow-on (commit `3ea828e`). Q4 test bench showed top block was `"NA             "` (NA + 13 spaces, 38% of rows). |
 | 2026-05-10 11:05 ET | dept-tags-as-booleans coverage corrected: 987 / 0.08%, not 4,187 / 0.36% | Plan 8 follow-on (commit `1877ee0`). Audited via `scratch/audit_limitation_claims.py`. |
+| 2026-05-10 21:30 ET | `claude/gifted-cartwright-9b6bac` fast-forward-merged to `origin/main` (`d71e7d0..5ebb569`) | 16 commits brought across: Plan 5 D1 follow-on (git pipe patterns universalised), Plans 6/8 follow-ons (block-code-padded sentinel "NA" not whitespace; dept-tags 987 not 4187), Sessions 17-21 narrative archive, Stop hook `systemMessage` fix, `block-dangerous.sh` Bash Safety hook + 3-tier allowlist policy. 6 worktrees compressed to 2 (main + active session); 7 fully-merged local branches still present and require Gordon's per-prompt approval to `git branch -d`. |
+| 2026-05-10 22:00 ET | Session A halted at Oxygen onboarding gate — chat-UI restoration deferred to Gordon | Postgres has 0 orgs, 1 user (`local-user@example.com` created tonight 20:54 ET). `oxy` CLI has no org subcommand; REST `/api/orgs` returns `[]` but the full setup chain requires authenticated SPA flow. Brief's hard-stop: "If the only path is browser UI clicks (no CLI/API equivalent), STOP — Code can't drive a browser." Data + agent layers fully healthy: DuckDB 1,169,935 rows, `oxy run` 2024 → 113,961 with full trust contract, `/trust` 36/36 pass, `/metrics` lists both measures, `/docs` 1.8MB. |
+| 2026-05-10 22:30 ET | New CLAUDE.md subsection "Verification gates for `[x]` ticks" | Codifies the static-artifact vs. live-functional distinction; mandates re-verification of live-functional boxes at every MVP sign-off (not inherited from earlier sessions); names `/chat`-shaped state-gated routes as requiring either UI walkthrough or explicit inline reinterpretation. Driven by Session 22's discovery that STANDARDS §5.8 row 2 was `[x]` based on a "Private beta pill" reinterpretation buried in an inline note, and Session 7's TASKS.md chat-UI tick (113,961 / 48,806) was either CLI-mislabelled or wiped along with prior org state. |
+| 2026-05-10 22:40 ET | STANDARDS §5.8 row 2 (`Routes live: /chat`) flipped `[x]` → `[ ]`; §6 Layers `§5.8 6/6` → `5/6` | Port-80 `/chat` returns 404 (removed in Plan 1 D4); the Tailnet `:3000` chat that the "Private beta" pill advertises is at the onboarding screen (Session 22 — 0 orgs in postgres). The previous interpretation ("pill advertises chat") was structurally true but conditionally load-bearing on a working chat. Gordon decides at MVP 1 sign-off: walk the UI wizard and re-tick, OR reinterpret as CLI-only and re-tick with an inline note. |
 
 ---
 
@@ -228,16 +235,17 @@
 
 > Resolved blockers live in [`docs/log-archive.md`](docs/log-archive.md).
 
-### MVP 1 sign-off blockers as of 2026-05-09 21:35 ET
+### MVP 1 sign-off blockers as of 2026-05-10 22:45 ET (Session 23 retroactive sweep)
 
-After Plan 7's STANDARDS §6 walk, every checklist box is `[x]` except:
+After Session 23's retroactive verification against the new CLAUDE.md "Verification gates for `[x]` ticks" standard, §6 has three open boxes:
 
 | Box | Status | Owner | Notes |
 |-----|--------|-------|-------|
 | §3.2 row 4 — Oxygen runs as a systemd service | open | Gordon decision | Runtime is stable: `oxy start` running as a nohup background process since 2026-05-08 (PID 29429), Postgres container up via `oxy start`'s Docker management, web app on `:3000` returns 200. SETUP.md §11 has the systemd unit recipe. Question for Gordon: is systemd required for MVP 1 sign-off, or acceptable to slip to a hardening pass after sign-off? |
 | §4.5 row 1 — Repo is public (or at minimum clonable by collaborators) | open | Gordon decision | Repo is currently private (GitHub `ironmonkey88/oxygen-mvp`); clonable by Gordon's team only. Move-to-public is a non-Code decision; needs Gordon to flip the GitHub setting and confirm here. |
+| §5.8 row 2 — Routes live: `/chat` | open (NEW — flipped by Session 23) | Gordon decision | Session 22 found web-UI SPA chat at the "Welcome to Oxygen / Create organization" onboarding screen — postgres has 0 orgs. Port-80 `/chat` is 404 (route removed in Plan 1 D4); the Tailnet `:3000` SPA can't render a chat surface without an org. CLI path (`oxy run agents/answer_agent.agent.yml`) is fully healthy and re-verified in Session 23 (Q1 2024 → 113,961, Q3 top types match). Decision: (a) Gordon walks the UI wizard, then re-tick on a passing SPA query; or (b) reinterpret §5.8 row 2 as CLI-only (the chat experience for MVP 1's analyst persona is the CLI), update STANDARDS inline, re-tick. |
 
-All other §6 boxes (Foundations 9/10, Trustability 16/16 of automatable rows, Layers 7/7 sections, E2E smoke 5/5) are `[x]` with evidence. **MVP 1 is sign-off-ready pending these two decisions.**
+After Session 23 sweep: Foundations 9/10, Trustability 16/16 automatable rows, Layers 6/7 sections (§5.8 went 6/6 → 5/6), E2E smoke 5/5 (all re-verified — rows 1+2 are CLI-only at present per the §5.8 row 2 finding). **MVP 1 sign-off is now blocked on these three Gordon decisions.**
 
 ---
 

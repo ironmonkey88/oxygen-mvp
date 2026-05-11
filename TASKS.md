@@ -22,7 +22,7 @@
 - [x] Oxygen runtime live on EC2 — `oxy start` brings up Postgres container + web app on :3000; `oxy build` exits 0 in plain non-interactive ssh
 - [x] Env vars in `/etc/environment` — `ANTHROPIC_API_KEY`, `OXY_DATABASE_URL`, plus `~/.local/bin` on PATH; documented in [SETUP.md](SETUP.md) §7
 - [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
-- [x] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth
+- [!] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth *(Session 22 found web-UI SPA chat blocked — postgres has 0 orgs, the SPA renders "Welcome to Oxygen / Create organization" instead of a chat surface; CLI `oxy run` path re-verified Session 23 with exact-match 113,961 + top-types Q3. Awaiting Gordon's UI walkthrough or sign-off reinterpretation per STANDARDS §5.8 inline note.)*
 - [x] Trust contract on agent (SQL + row count + citations in every response)  *(Plan 6 — STANDARDS §4.1 4/4)*
 - [x] Admin DQ framework in place  *(2026-05-08 — D2 of overnight; 3 admin models, run.sh, load_dbt_results.py; verified across 2 consecutive runs)*
 

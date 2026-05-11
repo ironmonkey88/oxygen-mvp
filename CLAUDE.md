@@ -440,3 +440,21 @@ Every `[x]` in TASKS.md should be backed by one of:
 - a file path + line range (the documentation was written).
 
 Bare `[x]` based on "I did the thing" is not enough. A `[x]` is a claim; claims need evidence, especially for security/permission changes.
+
+### Verification gates for `[x]` ticks
+
+Extends the `[x]` evidence rule for boxes whose claim is about *behavior at a point in time*, not about an artifact existing in the repo.
+
+Distinguish two kinds of boxes:
+
+- **Static-artifact boxes** — the satisfying state is a file, a config, a description in `schema.yml`, a deny pattern in `settings.json`. These can be ticked once on a commit hash and stay ticked until the artifact changes.
+- **Live-functional boxes** — the satisfying state is something running correctly: "chat answers correctly", "trust contract on the agent", "/trust page is green", "`./run.sh` end-to-end". These can regress silently between sessions — the artifact didn't change, but the runtime did.
+
+Rules for live-functional boxes:
+
+1. The `[x]` must reference a verification command (or curl, or query) that can be re-run later. Pasting the output once is fine; what matters is that future-Code can re-run the same command and check the same shape.
+2. At MVP sign-off — for any MVP, not just MVP 1 — every live-functional box in STANDARDS.md §6 must be re-verified *in the sign-off session*. Inherited ticks from earlier sessions are not sufficient. The cost of re-running a curl or an `oxy run` is seconds; the cost of false-green at sign-off is months of trust debt.
+3. When in doubt, re-run. If a box describes something the runtime is responsible for, the verification is cheap and should be habit, not exception.
+4. STANDARDS §6's `/chat` row (or any "Routes live: X" row where X is gated by org/workspace/auth state) requires either a real UI walkthrough or an explicit re-interpretation note recorded inline next to the `[x]`. "Satisfied by a private-beta pill on the portal" is one valid re-interpretation; using it silently is not.
+
+Why this exists: Session 22 found Oxygen's web-UI org state empty despite STANDARDS §5.8 row 2 (`Routes live: /chat`) being `[x]` and TASKS.md row 25 ("Chat UI accessible and answering questions correctly") being `[x]` with an exact-match 113,961 / 48,806 quote from Session 7. Both ticks survived through Sign-off Sweep (Plan 7) without anyone re-verifying that the SPA chat path actually worked end-to-end; the rows were interpreted as covered by CLI evidence (`oxy run`) and a "Private beta pill" on the portal. That interpretation may be right or wrong, but it should be on the page next to the tick, not in a session note three days back.
