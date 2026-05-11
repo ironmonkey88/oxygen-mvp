@@ -5,28 +5,27 @@
 
 ---
 
-## Next Focus — Working Chat Agent in the Portal
+## Next Focus — MVP 2 Plan Scoping
 
-**Goal:** Get a working chat agent in the portal against Somerville 311 data, with Gordon as the user. This is the single focused next move for the project. Resolving it closes MVP 1's last open box (STANDARDS §5.8 row 2 — `Routes live: /chat`) and gives the SPA the surface MVP 2's Builder Agent + Data Apps will live in too.
+MVP 1 signed off 2026-05-11 via pivot to `oxy start --local` (see Session 25 narrative and LOG Active Decisions). MVP 2 is now active: **Visual Knowledge Products** — the analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
 
-**Sub-goal:** The analyst (Gordon) opens the portal, follows the chat link, lands on a working chat surface, and asks the 2024 question. The reply lands with SQL, row count, citations, and any matched limitations. The MVP 1 demo moment — *"How many 311 requests in 2024?"* → 113,961 — lands in a browser, not just a terminal.
+Per BUILD.md §5 MVP 2, the layers added are Data Apps (`.app.yml`) and Builder Agent (the construction interface). The demo moment is:
 
-**Open path-choice (Gordon's decision):**
+> "Show me service request volume by neighborhood, monthly, with a drill-down on top categories." → Dashboard appears, fully configured, in chat.
 
-- **Option A — `oxy serve --local`.** Switch Oxygen from `oxy serve` / `oxy start` (multi-workspace, requires org creation) to `oxy serve --local` (single-workspace, no org creation). Matches the single-user EC2 reality and eliminates the onboarding gate. Structurally simpler.
-- **Option B — walk the multi-workspace onboarding wizard once.** Create org, connect somerville datasource, register agent, ask the 2024 question, confirm 113,961, re-tick §5.8 row 2. More operationally minimal but preserves multi-tenant readiness for MVP 4 (per BUILD.md §5 MVP 4 outcome).
+The Working Backwards example in MVP.md anchors the first dashboard: service equity across neighborhoods, with the four investigative angles (volume, resolution rate, resolution time, service mix) one click apart.
 
-Either decision unblocks the work. A is the recommended default because it matches what the deployment actually is today.
+**Open questions for plan-scoping (Gordon to decide):**
 
-**Task list:**
+- **Builder Agent setup.** Is Builder Agent already configured in the workspace (visible in the SPA's Procedures or Agents surface), or does it need explicit configuration? If it requires setup, what shape?
+- **First Data App scope.** The MVP.md demo phrasing names "service request volume by neighborhood, monthly, with drill-down on top categories." Is that the actual first target, or should we start narrower (e.g., a single chart) and grow?
+- **Semantic-layer additions.** MVP 2 needs new measures (resolution time, response-time bands, category groupings) and computed dimensions (resolution duration, time-of-day) on the fact. What's the priority order?
+- **Builder Agent vs. hand-written YAML.** BUILD.md §7 says Builder Agent is the construction interface from MVP 2 onward, with hand-writing as fallback. Does Builder Agent in `--local` mode work the way the BUILD.md framing assumes, or does it need the multi-workspace surface? (Discovered via the wizard incident: not everything the SPA supports works identically across modes.)
 
-- [ ] Path-choice decision (A or B above)
-- [ ] Implementation (Code session — full task breakdown scoped at kickoff with full context)
-- [ ] Verification: Gordon opens the portal, follows the chat link, asks "How many 311 requests in 2024?", receives 113,961 with full trust contract (SQL + row count + citations + any matched limitations)
-- [ ] STANDARDS §5.8 row 2 re-tick with verification evidence (command output, browser screenshot, or both — per CLAUDE.md "Verification gates for `[x]` ticks")
-- [ ] MVP 1 sign-off ritual: STANDARDS §6 header note ("MVP 1 signed off YYYY-MM-DD"), LOG Current Status flip (Active MVP → MVP 2), CLAUDE.md MVP Sequence flip (MVP 1 done), TASKS.md Sign-off Status MVP 1 section all `[x]`
+**Pending plan kickoff.** When Gordon's ready, a Code session breaks down the implementation with full context. Reference [`docs/plans/`](docs/plans/) for the canonical plan format.
 
-**Out of scope** for this focus: MVP 2 dashboards, MVP 3 governance, any portal copy refresh beyond what the chat link requires, any new semantic-layer content, any AWS infrastructure changes. When MVP 1 signs off, this section gets replaced with the MVP 2 focus.
+**Also queued (separate from MVP 2):**
+- MVP 1.5 — Public Chat Access via nginx Basic Auth. Plan saved at [`docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md`](docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md). Independent of MVP 2 — could land before, alongside, or after, depending on demo timing.
 
 ---
 
@@ -47,7 +46,7 @@ Either decision unblocks the work. A is the recommended default because it match
 - [x] Oxygen runtime live on EC2 — `oxy start` brings up Postgres container + web app on :3000; `oxy build` exits 0 in plain non-interactive ssh
 - [x] Env vars in `/etc/environment` — `ANTHROPIC_API_KEY`, `OXY_DATABASE_URL`, plus `~/.local/bin` on PATH; documented in [SETUP.md](SETUP.md) §7
 - [x] Answer Agent `.agent.yml` configured — minimal FR scope (no trust contract yet)
-- [!] Chat UI accessible and answering questions correctly — FR smoke test passed: 2024 full-year (113,961) and 2026 partial-year (48,806) both exact-match against DuckDB ground truth *(Session 22 found web-UI SPA chat blocked — postgres has 0 orgs, the SPA renders "Welcome to Oxygen / Create organization" instead of a chat surface; CLI `oxy run` path re-verified Sessions 23 + 24 across full bench 5/5 (Q1 113,961, Q2 49,782 YTD, Q3 top types match, Q4 block-code-padded NA sentinel surfaced, Q5 satisfaction 4.44/5 blended). Volume persistence proven across reboot in Session 24 — user record + 0-orgs state both survived intact. Awaiting Gordon's UI walkthrough or sign-off reinterpretation per STANDARDS §5.8 inline note.)*
+- [x] Chat UI accessible and answering questions correctly — verified in SPA at `http://oxygen-mvp.taildee698.ts.net:3000` after Session 25 pivot to `oxy start --local`. "How many 311 requests were opened in 2024?" returned 113,961 with execute_sql artifact + "Returned 1 row." + Citations (`main_gold.fct_311_requests` + `requests` Airlayer view) + analyst-honest Known limitations section. CLI `oxy run` path also intact across full bench 5/5 (Q1 113,961, Q2 49,782 YTD, Q3 top types match, Q4 block-code-padded NA sentinel surfaced, Q5 satisfaction 4.44/5 blended). Reboot survival proven Sessions 24 + 25.
 - [x] Trust contract on agent (SQL + row count + citations in every response)  *(Plan 6 — STANDARDS §4.1 4/4)*
 - [x] Admin DQ framework in place  *(2026-05-08 — D2 of overnight; 3 admin models, run.sh, load_dbt_results.py; verified across 2 consecutive runs)*
 

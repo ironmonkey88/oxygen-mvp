@@ -187,7 +187,7 @@ Requires=docker.service
 [Service]
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
-ExecStart=/home/ubuntu/.local/bin/oxy start
+ExecStart=/home/ubuntu/.local/bin/oxy start --local
 Restart=always
 RestartSec=10
 # Inherit env vars from /etc/environment — keeps the systemd unit and
@@ -208,6 +208,10 @@ sudo systemctl status oxy
 ```
 
 **Why `After=docker.service` + `Requires=docker.service`:** `oxy start` brings up a Docker postgres container as part of its boot. If systemd starts oxy before dockerd is ready (post-reboot), oxy crashes attempting to create the container. The `Requires=` ensures dockerd is up; `After=` orders oxy after it. Verified Session 24 reboot test — oxy comes back ~7 seconds after kernel up, including container recreation against the persistent `oxy-postgres-data` volume.
+
+**Why `--local`:** the `oxy start --local` flag runs in single-workspace mode rooted at the current working directory (the `WorkingDirectory=` line above), with guest authentication and no organization creation. This bypasses Oxygen's multi-workspace onboarding wizard, which currently has no path for connecting to an existing populated DuckDB — the wizard's DuckDB step accepts only CSV/Parquet uploads into a fresh `.db/` directory. For a project arriving with a pre-built medallion DuckDB (this one), `--local` is the supported deployment shape. Multi-workspace mode (`oxy start` without `--local`) is the long-term target for MVP 4's sharing surfaces and public chat via Magic Link auth, but requires either an Oxygen wizard with an "existing DuckDB" option or a programmatic workspace-creation tool. See Session 25 narrative for the customer-feedback writeup.
+
+**Security note on `--local`:** the `--local` flag disables authentication entirely (guest mode). Do not expose `:3000` on a non-loopback interface without a reverse proxy that restricts access. In this deployment, Tailscale serves as the de facto reverse proxy — `:3000` is closed at the AWS security group and reachable only over the Tailnet. MVP 1.5 (planned, see [docs/plans/](../docs/plans/)) adds nginx Basic Auth in front of the SPA for controlled public exposure as an interim solution.
 
 ---
 

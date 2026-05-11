@@ -104,10 +104,10 @@ oxygen-mvp/
 
 The four nested MVPs are defined in [BUILD.md §5](BUILD.md) with analyst outcomes, layers added, configuration produced, scaffolding retired, maturity stage, and demo moment. One-line summaries:
 
-1. **MVP 1 — First Knowledge Product.** The analyst asks a question and gets a verifiable answer with SQL, row count, and citation. Trusts it enough to put in a report.
-2. **MVP 2 — Visual Knowledge Products.** The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
+1. **MVP 1 — First Knowledge Product.** ✅ **Signed off 2026-05-11.** Analyst asks a question and gets a verifiable answer with SQL, row count, and citation. Achieved via `oxy start --local` (single-workspace mode); multi-workspace migration deferred to MVP 4.
+2. **MVP 2 — Visual Knowledge Products. (active)** The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
 3. **MVP 3 — Governance and Trust.** The analyst trusts the underlying data without having to verify it themselves. Verified Queries, full medallion, native agent testing.
-4. **MVP 4 — Semantic Depth and Sharing.** The analyst's findings move from personal to shared via Slack, MCP, A2A, BI tools, and public chat.
+4. **MVP 4 — Semantic Depth and Sharing.** The analyst's findings move from personal to shared via Slack, MCP, A2A, BI tools, and public chat. Also returns the deployment to multi-workspace mode + Magic Link auth + HTTPS.
 
 Complete each MVP fully before starting the next.
 

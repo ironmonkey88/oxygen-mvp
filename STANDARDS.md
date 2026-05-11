@@ -148,7 +148,7 @@ The interface — a research partner the analyst can trust.
 Everything the analyst sees outside the chat — and the public window.
 **Done done when:**
 - [x] Portal hosted on EC2 at port 80 (nginx)  *(Session 4)*
-- [ ] Routes live: `/`, `/chat`, `/docs`, `/trust`, `/metrics`  *(Session 23 retroactive sweep flipped this from `[x]` to `[ ]`. `/`, `/docs/`, `/metrics`, `/trust` all return 200. `/chat` is 404 on port 80 — the nginx `location /chat` block was removed in Plan 1 D4 when chat went Tailnet-only at `:3000`. The original interpretation was that the portal advertises chat via the hero "Private beta" pill, which is structurally true. But Session 22 found the Tailnet `:3000` chat itself is at the "Welcome to Oxygen / Create organization" onboarding screen — postgres has 0 orgs, the SPA can't render a chat surface. So the pill currently advertises a broken chat. Gordon's call at MVP 1 sign-off: (a) walk the UI wizard and re-tick this row on a passing SPA query, or (b) reinterpret the row as definitively CLI-only and re-tick with an inline note.)*
+- [x] Routes live: `/`, `/chat`, `/docs`, `/trust`, `/metrics`  *(Session 25 — 2026-05-11. `/chat` row interpreted as the Tailnet-only SPA at `:3000` (the portal advertises it via the hero "Private beta" pill; no public `/chat` route exists on port 80 — Plan 1 D4 deliberately closed that path). Pivoted from `oxy start` (multi-workspace) to `oxy start --local` (single-workspace, guest auth) after the multi-workspace onboarding wizard proved incompatible with the project's existing populated DuckDB — the wizard's DuckDB connection step only accepts CSV/Parquet uploads into a fresh `.db/` directory, no path for pointing at an existing medallion-architecture DuckDB file. `--local` reads `config.yml` and the workspace directly, bypassing the wizard. SPA tested in browser at `http://oxygen-mvp.taildee698.ts.net:3000`: workspace loaded with no wizard, `answer_agent` auto-registered, "How many 311 requests were opened in 2024?" returned 113,961 with full trust contract (execute_sql artifact + "Returned 1 row." + Citations `main_gold.fct_311_requests` + `requests` (Airlayer view) + analyst-honest Known limitations section). Reboot test passed: oxy systemd unit came back active 11 seconds after kernel up; agent regression intact post-reboot. Customer-feedback finding logged for Oxy in [`docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md`](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md). Multi-workspace mode deferred to MVP 4 (sharing surfaces, public chat via Magic Link auth).)*
 - [x] Nav reflects the analyst workflow: chat-first, with `/docs`, `/trust`, `/metrics` one click away  *(Plan 4 — three route links added to `portal/index.html` `.nav-links`; private-beta chat pill preserved on the hero)*
 - [x] `/trust` is dynamic — driven by the admin schema, not static copy  *(Plan 4)*
 - [x] `/metrics` is generated from Airlayer YAML, not hand-written  *(Plan 2 D3)*
@@ -157,6 +157,8 @@ Everything the analyst sees outside the chat — and the public window.
 ---
 
 ## 6. MVP 1 sign-off checklist
+
+**MVP 1 signed off 2026-05-11.** All 25 sign-off boxes `[x]` with re-verified evidence. The path through sign-off ran across Sessions 22–25: Session 22 surfaced the Oxygen onboarding gate; Session 23 codified the verification-gates standard + retroactive swept §6; Session 24 deployed systemd + reboot test + 5/5 bench; Session 25 pivoted from multi-workspace `oxy start` to `oxy start --local` after the onboarding wizard proved incompatible with the project's existing populated DuckDB, then tested SPA chat in-browser (113,961 with full trust contract) and confirmed reboot survival.
 
 Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 1 is called done.
 
@@ -181,7 +183,7 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 - [x] §5.5 Admin (DQ): 5/5  *(Plan 2 + Plan 3)*
 - [x] §5.6 Semantic (Airlayer): 7/7  *(Plan 7 — `oxy build` deferred caveat closed in Plan 0)*
 - [x] §5.7 Agent: 4/4  *(Plan 6)*
-- [ ] §5.8 Knowledge Product (Portal): 5/6  *(Plan 7 D2; Session 23 flipped row 2 `/chat` to `[ ]` — see §5.8 inline note)*
+- [x] §5.8 Knowledge Product (Portal): 6/6  *(Plan 7 D2 + Session 25 — `/chat` row re-ticked after `oxy start --local` pivot and SPA browser test of 113,961 trust contract)*
 
 **End-to-end smoke:**
 - [x] Analyst can ask "How many 311 requests were opened in 2024?" and receives a correct answer with SQL, row count, and citation  *(Plan 6 D3 Q1 — 113,961, transcript in `scratch/plan6_test_bench/q1_2024_regression.md`; Session 23 CLI re-verified 2026-05-10 22:00 ET — exact 113,961 with full trust contract; SPA chat path blocked by Session 22 onboarding gate, so this row is CLI-only at present)*

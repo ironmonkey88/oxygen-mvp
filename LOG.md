@@ -29,14 +29,23 @@
 
 ## Current Status
 
-**Active MVP:** MVP 1 — First Knowledge Product (verifiable answers)
-**Phase:** Overnight pass complete (Sessions 22–24). Session 22 surfaced the Oxygen onboarding gate; Session 23 codified the verification-gates standard + retroactive swept §6; Session 24 closed Sessions C D1 + D2 (systemd deploy + reboot test PASS, repo-clonable tick) and completed the 5/5 bench re-verification + `./run.sh` end-to-end clean. **MVP 1 sign-off now has 1 open box**: §5.8 row 2 (`/chat` UI walkthrough or CLI-only reinterpretation). Every other §6 box is `[x]` with re-verified evidence from this overnight pass.
+**Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
+**Phase:** MVP 1 signed off 2026-05-11 (Session 25) via pivot to `oxy start --local`. The multi-workspace onboarding wizard proved incompatible with existing populated DuckDB; `--local` reads the workspace directly. SPA browser-tested: 113,961 with full trust contract. Reboot survival proven. All 25 STANDARDS §6 boxes `[x]` with re-verified evidence. MVP 2 kickoff pending plan-scoping.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-11 00:15 ET (Session 24 — systemd deploy + reboot test + bench 5/5 + run.sh re-verify)
+**Last Updated:** 2026-05-11 (Session 25 — MVP 1 sign-off via `oxy start --local` pivot)
 
 ---
 
 ## Recent Sessions
+
+### Session 25 — 2026-05-11 — mvp1-signoff-via-local-pivot
+[full narrative](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md)
+
+- **Goal:** Resolve STANDARDS §5.8 row 2 (the last open MVP 1 sign-off box) by getting a working chat agent in the SPA with Gordon as the user.
+- **Shipped:** Tried path-choice B (multi-workspace wizard) — failed at the DuckDB step (wizard only accepts CSV/Parquet uploads, no path for existing populated DuckDB). Pivoted to A (`oxy start --local`). systemd unit ExecStart updated; reboot test passed (oxy back active 11s after kernel up). Gordon SPA-tested in browser: 113,961 with full trust contract (execute_sql artifact + Returned 1 row + Citations + analyst-honest Known limitations). All STANDARDS §6 boxes `[x]`; §6 header note "MVP 1 signed off 2026-05-11"; §5.8 6/6; LOG Current Status → MVP 2; CLAUDE MVP Sequence + TASKS Sign-off + ARCHITECTURE process management + SETUP.md §11 all updated. Customer-feedback finding documented for Oxy.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete (MVP 1 signed off)
+- **Next:** MVP 2 plan-scoping; MVP 1.5 (public chat via nginx Basic Auth) plan saved at [`docs/plans/`](docs/plans/) for separate scheduling.
 
 ### Session 24 — 2026-05-10 23:20 ET → 00:15 ET — systemd-deploy-and-bench-completion
 [full narrative](docs/sessions/session-24-2026-05-10-systemd-deploy-and-bench-completion.md)
@@ -74,19 +83,11 @@
 - **Status:** complete
 - **Next:** Gordon merges `claude/gifted-cartwright-9b6bac` to main so pipe patterns reach all branches; then resume Plan 10/11. *(merge landed 2026-05-10 21:30 ET — `d71e7d0..5ebb569` pushed to origin/main)*
 
-### Session 20 — 2026-05-09 21:45 ET → 2026-05-10 09:55 ET — Plan 5 — Tech Debt Sweep
-[full narrative](docs/sessions/session-20-2026-05-09-plan-5-tech-debt.md)
-
-- **Goal:** Hygiene pass to close out the rev 2 overnight batch — settings reconciliation, dbt profiles example, scratch hygiene, run.sh step-text consistency, doc reconciliation.
-- **Shipped:** D1 settings: pruned settings.local.json to empty, added `Bash(bash *)` to settings.json, CLAUDE.md "what belongs where" subsection (commit `b274ae7`); D2 dbt: `dbt/profiles.example.yml` + SETUP §8 rewrite (commit `1f0d05d`); D3 scratch: nothing to prune; D4 run.sh: no drift to fix; D5 docs: CLAUDE.md Run Order 7→9 steps + 5b, ARCHITECTURE.md Run Order bash block + Portal routes table + Process management line corrected, TASKS.md "Deliverable B" closed.
-- **Decisions:** 1 decision — see Decisions Log
-- **Status:** complete
-- **Next:** Gordon's call on the two open MVP 1 sign-off boxes (systemd, repo-public). Then whatever new plan he stacks.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 20** — 2026-05-09 21:45 ET → 2026-05-10 09:55 ET — Plan 5 Tech Debt Sweep; D1 settings reconciliation (settings.local.json pruned, `Bash(bash *)` added to settings.json), D2 `dbt/profiles.example.yml` + SETUP §8 rewrite, D5 doc reconciliation (CLAUDE Run Order 7→9 steps, ARCHITECTURE Portal routes + Process management corrected). [full narrative](docs/sessions/session-20-2026-05-09-plan-5-tech-debt.md)
 - **Session 19** — 2026-05-09 21:05 ET → 21:45 ET — Plan 7 MVP 1 Sign-off Sweep; STANDARDS §6 walked (23/25 `[x]` with evidence); portal copy refresh deployed (hero, stats, asset cards, "Built on Oxygen" prose); LOG Active Blockers row written with 2 Gordon-decision boxes. [full narrative](docs/sessions/session-19-2026-05-09-plan-7-signoff-sweep.md)
 - **Session 18** — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion; trust contract in `agents/answer_agent.agent.yml` (4-section reply, runtime renders SQL+result, prompt-enforced citations + limitations); 10 limitation entries + `_index.yaml` + `scripts/build_limitations_index.py` + run.sh step 9/9; 5/5 test bench pass with transcripts in `scratch/plan6_test_bench/`; STANDARDS §4.1 4/4, §4.4 row 2, §5.7 4/4. [full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
 - **Session 17** — 2026-05-09 19:18 ET → 19:35 ET — Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook; `.claude/hooks/block-dangerous.sh` denies risky shell shapes (chains, `$(...)`, leading `cd`/`export`) with loop-keyword + arithmetic carve-outs; wired into PreToolUse alongside the task-warning hook; merged 2 allow + 8 deny patterns; `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom + 13 hook assertions. [full narrative](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)
@@ -234,6 +235,7 @@
 | 2026-05-10 23:45 ET | STANDARDS §4.5 row 1 (repo-public) reinterpreted as team-clonable; ticked | Pre-authorized by Gordon in overnight brief: "Private, clonable by team — public flip deferred as a separate launch decision, not a sign-off blocker." Inline note added; §6 §4.5 2/3 → 3/3. |
 | 2026-05-10 23:55 ET | Bench Q5 re-verified post-reboot after two earlier rate-limit retries | Anthropic 30K/min cap hit during Q4+Q5 parallel batch and the immediate retry (Q5 is heavy — multiple queries, full context including all view files). After ~10 min cooldown during reboot validation, Q5 ran clean: Accuracy 4.39 / Courtesy 4.67 / Ease 4.63 / Overall 4.28, blended 4.44/5.0; both survey-related limitations surfaced. Lesson: bench questions should run sequentially, not parallel, to stay inside the 30K/min input-token window. Plan 6 D3 bench 5/5 fully re-verified across Sessions 23 + 24. |
 | 2026-05-11 | Operational docs aligned to MVP.md and BUILD.md; TASKS.md "Next Focus" added pointing at working chat agent in the portal | MVP.md and BUILD.md are now the strategic and construction authorities. Operational docs (CLAUDE.md reading list + What You Are Building + MVP Sequence, ARCHITECTURE.md Component Trajectory pointer + Process management line updated for systemd, STANDARDS.md §1 purpose pointer, TASKS.md MVP 2/3/4 framings + Next Focus section, LOG.md Active MVP line) reconciled to match. The active pointer for Code is now TASKS.md "Next Focus" — a working chat agent in the portal with Gordon as the user, which closes STANDARDS §5.8 row 2 and unlocks MVP 1 sign-off. |
+| 2026-05-11 | **MVP 1 signed off via pivot to `oxy start --local` (single-workspace mode)** | Multi-workspace onboarding wizard incompatible with existing populated DuckDB — wizard only accepts CSV/Parquet uploads into a fresh `.db/` directory; no path for pointing at a pre-built medallion DuckDB. `oxy start --local` reads `config.yml` and the workspace directly, manages Docker postgres lifecycle, enables single-workspace + guest-auth mode. SPA tested in browser at `oxygen-mvp.taildee698.ts.net:3000`: 113,961 with full trust contract (execute_sql + row count + citations + analyst-honest limitations note). Reboot test: oxy back active 11s after kernel up; CLI agent regression 113,961 post-reboot. Customer-feedback finding logged for Oxy: wizard needs an "existing DuckDB file path" option for users coming to Oxygen with a pre-built warehouse. Multi-workspace migration deferred to MVP 4 (sharing surfaces, public chat via Magic Link auth). |
 
 ---
 
@@ -241,19 +243,13 @@
 
 > Resolved blockers live in [`docs/log-archive.md`](docs/log-archive.md).
 
-### MVP 1 sign-off blocker as of 2026-05-11 00:15 ET (Session 24 close-out)
+### MVP 1 — signed off 2026-05-11
 
-Session 24 closed two of the three open boxes; one remains:
+**No active blockers.** MVP 1 signed off in Session 25 via pivot from `oxy start` (multi-workspace, wizard-gated) to `oxy start --local` (single-workspace, guest auth, reads `config.yml` directly). SPA browser test confirmed 113,961 with full trust contract; reboot test passed. All 25 STANDARDS §6 boxes `[x]` with re-verified evidence.
 
-| Box | Status | Owner | Notes |
-|-----|--------|-------|-------|
-| §5.8 row 2 — Routes live: `/chat` | open | Gordon decision | Port-80 `/chat` is 404 (route removed in Plan 1 D4); the Tailnet `:3000` SPA renders the "Create organization" onboarding screen until an org exists (Session 22 — postgres has 0 orgs, 1 user from tonight's signup that survived Session 24's reboot test). CLI path is fully healthy and bench 5/5 re-verified across Sessions 23 + 24. Decision: (a) Gordon walks the UI wizard at `oxygen-mvp.taildee698.ts.net:3000`, creates the org, asks the 2024 question, confirms 113,961, re-ticks the row; or (b) reinterpret §5.8 row 2 as definitively CLI-only (MVP 1's analyst persona uses `oxy run`; SPA chat out of scope), update STANDARDS inline, re-tick. |
+Sign-off arc, in case future archaeology needs it: Session 22 surfaced the Oxygen onboarding gate (0 orgs in postgres, SPA at "Create organization"). Session 23 codified the verification-gates standard and ran the retroactive sweep, flipping §5.8 row 2 to `[ ]`. Session 24 deployed Oxygen as a systemd service, passed the reboot test, and re-verified the bench 5/5. Session 25 attempted the multi-workspace wizard, found it can't connect to existing populated DuckDB (CSV/Parquet upload only), pivoted to `oxy start --local`, browser-tested the SPA, ran the second reboot test, and closed out.
 
-Closed in Session 24:
-- §3.2 row 4 (systemd) — `oxy.service` deployed, reboot test PASS, volume persistence proven, SETUP.md §11 updated
-- §4.5 row 1 (repo-public) — reinterpreted as team-clonable per Gordon's pre-authorization in the overnight brief
-
-After Session 24 sweep: Foundations 10/10, Trustability 16/16, Layers 6/7 sections (§5.8 still 5/6 pending Gordon), E2E smoke 5/5 all re-verified this session. **MVP 1 sign-off blocked on one Gordon call.**
+Resolved blockers moved to [`docs/log-archive.md`](docs/log-archive.md) per the rotation rule.
 
 ---
 
