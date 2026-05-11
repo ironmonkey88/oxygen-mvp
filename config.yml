@@ -1,7 +1,7 @@
 models:
-  - name: claude-sonnet-4-6
+  - name: claude-opus-4-7
     vendor: anthropic
-    model_ref: claude-sonnet-4-6
+    model_ref: claude-opus-4-7
     key_var: ANTHROPIC_API_KEY
 
 databases:

@@ -3,7 +3,7 @@
 name: answer_agent
 description: "Somerville 311 analytics — answer natural-language questions about service request data with extreme trustability."
 
-model: claude-sonnet-4-6
+model: claude-opus-4-7
 
 context:
   - name: topic
