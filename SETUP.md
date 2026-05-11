@@ -181,13 +181,15 @@ So Oxygen survives SSH disconnects and reboots:
 sudo tee /etc/systemd/system/oxy.service <<EOF
 [Unit]
 Description=Oxygen server
-After=network.target
+After=network.target docker.service
+Requires=docker.service
 
 [Service]
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
 ExecStart=/home/ubuntu/.local/bin/oxy start
 Restart=always
+RestartSec=10
 # Inherit env vars from /etc/environment — keeps the systemd unit and
 # non-interactive ssh sessions on the same source of truth. systemd does
 # not read /etc/environment by default; EnvironmentFile= does the work.
@@ -204,6 +206,8 @@ sudo systemctl start oxy
 # Check status
 sudo systemctl status oxy
 ```
+
+**Why `After=docker.service` + `Requires=docker.service`:** `oxy start` brings up a Docker postgres container as part of its boot. If systemd starts oxy before dockerd is ready (post-reboot), oxy crashes attempting to create the container. The `Requires=` ensures dockerd is up; `After=` orders oxy after it. Verified Session 24 reboot test — oxy comes back ~7 seconds after kernel up, including container recreation against the persistent `oxy-postgres-data` volume.
 
 ---
 

@@ -25,7 +25,7 @@ The target user for MVP 1 is a **city analyst** — someone helping the city run
 - [x] All pipeline steps idempotent  *(verified Plan 2 + Plan 3 — `dlt` write_disposition=replace, `dbt run` idempotent by design, admin uses `is_incremental()` filter; multiple `./run.sh` re-runs give stable row counts)*
 - [x] Single entry point: `run.sh`  *(verified — 9-step pipeline; CLAUDE.md Run Order section)*
 - [x] Sequential DuckDB access enforced (`dlt → dbt → oxy`); no concurrent writers  *(run.sh enforces order; ARCHITECTURE.md documents the lock contention rationale)*
-- [ ] Oxygen runs as a `systemd` service  *(GAP — `oxy.service` not installed on EC2; `oxy start` runs as a nohup background process since Session 7. SETUP.md §11 has the unit-file recipe; deferred to a hardening plan post-MVP-1 sign-off because the runtime is stable as-is)*
+- [x] Oxygen runs as a `systemd` service  *(Session 24 — 2026-05-10 23:39 ET. `/etc/systemd/system/oxy.service` deployed with `After=network.target docker.service`, `Requires=docker.service`, `EnvironmentFile=/etc/environment`, `Restart=always`. `systemctl enable` symlinked into `multi-user.target.wants`. Validation: status active running, is-enabled enabled, curl :3000 → 200 OK, agent CLI regression 113,961 both pre- and post-reboot. REBOOT TEST PASSED — instance rebooted via `sudo reboot`, oxy systemd unit came back active 7 seconds after kernel up, oxy-postgres container recreated and bound to the persistent `oxy-postgres-data` volume, user record from Session 22 (`local-user@example.com`) survived intact — proving volume persistence across full instance lifecycle. SETUP.md §11 updated.)*
 - [x] Pipeline exit codes captured even when tests fail (run continues to record failures, then propagates failure)  *(Plan 3 D3 — run.sh `set +e` around dbt test calls, `FINAL_EXIT = max(bronze/gold-test, admin-test)`; verified end-to-end via synthetic drift-fail)*
 
 ### 3.3 Usability
@@ -64,8 +64,8 @@ The bar for MVP 1 is not "trustworthy"; it is "extreme trustability." A trustwor
 - [x] Limitations surfaced both on the portal and in agent responses when the query touches a flagged area  *(Plan 4 — `/trust` page; Plan 6 — Answer Agent trust contract verified across Q4 (block-code-padded + location-ward-block-only) and Q5 (2024-survey-columns-sparse + survey-columns-on-fact))*
 
 ### 4.5 Reproducible
-- [ ] Repo is public (or at minimum clonable by collaborators)  *(Gordon decision — repo is private; clonable by Gordon's team only. Move to public is a non-Code decision; flagged for sign-off conversation rather than auto-flipped.)*
-- [x] Pipeline runs end-to-end with one command (`./run.sh`)  *(verified across Sessions 7, 13, 14, 17 — full run completes; 9 steps; FINAL_EXIT propagates test failures)*
+- [x] Repo is public (or at minimum clonable by collaborators)  *(Private, clonable by team — public flip deferred as a separate launch decision, not a sign-off blocker. Gordon's pre-authorized reinterpretation in the Session 22/23/24 overnight brief: the "or at minimum clonable by collaborators" clause is satisfied by team-only clone access at GitHub `ironmonkey88/oxygen-mvp`. Re-tick as Session 24 — 2026-05-10. If/when repo flips public, this row's evidence stands without modification.)*
+- [x] Pipeline runs end-to-end with one command (`./run.sh`)  *(verified across Sessions 7, 13, 14, 17 — full run completes; 9 steps; FINAL_EXIT propagates test failures; Session 24 re-verified 2026-05-10 23:30 ET — all 9 steps clean, bronze/gold tests exit 0, admin tests exit 0 including `dq_drift_fail_guardrail` PASS at new baseline 1,169,935 rows; final exit 0)*
 - [x] All transformations expressed declaratively (SQL, YAML) — no opaque scripts in the data path  *(audit: dbt SQL models, dlt-Python pipeline (declarative resource pattern), Airlayer YAML, agent YAML, run.sh as orchestrator only — no "magic" data-mutation scripts outside this surface)*
 
 ---
@@ -162,7 +162,7 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 
 **Foundations:**
 - [x] §3.1 Security: 5/5  *(Plan 1)*
-- [ ] §3.2 Reliability: 4/5  *(systemd-service row open — gap; SETUP.md §11 has the recipe; runtime stable as nohup, deferred)*
+- [x] §3.2 Reliability: 5/5  *(Session 24 D1 — systemd unit deployed, reboot test passed, volume persistence proven)*
 - [x] §3.3 Usability: 4/4  *(Plan 2)*
 
 **Extreme trustability:**
@@ -170,7 +170,7 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 - [x] §4.2 Public metric definitions: 3/3  *(Plan 2 D3)*
 - [x] §4.3 Live data quality: 4/4  *(Plan 4)*
 - [x] §4.4 Limitations registry: 2/2  *(Plan 8)*
-- [ ] §4.5 Reproducibility: 2/3  *(repo-public row open — Gordon decision, not Code's to flip)*
+- [x] §4.5 Reproducibility: 3/3  *(Session 24 — repo-public row reinterpreted as team-clonable per pre-authorization in overnight brief)*
 
 **Layers:**
 - [x] §5.1 Ingestion (dlt): 5/5  *(Plan 7 verified)*

@@ -30,13 +30,22 @@
 ## Current Status
 
 **Active MVP:** MVP 1 — Static data → DuckDB → Airlayer → Answer Agent chat UI
-**Phase:** Overnight Session 22 hit a hard stop at the Oxygen onboarding gate — Gordon found the web UI at "Welcome to Oxygen / Create organization" tonight (postgres has 0 orgs; the SPA can't render a chat surface). CLI path (`oxy run`) is fully healthy: re-verified 2024 → 113,961 and top request types match Session 18's Q3. Session 23 added a verification-gates standard to CLAUDE.md and ran a retroactive sweep — 1 row flipped (§5.8 row 2 `/chat`), all other live-functional boxes re-pass. **MVP 1 sign-off now has 3 open boxes**: §3.2 row 4 (systemd), §4.5 row 1 (repo-public), §5.8 row 2 (`/chat` UI walkthrough or CLI-only reinterpretation). gifted-cartwright merged to main this morning (`5ebb569`).
+**Phase:** Overnight pass complete (Sessions 22–24). Session 22 surfaced the Oxygen onboarding gate; Session 23 codified the verification-gates standard + retroactive swept §6; Session 24 closed Sessions C D1 + D2 (systemd deploy + reboot test PASS, repo-clonable tick) and completed the 5/5 bench re-verification + `./run.sh` end-to-end clean. **MVP 1 sign-off now has 1 open box**: §5.8 row 2 (`/chat` UI walkthrough or CLI-only reinterpretation). Every other §6 box is `[x]` with re-verified evidence from this overnight pass.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-10 22:45 ET (Session 23 — verification-gates standard + retroactive sweep)
+**Last Updated:** 2026-05-11 00:15 ET (Session 24 — systemd deploy + reboot test + bench 5/5 + run.sh re-verify)
 
 ---
 
 ## Recent Sessions
+
+### Session 24 — 2026-05-10 23:20 ET → 00:15 ET — systemd-deploy-and-bench-completion
+[full narrative](docs/sessions/session-24-2026-05-10-systemd-deploy-and-bench-completion.md)
+
+- **Goal:** Resume the overnight brief after Session 22/23 wake-up; close bench Q2/Q4/Q5 gaps, run `./run.sh` end-to-end, ship Session C D1 (systemd deploy + reboot) + D2 (repo-clonable tick).
+- **Shipped:** Bench 5/5 re-verified (Q1 113,961, Q2 49,782 YTD, Q3 top types, Q4 NA sentinel, Q5 satisfaction 4.44/5); `./run.sh` exit 0 (drift-fail guardrail PASS at new baseline 1,169,935); `oxy.service` deployed with hardened `After=docker.service Requires=docker.service`; **reboot test PASSED** — oxy back active 7s after kernel up, volume persistence proven (Session 22 user record survived); STANDARDS §3.2 row 4 + §4.5 row 1 both `[x]`; §6 §3.2 4/5 → 5/5, §4.5 2/3 → 3/3; SETUP.md §11 updated.
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** MVP 1 sign-off blocked on Gordon's §5.8 row 2 call (UI walkthrough vs CLI-only reinterpretation). Every other §6 box re-verified `[x]`.
 
 ### Session 23 — 2026-05-10 22:05 ET → 22:45 ET — verification-gates-standard
 [full narrative](docs/sessions/session-23-2026-05-10-verification-gates-standard.md)
@@ -74,19 +83,11 @@
 - **Status:** complete
 - **Next:** Gordon's call on the two open MVP 1 sign-off boxes (systemd, repo-public). Then whatever new plan he stacks.
 
-### Session 19 — 2026-05-09 21:05 ET → 21:45 ET — Plan 7 — MVP 1 Sign-off Sweep
-[full narrative](docs/sessions/session-19-2026-05-09-plan-7-signoff-sweep.md)
-
-- **Goal:** Walk STANDARDS §6 end-to-end, refresh portal copy to engineering-honest tone, and either sign off MVP 1 or produce a clean blocker list.
-- **Shipped:** STANDARDS §6 walked — 23/25 boxes `[x]` with evidence (curl checks for live routes, dlt/dbt config audits, schema.yml description+test counts, `oxy validate` 6/6); §3.2/§3.3/§4.5/§5.1/§5.2/§5.4/§5.6/§5.8 sections all flipped where automatable. Portal copy refresh: hero h1 + blurb, stats block, asset card grid (replaced /erd + /tasks placeholder cards with /trust + /metrics), "Built on Oxygen" prose; verified live at `http://18.224.151.49/`. Sign-off blocker row written in LOG Active Blockers (2 open §6 boxes, both Gordon-decision-shaped).
-- **Decisions:** 2 decisions — see Decisions Log
-- **Status:** complete (MVP 1 sign-off pending 2 Gordon decisions, not blocked on any Code work)
-- **Next:** Plan 5 — Tech Debt Sweep.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 19** — 2026-05-09 21:05 ET → 21:45 ET — Plan 7 MVP 1 Sign-off Sweep; STANDARDS §6 walked (23/25 `[x]` with evidence); portal copy refresh deployed (hero, stats, asset cards, "Built on Oxygen" prose); LOG Active Blockers row written with 2 Gordon-decision boxes. [full narrative](docs/sessions/session-19-2026-05-09-plan-7-signoff-sweep.md)
 - **Session 18** — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion; trust contract in `agents/answer_agent.agent.yml` (4-section reply, runtime renders SQL+result, prompt-enforced citations + limitations); 10 limitation entries + `_index.yaml` + `scripts/build_limitations_index.py` + run.sh step 9/9; 5/5 test bench pass with transcripts in `scratch/plan6_test_bench/`; STANDARDS §4.1 4/4, §4.4 row 2, §5.7 4/4. [full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
 - **Session 17** — 2026-05-09 19:18 ET → 19:35 ET — Plan 9 rev 2 — Allowlist Coverage + Bash Safety Hook; `.claude/hooks/block-dangerous.sh` denies risky shell shapes (chains, `$(...)`, leading `cd`/`export`) with loop-keyword + arithmetic carve-outs; wired into PreToolUse alongside the task-warning hook; merged 2 allow + 8 deny patterns; `scripts/check_allowlist_coverage.sh` rewritten with 11 idiom + 13 hook assertions. [full narrative](docs/sessions/session-17-2026-05-09-plan-9-rev2-bash-safety-hook.md)
 - **Session 16** — 2026-05-09 ~17:30 ET — Plan 9 — Allowlist Coverage, Once and For All; structural restructure (defaultMode acceptEdits, top-level Read/Write/Edit, $schema), broaden allow patterns (verification-idiom cohort), `scripts/check_allowlist_coverage.sh` first pass clean. [full narrative](docs/sessions/session-16-2026-05-09-plan-9-allowlist-coverage.md)
@@ -228,6 +229,10 @@
 | 2026-05-10 22:00 ET | Session A halted at Oxygen onboarding gate — chat-UI restoration deferred to Gordon | Postgres has 0 orgs, 1 user (`local-user@example.com` created tonight 20:54 ET). `oxy` CLI has no org subcommand; REST `/api/orgs` returns `[]` but the full setup chain requires authenticated SPA flow. Brief's hard-stop: "If the only path is browser UI clicks (no CLI/API equivalent), STOP — Code can't drive a browser." Data + agent layers fully healthy: DuckDB 1,169,935 rows, `oxy run` 2024 → 113,961 with full trust contract, `/trust` 36/36 pass, `/metrics` lists both measures, `/docs` 1.8MB. |
 | 2026-05-10 22:30 ET | New CLAUDE.md subsection "Verification gates for `[x]` ticks" | Codifies the static-artifact vs. live-functional distinction; mandates re-verification of live-functional boxes at every MVP sign-off (not inherited from earlier sessions); names `/chat`-shaped state-gated routes as requiring either UI walkthrough or explicit inline reinterpretation. Driven by Session 22's discovery that STANDARDS §5.8 row 2 was `[x]` based on a "Private beta pill" reinterpretation buried in an inline note, and Session 7's TASKS.md chat-UI tick (113,961 / 48,806) was either CLI-mislabelled or wiped along with prior org state. |
 | 2026-05-10 22:40 ET | STANDARDS §5.8 row 2 (`Routes live: /chat`) flipped `[x]` → `[ ]`; §6 Layers `§5.8 6/6` → `5/6` | Port-80 `/chat` returns 404 (removed in Plan 1 D4); the Tailnet `:3000` chat that the "Private beta" pill advertises is at the onboarding screen (Session 22 — 0 orgs in postgres). The previous interpretation ("pill advertises chat") was structurally true but conditionally load-bearing on a working chat. Gordon decides at MVP 1 sign-off: walk the UI wizard and re-tick, OR reinterpret as CLI-only and re-tick with an inline note. |
+| 2026-05-10 23:30 ET | `./run.sh` end-to-end re-verified post-Session-22-sync — clean exit 0 | All 9 steps ran clean; bronze/gold tests exit 0; admin tests exit 0; `dq_drift_fail_guardrail` PASSED at new baseline 1,169,935 rows (variance from frozen 1,168,959 baseline is +0.08%, within tolerance); /trust regenerated at 36/36 pass; metrics + limitations index regenerated. Re-verifies STANDARDS §4.5 row 2 against the new verification-gates standard. |
+| 2026-05-10 23:39 ET | Oxygen deployed as systemd service; reboot test PASSED | `/etc/systemd/system/oxy.service` with hardened `After=network.target docker.service` + `Requires=docker.service` + `EnvironmentFile=/etc/environment` + `Restart=always RestartSec=10`. `systemctl enable` symlinked into `multi-user.target.wants`. Reboot test: `sudo reboot` → instance back, oxy active 7s after kernel up, oxy-postgres container recreated against persistent volume, user record from Session 22 survived intact (volume persistence proven). curl :3000 → 200; agent regression 113,961. Hardening beyond SETUP.md §11's original — SETUP.md updated to match what shipped. STANDARDS §3.2 row 4 + §6 §3.2 4/5 → 5/5. |
+| 2026-05-10 23:45 ET | STANDARDS §4.5 row 1 (repo-public) reinterpreted as team-clonable; ticked | Pre-authorized by Gordon in overnight brief: "Private, clonable by team — public flip deferred as a separate launch decision, not a sign-off blocker." Inline note added; §6 §4.5 2/3 → 3/3. |
+| 2026-05-10 23:55 ET | Bench Q5 re-verified post-reboot after two earlier rate-limit retries | Anthropic 30K/min cap hit during Q4+Q5 parallel batch and the immediate retry (Q5 is heavy — multiple queries, full context including all view files). After ~10 min cooldown during reboot validation, Q5 ran clean: Accuracy 4.39 / Courtesy 4.67 / Ease 4.63 / Overall 4.28, blended 4.44/5.0; both survey-related limitations surfaced. Lesson: bench questions should run sequentially, not parallel, to stay inside the 30K/min input-token window. Plan 6 D3 bench 5/5 fully re-verified across Sessions 23 + 24. |
 
 ---
 
@@ -235,17 +240,19 @@
 
 > Resolved blockers live in [`docs/log-archive.md`](docs/log-archive.md).
 
-### MVP 1 sign-off blockers as of 2026-05-10 22:45 ET (Session 23 retroactive sweep)
+### MVP 1 sign-off blocker as of 2026-05-11 00:15 ET (Session 24 close-out)
 
-After Session 23's retroactive verification against the new CLAUDE.md "Verification gates for `[x]` ticks" standard, §6 has three open boxes:
+Session 24 closed two of the three open boxes; one remains:
 
 | Box | Status | Owner | Notes |
 |-----|--------|-------|-------|
-| §3.2 row 4 — Oxygen runs as a systemd service | open | Gordon decision | Runtime is stable: `oxy start` running as a nohup background process since 2026-05-08 (PID 29429), Postgres container up via `oxy start`'s Docker management, web app on `:3000` returns 200. SETUP.md §11 has the systemd unit recipe. Question for Gordon: is systemd required for MVP 1 sign-off, or acceptable to slip to a hardening pass after sign-off? |
-| §4.5 row 1 — Repo is public (or at minimum clonable by collaborators) | open | Gordon decision | Repo is currently private (GitHub `ironmonkey88/oxygen-mvp`); clonable by Gordon's team only. Move-to-public is a non-Code decision; needs Gordon to flip the GitHub setting and confirm here. |
-| §5.8 row 2 — Routes live: `/chat` | open (NEW — flipped by Session 23) | Gordon decision | Session 22 found web-UI SPA chat at the "Welcome to Oxygen / Create organization" onboarding screen — postgres has 0 orgs. Port-80 `/chat` is 404 (route removed in Plan 1 D4); the Tailnet `:3000` SPA can't render a chat surface without an org. CLI path (`oxy run agents/answer_agent.agent.yml`) is fully healthy and re-verified in Session 23 (Q1 2024 → 113,961, Q3 top types match). Decision: (a) Gordon walks the UI wizard, then re-tick on a passing SPA query; or (b) reinterpret §5.8 row 2 as CLI-only (the chat experience for MVP 1's analyst persona is the CLI), update STANDARDS inline, re-tick. |
+| §5.8 row 2 — Routes live: `/chat` | open | Gordon decision | Port-80 `/chat` is 404 (route removed in Plan 1 D4); the Tailnet `:3000` SPA renders the "Create organization" onboarding screen until an org exists (Session 22 — postgres has 0 orgs, 1 user from tonight's signup that survived Session 24's reboot test). CLI path is fully healthy and bench 5/5 re-verified across Sessions 23 + 24. Decision: (a) Gordon walks the UI wizard at `oxygen-mvp.taildee698.ts.net:3000`, creates the org, asks the 2024 question, confirms 113,961, re-ticks the row; or (b) reinterpret §5.8 row 2 as definitively CLI-only (MVP 1's analyst persona uses `oxy run`; SPA chat out of scope), update STANDARDS inline, re-tick. |
 
-After Session 23 sweep: Foundations 9/10, Trustability 16/16 automatable rows, Layers 6/7 sections (§5.8 went 6/6 → 5/6), E2E smoke 5/5 (all re-verified — rows 1+2 are CLI-only at present per the §5.8 row 2 finding). **MVP 1 sign-off is now blocked on these three Gordon decisions.**
+Closed in Session 24:
+- §3.2 row 4 (systemd) — `oxy.service` deployed, reboot test PASS, volume persistence proven, SETUP.md §11 updated
+- §4.5 row 1 (repo-public) — reinterpreted as team-clonable per Gordon's pre-authorization in the overnight brief
+
+After Session 24 sweep: Foundations 10/10, Trustability 16/16, Layers 6/7 sections (§5.8 still 5/6 pending Gordon), E2E smoke 5/5 all re-verified this session. **MVP 1 sign-off blocked on one Gordon call.**
 
 ---
 
