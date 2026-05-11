@@ -1,0 +1,71 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://oxy.tech/docs/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Welcome to Oxygen
+
+> The Open-Source AI Data Analyst built for Speed and Precision 
+
+**Oxygen** is the open-source AI data analyst built for speed and precision. Written in Rust and declarative by design, Oxygen provides the foundational components needed to transform AI-driven data analysis into reliable, production-ready systems through structured primitives, semantic understanding, and predictable execution.
+
+Using **Oxygen**, users can automate data Q\&A and reporting, and accelerate building data artifacts such as semantic topics and data applications.
+
+**Oxygen** integrates natively with your existing data stack - data warehouses, ELT tools, semantic layers, and BI tools. Oxygen also comes with its own data tools for a zero-config experience.
+
+**Oxygen** applies software development lifecycle principles (e.g. build-test-deploy pipeline) to AI-driven data analytics.
+
+**Oxygen** establishes a structured workflow for data agents, involving agent creation, prompt testing, and production deployment.
+
+<img height="100" alt="banner" class="rounded-md" src="https://mintcdn.com/oxy-internal/-wVM2K90JPw7QvxR/images/oxy-lifecycle.jpg?fit=max&auto=format&n=-wVM2K90JPw7QvxR&q=85&s=b7e742c8faab3aba24f9736ddad3e967" data-path="images/oxy-lifecycle.jpg" />
+
+Specifically, this process is implemented as follows:
+
+* **Agent Configuration**: Define agents using `.agent.yml` files that specify their instructions. Agents are provided tools to generate SQL, execute semantic queries, and execute procedures. We recommend using a routing agent as the first layer, which can deterministically execute procedures, with a SQL-generation agent as a fallback. This ensures that vetted procedures run with high determinism against their attached inclusions, while the SQL generation fallback provides broad coverage for ad-hoc questions.
+* **Procedure Development**: Create `.procedure.yml` files to orchestrate multi-step processes. Use `retrieve: include` and `exclude` to control how these procedures are retrieved by agents that have access to them.
+* **Testing Framework**: Add test cases directly to `.agent.yml` or `.procedure.yml` files. Execute tests using the `oxy test` command.
+
+You can interact with all components — agents, procedures, and data — through the web interface launched by `oxy start`. Oxygen is also CLI-native, so every operation can be run from the terminal, making it easy to integrate with coding tools like [Claude Code](https://github.com/oxy-hq/skills) and CI/CD pipelines.
+
+## Who should read what?
+
+The documentation is split into two audiences:
+
+**End users** — data analysts, business users, and developers who use Oxy to query data, build agents, and create workflows. Start here:
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install Oxy and run your first query in minutes
+  </Card>
+
+  <Card title="Getting Started with Agents" icon="robot" href="/getting-started-agents/set-up-project">
+    Create and test your first AI data agent
+  </Card>
+
+  <Card title="Core Concepts" icon="book" href="/learn-about-oxy/agents">
+    Agents, workflows, semantic layer, data apps
+  </Card>
+
+  <Card title="Basic Oxy commands" icon="terminal" href="/reference/oxy-commands">
+    CLI reference for running and testing agents
+  </Card>
+</CardGroup>
+
+**Operators** — DevOps engineers, platform teams, and self-hosters who deploy and configure the Oxy server. Start here:
+
+<CardGroup cols={2}>
+  <Card title="Deployment Overview" icon="server" href="/deployment/overview">
+    Deploy Oxy on cloud, Docker, or Kubernetes
+  </Card>
+
+  <Card title="Deployment Modes" icon="sliders" href="/deployment/cloud-mode">
+    Multi-workspace vs single-workspace mode
+  </Card>
+
+  <Card title="Authentication" icon="lock" href="/authentication/overview">
+    Magic link, Google OAuth, Okta SSO
+  </Card>
+
+  <Card title="GitHub App Setup" icon="github" href="/deployment/github-app">
+    Enable GitHub workspace import
+  </Card>
+</CardGroup>

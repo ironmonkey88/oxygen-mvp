@@ -285,14 +285,26 @@ Both live in `/etc/environment` — see SETUP.md §7 for why (`~/.bashrc` and `~
 
 ## Reference Links
 
-- Oxygen Docs: https://oxy.tech/docs/llms.txt
-- Oxygen Agents: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
-- Oxygen Routing Agents: https://oxy.tech/docs/guide/learn-about-oxy/routing-agents.md
-- Oxygen Semantic Layer: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
+**Local mirror first.** Oxygen's documentation is mirrored in this repo at [`docs/oxygen-docs/`](docs/oxygen-docs/) (see [README](docs/oxygen-docs/README.md) for structure + refresh procedure). Prefer the local copy for grep/read — it's offline, version-controlled, and the same snapshot Chat sees via project knowledge. The web URLs below are the canonical sources; consult them when something might have changed since the mirror was last refreshed.
+
+### Oxygen source (private, gh-authenticated)
+- Oxygen runtime source: https://github.com/oxy-hq/oxygen-internal — use this for behavior questions where docs are ambiguous or stale. The `oxy` binary on EC2 reports its build commit via `/api/health` (`build_info.git_commit`).
+- Oxygen Claude Code skills: https://github.com/oxy-hq/skills — official skill recipes for using Oxygen from Claude Code; worth a look before writing custom slash commands.
+
+### Oxygen docs (web canonical)
+- Oxygen Docs index (AI-friendly): https://oxy.tech/docs/llms.txt (also mirrored at [`docs/oxygen-docs/llms.txt`](docs/oxygen-docs/llms.txt))
+- Welcome: https://oxy.tech/docs/guide/welcome
+- Agents: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
+- Routing Agents: https://oxy.tech/docs/guide/learn-about-oxy/routing-agents.md
+- Semantic Layer: https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md
+- Data Apps: https://oxy.tech/docs/guide/learn-about-oxy/data-apps.md
+- AWS Deployment: https://oxy.tech/docs/guide/deployment/hands-on/aws.md
+- `oxy` CLI reference: https://oxy.tech/docs/guide/reference/oxy-commands.md
+- Environment variables: https://oxy.tech/docs/guide/reference/environment-variables.md
+
+### Related projects
 - Airlayer Repo: https://github.com/oxy-hq/airlayer
 - Airlayer Schema Format: https://github.com/oxy-hq/airlayer/blob/main/docs/schema-format.md
-- Oxygen Data Apps: https://oxy.tech/docs/guide/learn-about-oxy/data-apps.md
-- Oxygen AWS Deployment: https://oxy.tech/docs/guide/deployment/hands-on/aws.md
 - dlt Docs: https://dlthub.com/docs
 - dbt Core Docs: https://docs.getdbt.com
 - dbt-duckdb Adapter: https://github.com/duckdb/dbt-duckdb

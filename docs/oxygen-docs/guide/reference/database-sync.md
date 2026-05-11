@@ -1,0 +1,103 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://oxy.tech/docs/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Database Synchronization
+
+> Learn how to synchronize database schema information with the Oxy sync command
+
+# Oxy sync
+
+The `oxy sync` command collects semantic information from your databases and stores it in your local repository for use by agents and other Oxy features. This semantic information includes table structures, relationships, and sample data that help agents understand your data model.
+
+## Command Overview
+
+```bash theme={null}
+oxy sync [DATABASE_NAME] [OPTIONS]
+```
+
+### Arguments
+
+* `DATABASE_NAME` (optional): The name of a specific database to sync, as defined in your `config.yml` file. If omitted, all databases will be synced.
+
+### Options
+
+* `-d, --datasets <DATASETS>`: Specify one or more datasets to sync within the database. Can be used multiple times.
+* `-o, --overwrite`: Overwrite existing files during synchronization. By default, existing files are skipped.
+
+## Usage Examples
+
+### Sync All Databases
+
+```bash theme={null}
+oxy sync
+```
+
+This command will synchronize all databases defined in your `config.yml` file. By default, it will skip any files that already exist.
+
+### Sync a Specific Database
+
+```bash theme={null}
+oxy sync my_database
+```
+
+This syncs only the database named "my\_database" from your configuration.
+
+### Sync Specific Datasets
+
+```bash theme={null}
+oxy sync my_database -d customers -d orders
+```
+
+This will sync only the "customers" and "orders" datasets from the "my\_database" database.
+
+### Overwrite Existing Files
+
+```bash theme={null}
+oxy sync -o
+```
+
+By using the `-o` flag, existing semantic files will be overwritten during synchronization.
+
+## Output and Warnings
+
+The `sync` command provides feedback about the synchronization process:
+
+1. **Skipped Files**: When a file already exists and overwrite mode is off (default), the command will display a warning indicating which files were skipped.
+
+2. **Overwritten Files**: When the `-o` flag is used, the command will display a warning showing which existing files were overwritten.
+
+## Understanding the Synced Data
+
+When you run the `oxy sync` command, Oxy will:
+
+1. Connect to each configured database
+2. Extract schema information, including tables, columns, relationships, and data types
+3. Generate semantic models representing this data
+4. Save these models as files in your project directory
+
+These semantic files are then used by agents when you ask questions about your data, enabling them to generate accurate SQL queries and understand your data structure.
+
+## Configuration
+
+Before using the `sync` command, ensure your databases are properly configured in your `config.yml` file. For example:
+
+```yaml theme={null}
+databases:
+  - name: my_postgres_db
+    type: postgres
+    host: localhost
+    port: 5432
+    user: postgres
+    password: mysecretpassword
+    database: mydb
+
+  - name: my_bigquery_db
+    type: bigquery
+    key_path: path/to/keyfile.json
+    datasets:
+      analytics: ["*"]
+      marketing: ["users", "campaigns"]
+```
+
+See the [configuration documentation](/learn-about-oxy/config) for more details on setting up your database connections.

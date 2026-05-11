@@ -1,0 +1,170 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://oxy.tech/docs/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Configure Environment
+
+> Environment variables for Oxy deployments
+
+Oxy is configured primarily through environment variables. This page covers the full set of variables for production deployments.
+
+<Steps>
+  <Step title="Create Environment File">
+    Create a `.env` file to store your environment variables:
+
+    ```bash theme={null}
+    touch .env
+    chmod 600 .env  # Restrict permissions to owner only
+    ```
+
+    <Warning>
+      Never commit `.env` to version control. Add it to `.gitignore`.
+    </Warning>
+  </Step>
+
+  <Step title="Set Required Variables">
+    The variables you need depend on your deployment mode.
+
+    **Single-workspace mode (`oxy serve --local`)** — minimal setup:
+
+    ```bash theme={null}
+    OPENAI_API_KEY=sk-...
+    # or whichever model provider you use
+    ```
+
+    **Multi-workspace mode (`oxy serve`)** — required:
+
+    ```bash theme={null}
+    # PostgreSQL connection string
+    OXY_DATABASE_URL=postgresql://user:password@host:5432/oxy
+
+    # Directory where workspaces are stored
+    OXY_STATE_DIR=/data/oxy          # defaults to ~/.local/share/oxy
+
+    # LLM provider (at least one)
+    OPENAI_API_KEY=sk-...
+
+    # Authentication (at least one method, or leave all unset for no-auth)
+    MAGIC_LINK_SECRET=any-long-random-string
+    GOOGLE_CLIENT_ID=...
+    GOOGLE_CLIENT_SECRET=...
+
+    # Instance owner (recommended for team deployments)
+    OXY_OWNER=admin@example.com
+    ```
+  </Step>
+
+  <Step title="GitHub App (multi-workspace only)">
+    To enable importing repositories as workspaces, set up a GitHub App and configure these variables. See the [GitHub App Setup guide](/deployment/github-app) for step-by-step instructions.
+
+    ```bash theme={null}
+    GITHUB_APP_ID=123456
+    GITHUB_APP_SLUG=my-oxy-app
+    GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+    ...
+    -----END RSA PRIVATE KEY-----"
+    GITHUB_CLIENT_ID=Iv23liqo62PgXXXXXX
+    GITHUB_CLIENT_SECRET=abc123...
+    GITHUB_STATE_SECRET=$(openssl rand -hex 32)  # keep stable across restarts
+    ```
+  </Step>
+
+  <Step title="Enterprise Features (optional)">
+    Required only when using `oxy serve --enterprise` or `oxy start --enterprise`:
+
+    ```bash theme={null}
+    # OXY_OBSERVABILITY_BACKEND=postgres  # auto-detected; set explicitly to override
+    ```
+
+    Observability uses the existing `OXY_DATABASE_URL` Postgres connection by default.
+  </Step>
+
+  <Step title="Verify and Restart">
+    ```bash theme={null}
+    # Check that the variables are loaded
+    printenv | grep OXY_
+
+    # Restart the Oxy service
+    sudo systemctl restart oxy
+    sudo systemctl status oxy
+    ```
+  </Step>
+</Steps>
+
+***
+
+## Full Variable Reference
+
+### Core
+
+| Variable           | Required                   | Default              | Description                                                                                                                                |
+| ------------------ | -------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `OXY_DATABASE_URL` | Required (multi-workspace) | —                    | PostgreSQL connection string                                                                                                               |
+| `OXY_STATE_DIR`    | No                         | `~/.local/share/oxy` | Directory for workspaces and runtime data                                                                                                  |
+| `OXY_OWNER`        | No                         | —                    | Email address granted Owner role on login. Owners can promote other users to Admin. When unset, all users are admin (single-user default). |
+| `OXY_API_URL`      | No                         | derived from request | Base URL of the API (set when frontend and backend are on different domains)                                                               |
+
+### Authentication
+
+| Variable               | Required            | Description                                   |
+| ---------------------- | ------------------- | --------------------------------------------- |
+| `MAGIC_LINK_SECRET`    | For magic-link auth | Secret used to sign magic-link tokens         |
+| `GOOGLE_CLIENT_ID`     | For Google OAuth    | OAuth 2.0 client ID from Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | For Google OAuth    | OAuth 2.0 client secret                       |
+| `OKTA_CLIENT_ID`       | For Okta OAuth      | Okta application client ID                    |
+| `OKTA_CLIENT_SECRET`   | For Okta OAuth      | Okta application client secret                |
+| `OKTA_DOMAIN`          | For Okta OAuth      | Your Okta domain (e.g. `company.okta.com`)    |
+
+See [Authentication](/authentication/overview) for setup instructions.
+
+### GitHub App
+
+| Variable                 | Required          | Description                                                     |
+| ------------------------ | ----------------- | --------------------------------------------------------------- |
+| `GITHUB_APP_ID`          | For GitHub import | Numeric App ID from the GitHub App settings page                |
+| `GITHUB_APP_SLUG`        | For GitHub import | App slug (appears in the app's GitHub URL)                      |
+| `GITHUB_APP_PRIVATE_KEY` | For GitHub import | Full RSA private key PEM block                                  |
+| `GITHUB_CLIENT_ID`       | For GitHub import | OAuth Client ID from the app settings                           |
+| `GITHUB_CLIENT_SECRET`   | For GitHub import | OAuth Client Secret from the app settings                       |
+| `GITHUB_STATE_SECRET`    | For GitHub import | Random secret for HMAC-signing OAuth state and selection tokens |
+
+See [GitHub App Setup](/deployment/github-app) for a full walkthrough.
+
+### Enterprise (Observability)
+
+| Variable                      | Required | Description                                                                          |
+| ----------------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `OXY_OBSERVABILITY_BACKEND`   | No       | Storage backend: auto-detected (`postgres` if `OXY_DATABASE_URL` set, else `duckdb`) |
+| `OXY_SERVICE_NAME`            | No       | Service name for spans (default: `oxy`)                                              |
+| `OXY_OBSERVABILITY_LOG_LEVEL` | No       | Log level for observability layer (default: `debug`)                                 |
+
+***
+
+## Using AWS SSM Parameter Store
+
+For cloud deployments, fetch secrets from SSM at startup:
+
+```bash theme={null}
+# Fetch a single parameter
+export OXY_DATABASE_URL=$(aws ssm get-parameter \
+  --name "/oxy/database-url" \
+  --with-decryption \
+  --query "Parameter.Value" \
+  --output text)
+
+# Fetch and source a full .env file stored in SSM
+aws ssm get-parameter --name "/oxy/env" --with-decryption \
+  --query "Parameter.Value" --output text > .env
+```
+
+<div className="mt-8">
+  <Cards>
+    <Card title="Previous: Set Up Workspace & Repository" icon="arrow-left" href="/deployment/workspace-setup">
+      Set up your Oxy workspace and configure your repository
+    </Card>
+
+    <Card title="GitHub App Setup" icon="github" href="/deployment/github-app">
+      Configure GitHub App for workspace import
+    </Card>
+  </Cards>
+</div>

@@ -1,0 +1,123 @@
+# Oxy
+
+## Docs
+
+- [Oxygen Serve](https://oxy.tech/docs/changelog/2025-04-03.md): We’ve launched oxy serve to make it easier for you to interact with your agents. Now you can:
+- [Added support for Model Context Protocol (MCP) Server](https://oxy.tech/docs/changelog/2025-04-10.md): This release includes a built-in MCP-compliant server, enabling seamless context management and integration with clients that support the MCP speci...
+- [Visualizations and Agent Workflows](https://oxy.tech/docs/changelog/2025-04-24.md): This release includes native visualization for the Oxygen GUI experience. Further, agents can now natively execute workflows. Google BigQuery support ...
+- [Data Apps](https://oxy.tech/docs/changelog/2025-05-07.md): This release adds native support for data applications. It includes an open, declarative framework for building data applications, and an IDE for O...
+- [Major Authentication Updates, Enhanced Agent Capabilities, and Improved User Experience](https://oxy.tech/docs/changelog/2025-06-26.md): We've implemented authentication with multiple new options to fit your workflow:
+- [Semantic Type System, User Management, and Enhanced Chat Streaming](https://oxy.tech/docs/changelog/2025-07-03.md): Introducing semantics.yml - a comprehensive approach to data modeling that unifies all entity definitions across your entire Oxygen deployment:
+- [GitHub Integration, Readonly Mode, and Enhanced Streaming Controls](https://oxy.tech/docs/changelog/2025-07-10.md): Launch Oxygen from anywhere without requiring an existing project folder:
+- [Activity Logs, Enhanced Retrieval Accuracy, and Agent Preview Improvements](https://oxy.tech/docs/changelog/2025-07-17.md): Complete audit trail of all agent interactions in a comprehensive table view:
+- [Unified Settings Interface and Ephemeral Data Cleanup](https://oxy.tech/docs/changelog/2025-07-24.md): Improved settings experience with consolidated management:
+- [Product Stability and Performance Enhancements](https://oxy.tech/docs/changelog/2025-07-30.md): This release focuses on enhancing user experience and system reliability through targeted optimizations:
+- [Workflow Major Enhancements](https://oxy.tech/docs/changelog/2025-08-08.md): Debug and analyze workflow executions with comprehensive replay capabilities:
+- [Data App Validation, Advanced Semantic Routing and Model Configuration Headers Support](https://oxy.tech/docs/changelog/2025-08-21.md): Real-time and build-time validation for data app within the IDE:
+- [Enhanced IDE Experience, HTTPS Development, and Platform Integrations](https://oxy.tech/docs/changelog/2025-09-04.md): Improved workspace control, consistency, and navigation:
+- [IDE Improvements and Platform Stability](https://oxy.tech/docs/changelog/2025-09-12.md): Enhanced file navigation experience:
+- [API Enhancements and YAML Retrieval Support](https://oxy.tech/docs/changelog/2025-09-26.md): New API endpoint for non-streaming responses:
+- [Cloud-Native Architecture, Agentic Workflows, and Enhanced APIs](https://oxy.tech/docs/changelog/2025-10-24.md): Flexible deployment model that works both locally and in cloud environments:
+- [Authentication Enhancements and Workflow UX Improvements](https://oxy.tech/docs/changelog/2025-11-06.md): Comprehensive authentication improvements across deployment modes:
+- [Snowflake Row-Level Security, Enhanced Workflow UI, and IDE Improvements](https://oxy.tech/docs/changelog/2025-11-14.md): Comprehensive row-level security support for Snowflake databases:
+- [Deep Research Mode, Enhanced Workflow Controls, and Cloud Onboarding Improvements](https://oxy.tech/docs/changelog/2025-11-20.md): Introducing deep research capabilities for complex analytical workflows:
+- [GUI Configuration Editor and Chat Experience Improvements](https://oxy.tech/docs/changelog/2025-11-27.md): Visual interface for managing Oxygen configurations:
+- [Quick Start Demo Project, Enhanced Testing Capabilities, and Compatibility Improvements](https://oxy.tech/docs/changelog/2025-12-04.md): Streamlined onboarding with pre-configured demo templates:
+- [Slack Integration, Enhanced Consistency Testing, and Chart Improvements](https://oxy.tech/docs/changelog/2025-12-11.md): Native Slack integration with @mentions, command support, and threaded conversations. Enhanced consistency testing and improved chart rendering.
+- [Ontology View, Agentic Workflows, PostgreSQL Migration, and Automation Renaming](https://oxy.tech/docs/changelog/2025-12-18.md): Interactive graph visualization of your entire data project:
+- [A2A Protocol Support, Enhanced IDE Experience, and Snowflake Browser Authentication](https://oxy.tech/docs/changelog/2025-12-25.md): Comprehensive implementation of A2A protocol v0.3.0 for standardized agent communication
+- [Fly.io Deployment Support, Workflow Run Management, and Chart Improvements](https://oxy.tech/docs/changelog/2026-01-01.md): Quick cloud deployment capabilities with Fly.io integration and enhanced workflow management
+- [User Attribution for Automation Runs, Semantic Explorer Sorting, and Migration Improvements](https://oxy.tech/docs/changelog/2026-01-08.md): Comprehensive user tracking for workflow executions, manual sort control for semantic queries, and enhanced error handling
+- [Enterprise Observability with OpenTelemetry, Optimized Query Results, and Intent Classification](https://oxy.tech/docs/changelog/2026-01-15.md): Comprehensive monitoring and analytics for agent executions with OpenTelemetry integration and performance-optimized query results
+- [Observability Metrics, v0.dev Integration, and Enhanced IDE Experience](https://oxy.tech/docs/changelog/2026-01-22.md): Advanced analytics for platform usage monitoring with AI-powered app generation and improved field selection
+- [PostgreSQL-Only Architecture, Enhanced Oxygen Start, and Developer Portal Improvements](https://oxy.tech/docs/changelog/2026-01-29.md): Streamlined database backend with enterprise mode for local development and improved settings navigation
+- [SQL IDE, Enhanced Query Execution, and Strict YAML Validation](https://oxy.tech/docs/changelog/2026-02-05.md): Comprehensive SQL development environment with keyboard shortcuts and improved configuration validation
+- [SQL IDE Enhancements, Time Dimensions, Version Tracking, and Platform Stability](https://oxy.tech/docs/changelog/2026-02-12.md): Enhanced temporal analytics, SQL IDE improvements, build metadata visibility, and comprehensive platform reliability fixes
+- [Readonly Mode, Enhanced Anthropic Support, Data App Editing, and App Result Caching](https://oxy.tech/docs/changelog/2026-02-26.md): Server-level file protection, improved Claude compatibility, and enhanced data app management
+- [Magic Link Authentication, Looker Integration, and Procedure Terminology](https://oxy.tech/docs/changelog/2026-03-05.md): Passwordless authentication via email, comprehensive Looker analytics integration, and clearer automation terminology
+- [Interactive App Controls, Enhanced Looker Integration, and Agent Testing Framework](https://oxy.tech/docs/changelog/2026-03-12.md): Dynamic parameter controls for apps, full Looker platform integration, and LLM-as-judge testing
+- [Agent Testing UI, Looker Explore, and CLI Improvements](https://oxy.tech/docs/changelog/2026-03-19.md): Testing UI for agent runs, Looker Explore in the Dev Portal, and database-free CLI execution
+- [IDE Git Flow, Secrets Panel Improvements, and Bug Fixes](https://oxy.tech/docs/changelog/2026-03-26.md): Branch-aware file operations, local git support, and improved environment variable management
+- [Agentic Agents, Testing UI Fixes, and Platform Improvements](https://oxy.tech/docs/changelog/2026-04-02.md): A new .agentic.yml agent type with end-to-end reasoning pipelines, app generation, and human-in-the-loop support
+- [Builder Agent, Workspace Management, and Thinking Budget](https://oxy.tech/docs/changelog/2026-04-09.md): New builder copilot agent, multi-workspace deployment modes with member management, and extended thinking toggle
+- [Builder Agent Improvements, Verified Query Badges, and Time-Aware Analytics](https://oxy.tech/docs/changelog/2026-04-16.md): Smarter file edits in Builder mode, verified badges for semantic layer queries, and time-aware analytics agent
+- [Multi-Organization Support, IDE Pull, and Observability](https://oxy.tech/docs/changelog/2026-04-23.md): Organizations with onboarding and bulk invites, pull latest changes directly from the IDE, and configurable observability backends.
+- [SQL Modeling (dbt), Universal Slack Bot, Oxygen Rebrand, and Rate Limit Handling](https://oxy.tech/docs/changelog/2026-04-30.md): Native dbt-style SQL modeling, multi-tenant Slack integration, product rename to Oxygen, and automatic LLM rate-limit retries.
+- [Stripe Billing, Verified Queries, Builder Improvements, and Unified Settings](https://oxy.tech/docs/changelog/2026-05-07.md): Per-seat Stripe billing with self-serve checkout, trusted SQL file execution, a major Builder upgrade, and consolidated settings dialog.
+- [API Keys](https://oxy.tech/docs/guide/api-keys/API-Keys.md)
+- [Google OAuth Authentication](https://oxy.tech/docs/guide/authentication/google.md): Configure Google OAuth 2.0 for social login
+- [Magic Link Authentication](https://oxy.tech/docs/guide/authentication/magic-link.md): Passwordless email sign-in using one-time links delivered via Amazon SES
+- [Okta Authentication](https://oxy.tech/docs/guide/authentication/okta.md): Configure Okta OAuth 2.0 authentication for Oxy
+- [Authentication Overview](https://oxy.tech/docs/guide/authentication/overview.md): Overview of Oxy's authentication options: magic link, Google OAuth, and Okta OAuth
+- [Deployment Modes](https://oxy.tech/docs/guide/deployment/cloud-mode.md): Deploy Oxy in multi-workspace mode for cloud platforms, or single-workspace mode for local development
+- [Container Runtime Support](https://oxy.tech/docs/guide/deployment/container-runtimes.md): Configure and use various container runtimes with Oxy
+- [Create Machine](https://oxy.tech/docs/guide/deployment/create-machine.md): Setting up your server for Oxy deployment
+- [Docker Deployment](https://oxy.tech/docs/guide/deployment/docker.md): Deploying Oxy using Docker containers
+- [Configure Environment](https://oxy.tech/docs/guide/deployment/environment.md): Environment variables for Oxy deployments
+- [GitHub App Setup](https://oxy.tech/docs/guide/deployment/github-app.md): Configure a GitHub App to enable workspace import and Git integration in multi-workspace mode
+- [Deploy on AWS](https://oxy.tech/docs/guide/deployment/hands-on/aws.md): Run Oxy on an Amazon EC2 instance
+- [Install Oxy CLI](https://oxy.tech/docs/guide/deployment/install-oxy.md): Installing and configuring the Oxy CLI on your server
+- [Deploy Oxy on Kubernetes with Helm](https://oxy.tech/docs/guide/deployment/kubernetes-helm.md): Deploy Oxy on Kubernetes using the official Helm chart
+- [Deploy Oxy on Kubernetes with Raw Manifests](https://oxy.tech/docs/guide/deployment/kubernetes-raw.md): Deploy Oxy on Kubernetes using raw YAML manifests for full control
+- [Deploying Oxy on Cloud](https://oxy.tech/docs/guide/deployment/overview.md): How to deploy Oxy on cloud environments
+- [Kubernetes Deployment](https://oxy.tech/docs/guide/deployment/reference-architecture/aws/architecture.md): Deploy Oxy on Kubernetes using the official Helm chart
+- [EKS Deployment](https://oxy.tech/docs/guide/deployment/reference-architecture/aws/ec2-architecture.md): Deploy Oxy on Amazon Elastic Kubernetes Service
+- [GKE Deployment](https://oxy.tech/docs/guide/deployment/reference-architecture/aws/ecs-architecture.md): Deploy Oxy on Google Kubernetes Engine
+- [Kubernetes Quick Start](https://oxy.tech/docs/guide/deployment/reference-architecture/aws/step-by-step/ec2.md): Get Oxy running on any Kubernetes cluster in minutes
+- [Production Checklist](https://oxy.tech/docs/guide/deployment/reference-architecture/aws/step-by-step/ecs.md): Checklist for a production-ready Oxy deployment on Kubernetes
+- [Set Up Workspace & Repository](https://oxy.tech/docs/guide/deployment/workspace-setup.md): Setting up your Oxy workspace and configuring your repository
+- [Creating your first agent](https://oxy.tech/docs/guide/getting-started-agents/creating-your-first-agent.md)
+- [Providing additional context](https://oxy.tech/docs/guide/getting-started-agents/providing-context.md)
+- [Set up your project](https://oxy.tech/docs/guide/getting-started-agents/set-up-project.md): Getting started with oxy, with real data
+- [Test your agent](https://oxy.tech/docs/guide/getting-started-agents/test-your-agent.md)
+- [A2A Protocol Integration](https://oxy.tech/docs/guide/integrations/a2a/overview.md): Enable agent-to-agent communication using the A2A protocol
+- [Looker](https://oxy.tech/docs/guide/integrations/analytics/looker.md): Connect Oxy to Looker for querying explores and syncing metadata
+- [Slack](https://oxy.tech/docs/guide/integrations/apps/slack.md): Query your data directly from Slack using @mentions, DMs, and the Oxygen assistant sidebar
+- [BigQuery](https://oxy.tech/docs/guide/integrations/data-sources/bigquery.md)
+- [ClickHouse](https://oxy.tech/docs/guide/integrations/data-sources/clickhouse.md)
+- [Domo](https://oxy.tech/docs/guide/integrations/data-sources/domo.md)
+- [DuckDB](https://oxy.tech/docs/guide/integrations/data-sources/duckdb.md)
+- [MotherDuck](https://oxy.tech/docs/guide/integrations/data-sources/motherduck.md)
+- [MySQL](https://oxy.tech/docs/guide/integrations/data-sources/mysql.md)
+- [Postgres](https://oxy.tech/docs/guide/integrations/data-sources/postgres.md)
+- [Redshift](https://oxy.tech/docs/guide/integrations/data-sources/redshift.md)
+- [Snowflake](https://oxy.tech/docs/guide/integrations/data-sources/snowflake.md)
+- [Claude](https://oxy.tech/docs/guide/integrations/models/anthropic.md): Oxy is the fastest way to build AI agents
+- [Gemini](https://oxy.tech/docs/guide/integrations/models/gemini.md): Oxy is the fastest way to build AI agents
+- [Ollama](https://oxy.tech/docs/guide/integrations/models/ollama.md): Oxy is the fastest way to build data agents
+- [OpenAI](https://oxy.tech/docs/guide/integrations/models/openai.md)
+- [Integrations](https://oxy.tech/docs/guide/integrations/overview.md): Oxy integrates with a variety of data sources and models
+- [Overview](https://oxy.tech/docs/guide/integrations/v0/overview.md)
+- [Agentic Workflows](https://oxy.tech/docs/guide/learn-about-oxy/agentic-workflows.md): Autonomous agent-driven workflows with dynamic decision making
+- [Agents](https://oxy.tech/docs/guide/learn-about-oxy/agents.md): Prompted LLM chatbots that can reason about data
+- [Cache](https://oxy.tech/docs/guide/learn-about-oxy/cache.md): Store intermediate task results for efficiency
+- [Global config](https://oxy.tech/docs/guide/learn-about-oxy/config.md): How to configure your `config.yml` file
+- [Context](https://oxy.tech/docs/guide/learn-about-oxy/context.md): How to supply your agent with additional context
+- [Context Graph](https://oxy.tech/docs/guide/learn-about-oxy/context-graph.md): Interactive graph visualization of your data project's semantic and operational assets
+- [Data Apps](https://oxy.tech/docs/guide/learn-about-oxy/data-apps.md): Configuration-based dashboards for visualizing SQL data
+- [Debugging & Logs](https://oxy.tech/docs/guide/learn-about-oxy/debugging.md)
+- [Modeling](https://oxy.tech/docs/guide/learn-about-oxy/modeling.md): Define layered SQL transformations inside your Oxy workspace using dbt project conventions
+- [Observability](https://oxy.tech/docs/guide/learn-about-oxy/observability.md)
+- [Routing Agents](https://oxy.tech/docs/guide/learn-about-oxy/routing-agents.md): Learn how to create and configure routing agents to direct tasks to specialized tools and agents
+- [Overview](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer.md): Build a comprehensive semantic layer to power AI-driven analytics
+- [Dimensions](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer/dimensions.md): Define dimensions for filtering and grouping data
+- [Entities](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer/entities.md): Define entities and relationships in your semantic layer
+- [Measures](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer/measures.md): Define measures and metrics for quantitative analysis
+- [Topics](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer/topics.md): Organize views by business domain with topics
+- [Using the Semantic Layer](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer/usage.md): How to use your semantic layer in agents, workflows, and routing agents
+- [Views](https://oxy.tech/docs/guide/learn-about-oxy/semantic-layer/views.md): Create and manage views in your semantic layer
+- [Semantic Model](https://oxy.tech/docs/guide/learn-about-oxy/semantic-model.md)
+- [Testing](https://oxy.tech/docs/guide/learn-about-oxy/testing.md): How to write tests and use the oxy test CLI
+- [Workflows](https://oxy.tech/docs/guide/learn-about-oxy/workflows.md): How to define workflows
+- [MCP Server](https://oxy.tech/docs/guide/mcp-server/mcp-usage.md): Learn how to use the Model Context Protocol (MCP) server in Oxy to expose your data agents, workflows, SQL files, and semantic topics to AI assistants like Claude.
+- [SQLite to PostgreSQL Migration Guide](https://oxy.tech/docs/guide/migration/migration-guide.md): Migrate your Oxy installation from SQLite to PostgreSQL using simple CLI commands
+- [Prerequisites](https://oxy.tech/docs/guide/prerequisites.md): What you need before running oxy start
+- [Quickstart](https://oxy.tech/docs/guide/quickstart.md): Let's learn how to start using oxy
+- [Branch Configuration](https://oxy.tech/docs/guide/reference/branch-configuration.md): Configure Oxy's IDE branch workflow — protected branches and the fork point for new worktrees.
+- [Database Synchronization](https://oxy.tech/docs/guide/reference/database-sync.md): Learn how to synchronize database schema information with the Oxy sync command
+- [Environment Variable Configuration](https://oxy.tech/docs/guide/reference/environment-variables.md): Use environment variables for database connection configurations
+- [Oxy commands](https://oxy.tech/docs/guide/reference/oxy-commands.md)
+- [oxy start](https://oxy.tech/docs/guide/reference/oxy-start.md): Start PostgreSQL with Docker and launch the Oxy server
+- [Read-Only Mode](https://oxy.tech/docs/guide/reference/readonly-mode.md): Run the Oxy server without allowing file modifications via the API
+- [Semantic Layer Quick Reference](https://oxy.tech/docs/guide/reference/semantic-layer-reference.md): Quick reference for semantic layer syntax and properties
+- [Welcome to Oxygen](https://oxy.tech/docs/guide/welcome.md): The Open-Source AI Data Analyst built for Speed and Precision
