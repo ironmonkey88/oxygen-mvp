@@ -50,6 +50,10 @@ The Working Backwards example in MVP.md anchors the first dashboard: service equ
 - [x] Trust contract on agent (SQL + row count + citations in every response)  *(Plan 6 — STANDARDS §4.1 4/4)*
 - [x] Admin DQ framework in place  *(2026-05-08 — D2 of overnight; 3 admin models, run.sh, load_dbt_results.py; verified across 2 consecutive runs)*
 
+### MVP 1.5 — Post-Sign-off Hardening
+- [x] Switch Answer Agent from Sonnet 4.6 to Opus 4.7 *(2026-05-11; commit `a5853d0` switched `config.yml` + `agents/answer_agent.agent.yml`; CLI bench 5/5 + SPA bench Q1–Q5 in single thread, no `ApiError`; rate-limit headroom 30K → 500K tokens/min; `agent-rate-limit-multi-turn-spa` limitation `mitigated-by-opus-4-7-migration`)*
+- [ ] Public chat access via nginx Basic Auth at `/chat` *(plan saved at `docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md`; execution pending)*
+
 ### MVP 2 — Visual Knowledge Products
 - [ ] Airapp `.app.yml` with charts
 

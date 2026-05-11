@@ -266,6 +266,7 @@ lsof data/somerville.duckdb
 - File type: `.agent.yml`
 - Key tool: `execute_sql` — agent writes and runs SQL against DuckDB
 - Gets schema context from Airlayer via `context` block
+- **Model:** Claude Opus 4.7 (`claude-opus-4-7`) via Anthropic API (`ANTHROPIC_API_KEY`). Selected 2026-05-11 over `claude-sonnet-4-6` for the 500K input-tokens/min Tier 1 rate limit (16× Sonnet's 30K cap), which Sonnet was hitting on SPA multi-turn conversations. Opus also delivers stronger instruction-following on the trust contract (more decisive on historical-year framings, more rigorous about querying `current_date` for ytd questions, sharper analyst-honest limitation framing).
 - Docs: https://oxy.tech/docs/guide/learn-about-oxy/agents.md
 
 ### Routing Agent

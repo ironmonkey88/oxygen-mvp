@@ -1,13 +1,16 @@
 ---
 id: agent-rate-limit-multi-turn-spa
-title: SPA multi-turn conversations may hit Anthropic 30K input tokens/min cap
+title: SPA multi-turn conversations may hit Anthropic 30K input tokens/min cap (mitigated 2026-05-11)
 severity: medium
 affects:
   - spa-chat
   - multi-turn-conversations
 since: 2026-05-11
-status: known
+status: mitigated-by-opus-4-7-migration
 ---
+
+> **Mitigated 2026-05-11.** The Answer Agent was switched from `claude-sonnet-4-6` (30K input tokens/min Tier 1 cap) to `claude-opus-4-7` (500K input tokens/min Tier 1 cap — 16× headroom). Verified Session 26 across CLI bench 5/5 + SPA Q1–Q5 in a single thread with no `ApiError` banners. See LOG Active Decisions row for 2026-05-11 and `docs/plans/mvp-1.5-switch-agent-to-opus-4-7.md`. The body below documents the original Sonnet-era issue for historical reference; the workaround section is no longer load-bearing.
+
 
 # SPA multi-turn conversations may hit Anthropic 30K input tokens/min cap
 
