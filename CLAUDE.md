@@ -1,7 +1,9 @@
 # CLAUDE.md — Instructions for Claude Code
 
 This file is instructions for Claude Code. For project context, read these files first:
+- `MVP.md` — strategic analysis: who this is for, what success looks like, the four-MVP roadmap
 - `ARCHITECTURE.md` — stack decisions, component map, data flow, constraints
+- `STANDARDS.md` — "done done" spec by layer; MVP 1 sign-off checklist
 - `SETUP.md` — environment setup, install commands, config files
 - `LOG.md` — current status, decisions, blockers
 - `TASKS.md` — task tracker
