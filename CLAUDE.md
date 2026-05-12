@@ -263,6 +263,23 @@ failing stage name if any non-test stage halts. Final exit code =
 surfaces, but admin tables, the trust page, and the run-end record
 still get populated.
 
+**Plan 1b notes.** After adding, dropping, or significantly modifying
+a dbt model (`dbt/models/**/*.sql` or column descriptions in
+`dbt/models/*/schema.yml`), manually regenerate column profiles so
+`/profile` reflects the new schema immediately:
+
+```bash
+.venv/bin/python scripts/profile_tables.py
+.venv/bin/python scripts/generate_profile_page.py
+```
+
+The next `./run.sh` would catch it within 24 hours via the staleness
+check (stage 9b), but explicit invocation keeps the portal in sync
+during active development. dbt's own `schema.yml` files are NEVER
+touched by the profile pipeline — they remain hand-written editorial
+content. Profile data lives in `main_admin.fct_column_profile_raw`
+and is surfaced only on the `/profile` portal route.
+
 See `ARCHITECTURE.md` for the full annotated run order.
 
 ---

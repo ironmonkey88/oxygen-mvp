@@ -247,6 +247,47 @@ the failing pipeline step (e.g. `dlt_ingest`, `dbt_run_admin`), and
 `error_message` capturing the exit code. No alerting yet — visible on
 `/trust`.
 
+**Column profiling (Plan 1b).** Every column of analyst-facing bronze
+and gold tables is profiled by `scripts/profile_tables.py` and stored
+in `main_admin.fct_column_profile_raw` (Python-owned, append-only).
+Profile rows capture row counts, distinct counts, null percentages,
+type-specific shape data (numeric distribution + percentiles, date
+ranges, text top-5 values + length stats, boolean true/false splits).
+Two regeneration cadences:
+
+- **Weekly full regen** via `profile-tables.timer` (Sunday 2 AM ET)
+- **Change-triggered regen** via run.sh stage 9b — `check_profile_staleness.py`
+  compares the current warehouse schema and table row counts against
+  the latest profile rows; if a column was added/removed OR any
+  tracked table moved by more than 10% in row count, run.sh
+  regenerates the profile mid-pipeline
+
+Exclusion patterns identical in `profile_tables.py` and
+`check_profile_staleness.py`: tables starting with `_` (dlt internals)
+and tables ending with `_raw` (dlt landing tables behind dbt views)
+are not profiled. The analyst-facing dbt view is profiled instead.
+
+**Decision 1b/D option (c): dbt's `schema.yml` files stay hand-written.**
+Profile data is NOT injected into dbt's column descriptions. Editorial
+content (descriptions, why a column matters) lives in
+`dbt/models/*/schema.yml`. Observational content (row counts,
+distributions, top values) lives in `fct_column_profile_raw` and is
+surfaced on the new `/profile` portal route by
+`scripts/generate_profile_page.py`. dbt's `/docs/` site keeps showing
+clean hand-written descriptions; analysts who want shape data go to
+`/profile`.
+
+**Portal documentation surfaces.** Five portal data routes, each driven
+by a different source:
+
+| Route | Source | Generator |
+|---|---|---|
+| `/docs/` | dbt schema.yml + manifest | `dbt docs generate` (run.sh stage 6) |
+| `/erd` | dbt schema.yml relationships + semantics/*.yml | `generate_warehouse_erd.py` + `generate_semantic_layer_diagram.py` + `generate_erd_page.py` (Plan 1b, run.sh stage 9e) — Mermaid diagrams of warehouse ERD + semantic layer |
+| `/metrics` | semantics/views/*.view.yml | `generate_metrics_page.py` (run.sh stage 7) |
+| `/profile` | dbt schema.yml + fct_column_profile_raw | `generate_profile_page.py` (Plan 1b, run.sh stage 9d) |
+| `/trust` | fct_test_run + fct_pipeline_run_raw + fct_source_health_raw | `generate_trust_page.py` (run.sh stage 8) |
+
 ---
 
 ## Run Order
@@ -298,6 +339,25 @@ cp portal/index.html /var/www/somerville/index.html
 
 # 9. Rebuild docs/limitations/_index.yaml from .md frontmatter (Plan 8)
 python3 scripts/build_limitations_index.py
+
+# 9b. Profile staleness check (Plan 1b) — exits 1 if stale, captured-exit
+PROFILE_STALE=0
+python scripts/check_profile_staleness.py || PROFILE_STALE=1
+
+# 9c. Conditional profile regen — only runs if staleness check fired
+if [ "$PROFILE_STALE" -eq 1 ]; then
+    python scripts/profile_tables.py --run-id="$RUN_ID"
+fi
+
+# 9d. Regenerate /profile portal page from fct_column_profile_raw (Plan 1b)
+python scripts/generate_profile_page.py
+cp portal/profile.html /var/www/somerville/profile.html
+
+# 9e. Regenerate /erd portal page — Mermaid warehouse ERD + semantic-layer (Plan 1b)
+python scripts/generate_warehouse_erd.py
+python scripts/generate_semantic_layer_diagram.py
+python scripts/generate_erd_page.py
+cp portal/erd.html /var/www/somerville/erd.html
 
 # 10. Record run end — UPDATE fct_pipeline_run_raw with status + stage outcomes
 #     run_status='partial' if either test stage non-zero, else 'success'

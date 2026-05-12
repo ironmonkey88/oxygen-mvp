@@ -72,7 +72,19 @@ Foundation for Plan 1b. Architectural decisions resolved in chat: (A) Python own
 - [x] Step 7 — `systemd/source-health-check.{service,timer}` deployed; `source-health-check.timer` shows next-run **Tue 2026-05-12 05:00:00 UTC** (top of next hour, 22 min after activation).
 - [x] Step 8 — Two limitations entries written: `source-bulk-republish-no-per-row-modified.md` (honest documentation that source publishes in bulk with no per-row modified field) and `audit-columns-non-analytics.md` (the six underscore-prefixed metadata columns are not analytics). `docs/limitations/_index.yaml` regenerated: 10 → 12 active entries.
 - [x] Step 9 — `ARCHITECTURE.md` gained "Pipeline & Observability" section + Run Order updated to 10 stages with captured-exit + trap detail; `CLAUDE.md` Run Order section synced; `SETUP.md` §5 added `python-ulid` to pip install, new §15 "Pipeline scheduling" with install/verify/manual-invoke/inspect snippets; `LOG.md` Active Decisions row for Plan 1a with full change set; `docs/sessions/session-29-...md` narrative written.
-- [~] Step 10 — Commit pending
+- [x] Step 10 — Commit `a0f4904` on `claude/nice-shtern-4d9efc` (20 files, +1015/-87). Local-only — push/merge to `main` pending Gordon's call.
+
+#### Plan 1b — Column Profiling + Portal Documentation *(2026-05-12 — in progress)*
+Architectural decisions resolved in chat: **1b/A** = Python-owned `fct_column_profile_raw` (same pattern as Plan 1a admin tables); **1b/D** = option (c) — keep `dbt/models/*/schema.yml` hand-written, surface profiles on a new dedicated `/profile` portal page driven by `fct_column_profile_raw`, never touch dbt's schema files programmatically.
+
+- [x] Phase 1 — `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (Python-owned); 75 columns profiled in 5.5s after adding `_dlt_*` + `*_raw` exclusion patterns
+- [x] Phase 2 — `scripts/check_profile_staleness.py` reports `CURRENT` after fresh profile run; wired into run.sh stages 9b (`cmd || rc=$?` form) + 9c (conditional regen)
+- [x] Phase 3 — `scripts/generate_profile_page.py` writes `portal/profile.html` (75 columns, 5 tables, 73KB); reads `schema.yml` for descriptions + `fct_column_profile_raw` for shape; dbt schema files never touched
+- [x] Phase 4 — `scripts/generate_warehouse_erd.py` (8 models, 2 relationships from dbt `relationships:` tests; audit cols omitted) + `scripts/generate_semantic_layer_diagram.py` (1 topic, 4 views, 4 base tables)
+- [x] Phase 5 — `scripts/generate_erd_page.py` assembles `portal/erd.html` with both Mermaid sources via jsdelivr CDN; `nginx/somerville.conf` gains `location = /profile` + `location = /erd`; reload tested. Portal nav (`portal/index.html`) extended with `/erd` and `/profile` links; live homepage verified
+- [x] Phase 6 — `systemd/profile-tables.{service,timer}` deployed; `systemctl list-timers` shows next run **Sun 2026-05-17 06:00:00 UTC = 2:00 AM EDT**; `ExecStartPost` refreshes `/profile` page + deploys after each regen. No `oxy.service` dependency
+- [x] Phase 7 — `ARCHITECTURE.md` (Pipeline & Observability extended; 5-route portal table); `SETUP.md` (§15 → 3 timers, run-order list bumped to 9b–9e); `CLAUDE.md` (Plan 1b workflow note with manual `profile_tables.py + generate_profile_page.py` after dbt model changes); `LOG.md` (Active Decisions row); `docs/sessions/session-30-...md` narrative written
+- [~] Phase 8 — Commit pending
 
 ### MVP 2 — Visual Knowledge Products
 - [ ] Airapp `.app.yml` with charts

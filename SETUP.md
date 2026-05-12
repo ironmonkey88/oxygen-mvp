@@ -325,31 +325,38 @@ The htpasswd file is **not committed** to the repo; `.gitignore` blocks `.htpass
 
 ## 15. Pipeline scheduling (Plan 1a)
 
-Two systemd timers manage the pipeline:
+Three systemd timers manage the pipeline:
 
 1. **`pipeline-refresh.timer`** — daily at 6 AM Eastern. Runs
    `./run.sh daily`. Full SODA pull, dbt run + tests, admin rebuild,
-   /docs+/metrics+/trust regen, end-of-run observability record.
+   /docs+/metrics+/trust+/profile+/erd regen, end-of-run
+   observability record.
 2. **`source-health-check.timer`** — hourly on the hour. Pings the
    SODA endpoint, appends one row to
    `main_admin.fct_source_health_raw` with reachability, source row
    count, and `rowsUpdatedAt`.
+3. **`profile-tables.timer`** (Plan 1b) — Sunday at 2 AM Eastern.
+   Runs `scripts/profile_tables.py` for a full re-profile of bronze +
+   gold columns and refreshes the `/profile` portal page. Within run.sh,
+   a cheap staleness check (`scripts/check_profile_staleness.py`)
+   triggers an interim profile regen if the warehouse schema changes
+   or a tracked table moves by more than 10% in row count.
 
 Both units explicitly do **not** depend on `oxy.service` — dlt and dbt
 write to DuckDB directly, and Oxygen reads concurrently. Coupling the
 timers to oxy.service would block scheduled refreshes whenever Oxygen
 restarts.
 
-Unit files live in the repo at `systemd/pipeline-refresh.{service,timer}`
-and `systemd/source-health-check.{service,timer}`. To install on a
-fresh deployment:
+Unit files live in the repo at `systemd/`. To install on a fresh
+deployment:
 
 ```bash
-sudo cp systemd/pipeline-refresh.service systemd/pipeline-refresh.timer \
-        systemd/source-health-check.service systemd/source-health-check.timer \
-        /etc/systemd/system/
+sudo cp systemd/*.service systemd/*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now pipeline-refresh.timer source-health-check.timer
+sudo systemctl enable --now \
+    pipeline-refresh.timer \
+    source-health-check.timer \
+    profile-tables.timer
 ```
 
 Verify schedules:
@@ -389,7 +396,7 @@ The pipeline has a single entry point: **`./run.sh`** at the repo root. Never in
 ./run.sh daily     # what systemd's pipeline-refresh.service passes
 ```
 
-The ten steps (full list in ARCHITECTURE.md §Run Order):
+The stages (full list in ARCHITECTURE.md §Run Order):
 
 0. `pipeline_run_start.py` → `RUN_ID` (Plan 1a)
 1. `dlt/somerville_311_pipeline.py $RUN_ID` *(full pull + merge on `id`)*
@@ -402,6 +409,10 @@ The ten steps (full list in ARCHITECTURE.md §Run Order):
 7. `generate_metrics_page.py` + deploy
 8. `generate_trust_page.py` + deploy + sync `portal/index.html`
 9. `build_limitations_index.py`
+9b. `check_profile_staleness.py` (Plan 1b)
+9c. `profile_tables.py` (conditional, only if 9b stale)
+9d. `generate_profile_page.py` + deploy `portal/profile.html`
+9e. `generate_warehouse_erd.py` + `generate_semantic_layer_diagram.py` + `generate_erd_page.py` + deploy `portal/erd.html`
 10. `pipeline_run_end.py --run-id=$RUN_ID --status=$FINAL_STATUS ...` (Plan 1a)
 
 Final exit code = the captured `dbt test` exit (max of bronze/gold and admin) so a failing test surfaces but admin tables, the trust page, and the run record still get populated.

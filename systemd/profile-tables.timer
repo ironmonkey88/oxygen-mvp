@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Somerville profile regeneration schedule
+Requires=profile-tables.service
+
+[Timer]
+# Sunday at 2 AM Eastern Time, DST-aware.
+OnCalendar=Sun *-*-* 02:00:00 America/New_York
+Persistent=true
+
+[Install]
+WantedBy=timers.target

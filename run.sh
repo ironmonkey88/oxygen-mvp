@@ -138,6 +138,38 @@ ERROR_STAGE="limitations_index"
 echo "==> 9/10 build limitations index"
 python3 scripts/build_limitations_index.py
 
+# Step 9b: profile staleness check (Plan 1b)
+# Cheap: ~100ms when current. If stale (schema change or >10% row-count
+# delta on any tracked bronze/gold table), step 9c regenerates the
+# profile via scripts/profile_tables.py.
+ERROR_STAGE="profile_staleness"
+echo "==> 9b/10 profile staleness check"
+PROFILE_STALE=0
+python scripts/check_profile_staleness.py || PROFILE_STALE=1
+
+if [ "$PROFILE_STALE" -eq 1 ]; then
+    ERROR_STAGE="profile_regen"
+    echo "==> 9c/10 profile stale — regenerating (~6s)"
+    python scripts/profile_tables.py --run-id="$RUN_ID"
+fi
+
+# Step 9d: regenerate /profile and /erd portal pages (Plan 1b)
+ERROR_STAGE="profile_page"
+echo "==> 9d/10 regenerate /profile page"
+python scripts/generate_profile_page.py
+if [ -d /var/www/somerville ] && [ -f portal/profile.html ]; then
+    cp portal/profile.html /var/www/somerville/profile.html
+fi
+
+ERROR_STAGE="erd_diagrams"
+echo "==> 9e/10 regenerate warehouse ERD + semantic-layer diagrams"
+python scripts/generate_warehouse_erd.py
+python scripts/generate_semantic_layer_diagram.py
+python scripts/generate_erd_page.py
+if [ -d /var/www/somerville ] && [ -f portal/erd.html ]; then
+    cp portal/erd.html /var/www/somerville/erd.html
+fi
+
 # Step 10: record run end (success or partial depending on test exits)
 ERROR_STAGE="run_end"
 if [ "$DBT_TEST_EXIT" -ne 0 ] || [ "$DBT_ADMIN_TEST_EXIT" -ne 0 ]; then

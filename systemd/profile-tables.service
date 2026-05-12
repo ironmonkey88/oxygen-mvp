@@ -1,0 +1,20 @@
+[Unit]
+Description=Weekly Somerville profile regeneration
+# Plan 1b (2026-05-12): no oxy.service dependency — same rationale as
+# pipeline-refresh.service. Profile generation is read-only on the
+# schemas being profiled (one brief write at the end to INSERT new
+# rows); Oxygen's lazy DuckDB connections coexist fine.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/oxygen-mvp
+EnvironmentFile=/etc/environment
+ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/profile_tables.py
+# After regen, refresh the /profile page so the portal shows the new shape.
+ExecStartPost=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/generate_profile_page.py
+ExecStartPost=/bin/sh -c 'cp /home/ubuntu/oxygen-mvp/portal/profile.html /var/www/somerville/profile.html'
+StandardOutput=journal
+StandardError=journal
