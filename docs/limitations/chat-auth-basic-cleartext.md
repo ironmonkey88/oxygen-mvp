@@ -23,9 +23,16 @@ This is an accepted tradeoff for MVP 1.5 controlled-distribution demos:
 ## Implementation
 
 - `/etc/nginx/.htpasswd` (root:www-data 640) — single `analyst` user, bcrypt hash (`-B` flag), NOT in repo. `.gitignore` blocks `.htpasswd` and `*.htpasswd` defensively.
-- nginx config: `/chat`, `/assets`, `/api`, and `/favicon-logo.svg` locations all auth-gated and proxied to `localhost:3000`. `/chat` includes WebSocket upgrade headers for streaming agent replies. See [`nginx/somerville.conf`](../../nginx/somerville.conf).
+- nginx config: **only `/chat` is auth-gated** (entry-point gate). SPA internal paths (`/api`, `/assets`, `/home`, `/threads`, `/favicon-logo.svg`, `/oxygen-*.svg/gif/png`) all proxy to `localhost:3000` **without auth**. The plan's original design (auth on every proxied path) didn't survive contact with reality — the SPA's streaming agent POST (`/api/.../threads/<id>/agent`) omits Basic Auth credentials from the request, so nginx 401'd, browser re-prompted, user re-entered the password, fetch still omitted creds → loop. Moving auth to `/chat`-only resolves the loop. See [`nginx/somerville.conf`](../../nginx/somerville.conf).
 - Portal routes (`/`, `/docs/`, `/metrics`, `/trust`) remain unauthenticated — the portal is the public window.
 - Tailnet `:3000` access stays open (port 3000 closed at AWS SG, reachable only over Tailscale). The Basic Auth path is the *public* alternative; Tailnet remains the private path for the project team.
+
+**Revised risk surface** (compared to the plan's original "auth on every path" design): anyone who discovers `/api/*` URL patterns directly could query the agent without `/chat` auth. This is an API-token-burn risk, not a data-exposure risk (the SPA's API surface is internal workspace plumbing, all on one Oxygen instance). Mitigated by:
+
+- Anthropic spend cap on Gordon's account (currently $5.52 of $100/month; Opus 4.7's 500K input-tokens/min Tier 1 limit also caps catastrophic burn rate).
+- The `/chat` URL is the surface that gets shared with prospects; `/api/*` URL patterns only emerge from inside the SPA after login.
+- Tailnet `:3000` remains the project-team path; the public Basic Auth route is for demos, not for project work.
+- Rotate the credential on any concern about who has it.
 
 ## Mitigation
 

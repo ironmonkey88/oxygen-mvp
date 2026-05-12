@@ -289,7 +289,7 @@ To set up on a fresh deployment:
    sudo chmod 640 /etc/nginx/.htpasswd
    ```
 
-4. **Add `/chat` + asset proxies to `/etc/nginx/sites-available/somerville`.** The canonical config (with `/chat`, `/assets`, `/api`, `/favicon-logo.svg` all auth-gated) lives in repo at [`nginx/somerville.conf`](../nginx/somerville.conf). Deploy via the standard pattern from §13.
+4. **Add `/chat` + SPA-internal proxies to `/etc/nginx/sites-available/somerville`.** The canonical config lives in repo at [`nginx/somerville.conf`](../nginx/somerville.conf): auth-gate **only `/chat`**; proxy `/api`, `/assets`, `/home`, `/threads`, and `/oxygen-*.{svg,gif,png}` to `localhost:3000` **without auth** (the SPA's streaming agent POST omits credentials, so gating those paths causes a loop). Deploy via the standard pattern from §13.
 
 5. **Reload nginx**:
    ```bash
@@ -316,6 +316,7 @@ Then inform anyone who had the old credential.
 - **TLS / HTTPS.** Cleartext over port 80. Acceptable for MVP 1.5 throwaway demos; replaced by MVP 4's Magic Link + HTTPS via Oxygen multi-workspace mode.
 - **Per-user accounts.** Single shared credential.
 - **Audit log.** nginx access log captures requests but not "which user" since there's only one.
+- **Auth on SPA internal paths.** Only `/chat` is gated. `/api`, `/assets`, `/home`, `/threads`, and the `/oxygen-*` branding assets are open to anyone who hits them directly. API-token-burn risk only (no data exposure); see `docs/limitations/chat-auth-basic-cleartext.md`.
 
 The htpasswd file is **not committed** to the repo; `.gitignore` blocks `.htpasswd` and `*.htpasswd` defensively. The password belongs in Gordon's password manager, rotated per the cadence in [`docs/limitations/chat-auth-basic-cleartext.md`](../docs/limitations/chat-auth-basic-cleartext.md).
 
