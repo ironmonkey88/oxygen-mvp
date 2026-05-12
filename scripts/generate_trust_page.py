@@ -329,7 +329,7 @@ def _wrap(body_inner: str) -> str:
     margin-right: 4px;
   }}
 
-  section {{ padding: 28px 40px; max-width: 1100px; }}
+  section {{ padding: 28px 40px; max-width: 1400px; }}
   .section-num {{
     font-family: 'DM Mono', monospace; font-size: 11px;
     letter-spacing: 0.08em; color: var(--text-muted);

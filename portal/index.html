@@ -169,11 +169,12 @@
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
     .stat {
       padding: 32px 40px;
       border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
     .stat:last-child { border-right: none; }
     .stat-value {
@@ -425,6 +426,14 @@
       <div class="stat-value">10</div>
       <div class="stat-label">Documented limitations</div>
     </div>
+    <div class="stat">
+      <div class="stat-value">2026-05-09</div>
+      <div class="stat-label">Last data point</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">2026-05-11</div>
+      <div class="stat-label">Last pipeline run</div>
+    </div>
   </div>
 
   <!-- PLATFORM ASSETS -->
@@ -465,7 +474,7 @@
     <div class="how-inner">
       <div class="how-text">
         <h3>Built on Oxygen</h3>
-        <p>Somerville's 311 SODA feed is ingested via dlt to Parquet, transformed through bronze and gold dbt layers in DuckDB, and surfaced through the Airlayer semantic layer. The chat interface is an Oxygen Answer Agent backed by Claude Sonnet 4.6.</p>
+        <p>Somerville's 311 SODA feed is ingested via dlt to Parquet, transformed through bronze and gold dbt layers in DuckDB, and surfaced through the Airlayer semantic layer. The chat interface is an Oxygen Answer Agent backed by Claude Opus 4.7.</p>
         <p>The agent operates under a trust contract: every reply includes the executed SQL, the row count returned, citations to source tables and Airlayer views, and surfaced entries from the limitations registry when the query touches a flagged area. Methodology is always inspectable.</p>
         <p>Out of scope for MVP 1: charts, exports, dashboards, follow-up suggestions, and resident-facing framing. Those land in MVP 2 and beyond.</p>
       </div>
@@ -493,11 +502,11 @@
         <div class="stack-row">
           <span class="stack-layer">Chat</span>
           <span class="stack-tool">Answer Agent</span>
-          <span class="stack-detail">Claude Sonnet</span>
+          <span class="stack-detail">Claude Opus</span>
         </div>
         <div class="stack-row">
           <span class="stack-layer">Model</span>
-          <span class="stack-tool">Claude Sonnet 4.6</span>
+          <span class="stack-tool">Claude Opus 4.7</span>
           <span class="stack-detail">Anthropic</span>
         </div>
       </div>
