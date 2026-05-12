@@ -329,7 +329,7 @@ def _wrap(body_inner: str) -> str:
     margin-right: 4px;
   }}
 
-  section {{ padding: 28px 40px; max-width: 1400px; }}
+  section {{ padding: 28px 40px; max-width: 1600px; }}
   .section-num {{
     font-family: 'DM Mono', monospace; font-size: 11px;
     letter-spacing: 0.08em; color: var(--text-muted);
@@ -355,7 +355,16 @@ def _wrap(body_inner: str) -> str:
   }}
   .stat-label {{ color: var(--text-muted); font-size: 13px; margin-top: 6px; }}
 
-  .table-wrap {{ overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); }}
+  .table-wrap {{
+    overflow-x: auto; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg-card);
+    /* Always-visible thin scrollbar so users see the table is horizontally
+       scrollable on narrower viewports (macOS hides scrollbars by default). */
+    scrollbar-width: thin;
+  }}
+  .table-wrap::-webkit-scrollbar {{ height: 8px; }}
+  .table-wrap::-webkit-scrollbar-track {{ background: var(--bg-stat); }}
+  .table-wrap::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 4px; }}
   .tests-table {{
     width: 100%; border-collapse: collapse; font-size: 13px;
   }}
@@ -369,8 +378,8 @@ def _wrap(body_inner: str) -> str:
     background: var(--bg-stat); font-weight: 500;
   }}
   .tests-table tr:last-child td {{ border-bottom: none; }}
-  .tests-table .mono {{ font-family: 'DM Mono', monospace; font-size: 12px; }}
-  .tests-table .test-id {{ color: var(--text); white-space: nowrap; }}
+  .tests-table .mono {{ font-family: 'DM Mono', monospace; font-size: 12px; word-break: break-all; }}
+  .tests-table .test-id {{ color: var(--text); word-break: break-all; }}
   .tests-table .row-fail td {{ background: #fbf3f3; }}
   .tests-table .row-warn td {{ background: #fbf6e8; }}
 
