@@ -36,3 +36,5 @@ Thumbs.db
 
 # Ad-hoc scripts (scp'd to EC2 for execution)
 scratch/
+.htpasswd
+*.htpasswd

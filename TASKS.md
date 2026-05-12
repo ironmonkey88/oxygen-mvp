@@ -52,7 +52,7 @@ The Working Backwards example in MVP.md anchors the first dashboard: service equ
 
 ### MVP 1.5 — Post-Sign-off Hardening
 - [x] Switch Answer Agent from Sonnet 4.6 to Opus 4.7 *(2026-05-11; commit `a5853d0` switched `config.yml` + `agents/answer_agent.agent.yml`; CLI bench 5/5 + SPA bench Q1–Q5 in single thread, no `ApiError`; rate-limit headroom 30K → 500K tokens/min; `agent-rate-limit-multi-turn-spa` limitation `mitigated-by-opus-4-7-migration`)*
-- [ ] Public chat access via nginx Basic Auth at `/chat` *(plan saved at `docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md`; execution pending)*
+- [x] Public chat access via nginx Basic Auth at `/chat` *(2026-05-11; nginx config adds /chat + /assets + /api + /favicon-logo.svg proxies to :3000 all auth-gated; /etc/nginx/.htpasswd with bcrypt `analyst` credential root:www-data 640 — NOT in repo, .gitignore hardened; portal hero pill becomes clickable link; curl gates 1-3 PASS (401 without creds, 200 with creds, portal routes unaffected); public :3000 confirmed closed at AWS SG; tradeoff statement at `docs/limitations/chat-auth-basic-cleartext.md`; SPA browser test for end-to-end SPA load remains Gordon's gate-4 verification)*
 
 ### MVP 2 — Visual Knowledge Products
 - [ ] Airapp `.app.yml` with charts

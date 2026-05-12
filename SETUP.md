@@ -265,6 +265,62 @@ Portal lives at `portal/index.html` in the repo and is deployed to nginx's docro
 
 ---
 
+## 14. Public chat access (MVP 1.5)
+
+The Oxygen SPA is exposed publicly at `http://<public-ip>/chat`, gated by nginx Basic Auth. The portal hero pill links to `/chat`; visitors get a browser auth prompt and land in the workspace. Tailnet `:3000` direct access stays open in parallel.
+
+To set up on a fresh deployment:
+
+1. **Install apache2-utils** (for `htpasswd`):
+   ```bash
+   sudo apt-get install -y apache2-utils
+   ```
+
+2. **Create the htpasswd file** with a strong random password:
+   ```bash
+   sudo htpasswd -Bc /etc/nginx/.htpasswd analyst
+   # Prompts twice; use a password manager-generated string.
+   # -B = bcrypt; -c = create new file.
+   ```
+
+3. **Set ownership and permissions** (root readable + writable, www-data readable, world unreadable):
+   ```bash
+   sudo chown root:www-data /etc/nginx/.htpasswd
+   sudo chmod 640 /etc/nginx/.htpasswd
+   ```
+
+4. **Add `/chat` + asset proxies to `/etc/nginx/sites-available/somerville`.** The canonical config (with `/chat`, `/assets`, `/api`, `/favicon-logo.svg` all auth-gated) lives in repo at [`nginx/somerville.conf`](../nginx/somerville.conf). Deploy via the standard pattern from §13.
+
+5. **Reload nginx**:
+   ```bash
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+
+6. **Test from an external IP**:
+   ```bash
+   curl -sI http://<public-ip>/chat                            # expect: 401 Unauthorized
+   curl -sI -u "analyst:<password>" http://<public-ip>/chat    # expect: 200 OK
+   ```
+
+**To rotate the credential** (whenever someone with access shouldn't have it anymore):
+```bash
+sudo htpasswd -B /etc/nginx/.htpasswd analyst   # without -c — keeps file, updates password
+```
+Then inform anyone who had the old credential.
+
+**Why `--local`'s no-auth mode is OK here:** Oxygen runs in `oxy start --local` mode (single workspace, guest authentication, no orgs). The Oxygen help warns not to expose `--local` on non-loopback interfaces without a reverse proxy. nginx Basic Auth + the AWS security group (`:3000` closed publicly) together fill that role.
+
+**What is NOT here:**
+
+- **TLS / HTTPS.** Cleartext over port 80. Acceptable for MVP 1.5 throwaway demos; replaced by MVP 4's Magic Link + HTTPS via Oxygen multi-workspace mode.
+- **Per-user accounts.** Single shared credential.
+- **Audit log.** nginx access log captures requests but not "which user" since there's only one.
+
+The htpasswd file is **not committed** to the repo; `.gitignore` blocks `.htpasswd` and `*.htpasswd` defensively. The password belongs in Gordon's password manager, rotated per the cadence in [`docs/limitations/chat-auth-basic-cleartext.md`](../docs/limitations/chat-auth-basic-cleartext.md).
+
+---
+
 ## Run Order (Important)
 
 **Before any work on EC2, pull first:** `cd ~/oxygen-mvp && git pull origin main`. GitHub `main` is the source of truth — EC2 is downstream. See CLAUDE.md "Session Start on EC2" for details.
