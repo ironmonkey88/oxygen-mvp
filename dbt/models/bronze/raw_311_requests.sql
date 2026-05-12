@@ -1,9 +1,10 @@
 {{ config(materialized='view', schema='bronze') }}
 
 -- Bronze: exact mirror of Somerville 311 SODA API.
--- All source columns kept as VARCHAR per docs/schema.sql.
--- _dlt_load_id and _dlt_id retained for lineage/debugging.
--- union_by_name=true: older Parquet files are missing the survey/dept columns.
+-- Source data is owned by dlt (`main_bronze.raw_311_requests_raw`) since
+-- Plan 1a (2026-05-12); this view passes columns through and casts the
+-- date strings to VARCHAR for downstream layers per docs/schema.sql.
+-- All audit/lineage columns retained.
 select
     id,
     classification,
@@ -27,9 +28,10 @@ select
     navigating_city_services_and_policies,
     public_space_cleanliness_and_environmental_health,
     voting_and_election_information,
+    _extracted_at,
+    _extracted_run_id,
+    _first_seen_at,
+    _source_endpoint,
     _dlt_load_id,
     _dlt_id
-from read_parquet(
-    '/home/ubuntu/oxygen-mvp/data/raw/somerville_311/**/*.parquet',
-    union_by_name=true
-)
+from {{ source('bronze_raw', 'raw_311_requests_raw') }}

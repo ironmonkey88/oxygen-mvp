@@ -1,0 +1,13 @@
+[Unit]
+Description=Somerville 311 source-health check (hourly)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/oxygen-mvp
+EnvironmentFile=/etc/environment
+ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/source_health_check.py
+StandardOutput=journal
+StandardError=journal

@@ -237,22 +237,31 @@ GitHub `main` is the source of truth. EC2 is downstream of it. Skipping this ste
 **Never run dlt, dbt, or oxy commands individually.** Always use:
 
 ```bash
-./run.sh
+./run.sh           # defaults to run_type=manual
+./run.sh daily     # what systemd's pipeline-refresh.service passes
 ```
 
-`run.sh` activates the project venv at the top, then enforces the correct sequence:
-1. `python dlt/somerville_311_pipeline.py`
+`run.sh` records run-level observability into
+`main_admin.fct_pipeline_run_raw` and enforces the correct sequence:
+
+0. `python scripts/pipeline_run_start.py --run-type=$RUN_TYPE` → `RUN_ID` (Plan 1a)
+1. `python dlt/somerville_311_pipeline.py $RUN_ID` *(full pull + merge on `id` into `main_bronze.raw_311_requests_raw`; ~5 min)*
 2. `dbt run --select bronze gold`
-3. `dbt test --select bronze gold` *(captures exit code, does not halt on failure)*
+3. `dbt test --select bronze gold` *(captured-exit; does not halt)*
 4. `python dlt/load_dbt_results.py` *(appends run_results.json to `main_bronze.raw_dbt_results_raw`)*
 5. `dbt run --select admin`
-5b. `dbt test --select admin` *(drift-fail guardrail; captures exit, does not halt — Plan 3 D3)*
+5b. `dbt test --select admin` *(drift-fail guardrail; captured-exit — Plan 3 D3)*
 6. `dbt docs generate` *(regenerates `/docs`)*
 7. `python scripts/generate_metrics_page.py` + deploy to `/var/www/somerville/metrics.html` *(regenerates `/metrics` — Plan 2 D3)*
 8. `python scripts/generate_trust_page.py` + deploy to `/var/www/somerville/trust.html` + sync `portal/index.html` *(regenerates `/trust` — Plan 4)*
 9. `python scripts/build_limitations_index.py` *(regenerates `docs/limitations/_index.yaml` from `*.md` frontmatter — Plan 8)*
+10. `python scripts/pipeline_run_end.py --run-id=$RUN_ID --status=$FINAL_STATUS ...` *(UPDATE fct_pipeline_run_raw with status + stage outcomes; Plan 1a)*
 
-Final exit code = `max(bronze/gold-test exit, admin-test exit)` — any failing test surfaces, but admin tables and the trust page still get populated.
+A bash `trap on_error ERR` records `run_status='failed'` with the
+failing stage name if any non-test stage halts. Final exit code =
+`max(bronze/gold-test exit, admin-test exit)` — any failing test
+surfaces, but admin tables, the trust page, and the run-end record
+still get populated.
 
 See `ARCHITECTURE.md` for the full annotated run order.
 

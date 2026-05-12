@@ -1,0 +1,11 @@
+[Unit]
+Description=Somerville 311 pipeline daily refresh schedule
+Requires=pipeline-refresh.service
+
+[Timer]
+# 6 AM Eastern Time, DST-aware.
+OnCalendar=*-*-* 06:00:00 America/New_York
+Persistent=true
+
+[Install]
+WantedBy=timers.target

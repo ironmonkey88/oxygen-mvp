@@ -67,13 +67,14 @@ python --version   # Should show 3.12.x
 ## 5. Install Python Packages
 
 ```bash
-pip install "dlt[duckdb]" dbt-core dbt-duckdb
+pip install "dlt[duckdb]" dbt-core dbt-duckdb python-ulid
 ```
 
 **Package versions (as of project start):**
 - dlt: supports Python 3.9–3.13; install with `[duckdb]` extra for DuckDB destination
 - dbt-core: requires ≥ 1.8.x
 - dbt-duckdb: requires Python ≥ 3.10, DuckDB ≥ 1.1.x
+- python-ulid: added Plan 1a; used by `scripts/pipeline_run_start.py` and `source_health_check.py` for sortable run identifiers
 
 **Do not pin DuckDB separately.** Let dbt-duckdb manage it to avoid version conflicts.
 
@@ -322,29 +323,90 @@ The htpasswd file is **not committed** to the repo; `.gitignore` blocks `.htpass
 
 ---
 
+## 15. Pipeline scheduling (Plan 1a)
+
+Two systemd timers manage the pipeline:
+
+1. **`pipeline-refresh.timer`** — daily at 6 AM Eastern. Runs
+   `./run.sh daily`. Full SODA pull, dbt run + tests, admin rebuild,
+   /docs+/metrics+/trust regen, end-of-run observability record.
+2. **`source-health-check.timer`** — hourly on the hour. Pings the
+   SODA endpoint, appends one row to
+   `main_admin.fct_source_health_raw` with reachability, source row
+   count, and `rowsUpdatedAt`.
+
+Both units explicitly do **not** depend on `oxy.service` — dlt and dbt
+write to DuckDB directly, and Oxygen reads concurrently. Coupling the
+timers to oxy.service would block scheduled refreshes whenever Oxygen
+restarts.
+
+Unit files live in the repo at `systemd/pipeline-refresh.{service,timer}`
+and `systemd/source-health-check.{service,timer}`. To install on a
+fresh deployment:
+
+```bash
+sudo cp systemd/pipeline-refresh.service systemd/pipeline-refresh.timer \
+        systemd/source-health-check.service systemd/source-health-check.timer \
+        /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now pipeline-refresh.timer source-health-check.timer
+```
+
+Verify schedules:
+
+```bash
+sudo systemctl list-timers --all | grep -E 'pipeline-refresh|source-health'
+```
+
+Manual invocation (bypasses the scheduler):
+
+```bash
+sudo systemctl start pipeline-refresh.service
+# or, for ad-hoc runs:
+./run.sh manual
+```
+
+Inspect recent results from the warehouse:
+
+```bash
+# last 10 pipeline runs
+.venv/bin/python -c "import duckdb; print(duckdb.connect('data/somerville.duckdb', read_only=True).execute('SELECT run_id, run_started_at, run_status, run_duration_seconds, records_fetched FROM main_admin.fct_pipeline_run_raw ORDER BY run_started_at DESC LIMIT 10').df())"
+
+# last 10 source-health checks
+.venv/bin/python -c "import duckdb; print(duckdb.connect('data/somerville.duckdb', read_only=True).execute('SELECT check_id, checked_at, check_status, source_row_count, hours_since_source_update FROM main_admin.fct_source_health_raw ORDER BY checked_at DESC LIMIT 10').df())"
+```
+
+---
+
 ## Run Order (Important)
 
 **Before any work on EC2, pull first:** `cd ~/oxygen-mvp && git pull origin main`. GitHub `main` is the source of truth — EC2 is downstream. See CLAUDE.md "Session Start on EC2" for details.
 
-The pipeline has a single entry point: **`./run.sh`** at the repo root. Never invoke `dlt`, `dbt`, or `oxy` directly from the shell — `run.sh` activates the project venv, enforces the right order, captures the dbt-test exit code without halting, and ends with admin-table population and `/docs`/`/metrics` regeneration.
+The pipeline has a single entry point: **`./run.sh`** at the repo root. Never invoke `dlt`, `dbt`, or `oxy` directly from the shell — `run.sh` activates the project venv, enforces the right order, captures the dbt-test exit code without halting, records run-level observability into `main_admin.fct_pipeline_run_raw`, and ends with admin-table population plus `/docs`+`/metrics`+`/trust` regeneration.
 
 ```
-./run.sh
+./run.sh           # run_type=manual (default)
+./run.sh daily     # what systemd's pipeline-refresh.service passes
 ```
 
-The seven steps:
+The ten steps (full list in ARCHITECTURE.md §Run Order):
 
-1. `python dlt/somerville_311_pipeline.py`
+0. `pipeline_run_start.py` → `RUN_ID` (Plan 1a)
+1. `dlt/somerville_311_pipeline.py $RUN_ID` *(full pull + merge on `id`)*
 2. `dbt run --select bronze gold`
-3. `dbt test --select bronze gold` *(exit captured, do not halt)*
-4. `python dlt/load_dbt_results.py` *(append run_results.json to `main_bronze.raw_dbt_results_raw`)*
+3. `dbt test --select bronze gold` *(captured-exit; does not halt)*
+4. `dlt/load_dbt_results.py`
 5. `dbt run --select admin`
-6. `dbt docs generate` *(regenerates `/docs`)*
-7. `python scripts/generate_metrics_page.py` + deploy *(regenerates `/metrics`)*
+5b. `dbt test --select admin` *(captured-exit; drift-fail guardrail)*
+6. `dbt docs generate`
+7. `generate_metrics_page.py` + deploy
+8. `generate_trust_page.py` + deploy + sync `portal/index.html`
+9. `build_limitations_index.py`
+10. `pipeline_run_end.py --run-id=$RUN_ID --status=$FINAL_STATUS ...` (Plan 1a)
 
-Final exit code = the captured `dbt test` exit so a failing test surfaces but admin tables still get populated.
+Final exit code = the captured `dbt test` exit (max of bronze/gold and admin) so a failing test surfaces but admin tables, the trust page, and the run record still get populated.
 
-DuckDB only allows one writer at a time, so don't run `oxy build` or `oxy start` operations that touch the DuckDB file in parallel with `./run.sh`. See `ARCHITECTURE.md` for the file locking constraint.
+DuckDB only allows one writer at a time, so don't run `oxy build` or other DuckDB-writing operations in parallel with `./run.sh`. Oxygen's runtime opens connections lazily so coexistence with the timer is fine. See `ARCHITECTURE.md` for the file locking constraint.
 
 ---
 

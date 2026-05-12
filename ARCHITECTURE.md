@@ -188,31 +188,101 @@ Baselines are auto-generated on first run with `certified_by = 'system'`. Manual
 
 ---
 
+## Pipeline & Observability
+
+**Pipeline cadence.** `run.sh daily` is invoked by
+`pipeline-refresh.timer` (systemd) at 6 AM ET. The pipeline pulls the
+Somerville 311 SODA dataset in full on every run and merges into
+`main_bronze.raw_311_requests_raw` on the source primary key `id`. New
+records `INSERT`, existing records `UPDATE` with the latest content.
+There is no watermark and no incremental window — see
+[`docs/limitations/source-bulk-republish-no-per-row-modified.md`](docs/limitations/source-bulk-republish-no-per-row-modified.md)
+for why (the source publishes the dataset as a periodic bulk snapshot,
+not as an event stream; `:updated_at` is not row-level). Cost on the
+wire is ~24 paginated SODA calls and a 5-minute dlt load step.
+
+**Audit columns.** Every bronze row carries four pipeline-metadata
+columns on top of dlt's `_dlt_load_id` / `_dlt_id`:
+
+| Column | Type | Semantics |
+|---|---|---|
+| `_extracted_at` | TIMESTAMP UTC | When this run extracted the row. Advances on every refetch. |
+| `_extracted_run_id` | TEXT (ULID 26 chars) | The pipeline run that produced this row's current state. Joins to `main_admin.fct_pipeline_run_raw.run_id`. |
+| `_first_seen_at` | TIMESTAMP UTC | When the pipeline first ingested this record. Preserved across re-extractions. Maintained by a post-merge `UPDATE` inside the pipeline script, not by dlt's payload. |
+| `_source_endpoint` | TEXT | The SODA URL the row came from. |
+
+These are pipeline metadata, not analytical fields — see
+[`docs/limitations/audit-columns-non-analytics.md`](docs/limitations/audit-columns-non-analytics.md).
+
+**Bronze layer ownership.** `main_bronze.raw_311_requests_raw` is owned
+by dlt (the pipeline writes to it directly). `main_bronze.raw_311_requests`
+is owned by dbt as a passthrough view that selects from the raw table
+via `source('bronze_raw', 'raw_311_requests_raw')`. This split keeps
+dbt's bronze convention (a model named `raw_311_requests`) while letting
+dlt own the schema and load lifecycle of the merge target.
+
+**Run observability.** Every `./run.sh` invocation writes one row to
+`main_admin.fct_pipeline_run_raw`. The row is `INSERT`ed by
+`scripts/pipeline_run_start.py` at stage 0 with `run_status='in_progress'`
+and `UPDATE`d by `scripts/pipeline_run_end.py` at stage 10 with the
+final status, duration, and stage outcomes. A bash `trap on_error ERR`
+records `run_status='failed'` with the failing stage name and exit code
+if any non-test stage halts. Both admin tables (`fct_pipeline_run_raw`,
+`fct_source_health_raw`) are owned by Python, not by dbt — they are
+created by the scripts on first invocation with `CREATE TABLE IF NOT
+EXISTS` and appended to monotonically, so `dbt run --select admin`
+cannot clobber run history.
+
+**Source observability.** A separate systemd timer
+`source-health-check.timer` runs `scripts/source_health_check.py` once
+an hour. Each invocation appends a row to
+`main_admin.fct_source_health_raw` with the SODA endpoint's
+`rowsUpdatedAt`, `count(*)`, HTTP response code, and fetch duration.
+The hourly cadence is independent of the daily pipeline run; the trust
+page reads both tables to show pipeline + source reliability.
+
+**Failure handling.** Pipeline failures are captured in
+`fct_pipeline_run_raw` with `run_status='failed'`, `error_stage` set to
+the failing pipeline step (e.g. `dlt_ingest`, `dbt_run_admin`), and
+`error_message` capturing the exit code. No alerting yet — visible on
+`/trust`.
+
+---
+
 ## Run Order
 
-**Always use `run.sh` — never run steps manually.** `run.sh` activates the project venv at the top, then runs nine steps:
+**Always use `run.sh` — never run steps manually.** `run.sh` takes one
+positional argument (`daily` | `manual` | `backfill`, default `manual`),
+records run-level observability into `main_admin.fct_pipeline_run_raw`,
+and executes ten stages:
 
 ```bash
 # venv activation (top of run.sh)
 source .venv/bin/activate
 
-# 1. Ingest source data
-python dlt/somerville_311_pipeline.py
+# 0. Record run start — INSERT into fct_pipeline_run_raw, return RUN_ID
+RUN_ID=$(python scripts/pipeline_run_start.py --run-type="$RUN_TYPE")
+
+# Trap: any uncaught non-zero exit records run_status='failed' with stage + message
+trap on_error ERR
+
+# 1. Ingest source data — full pull + merge on `id` into main_bronze.raw_311_requests_raw
+python dlt/somerville_311_pipeline.py "$RUN_ID"
 
 # 2. Transform bronze + gold
 dbt run --select bronze gold
 
-# 3. Test bronze + gold (capture exit, do NOT halt — we want to record failures)
-dbt test --select bronze gold ; DBT_TEST_EXIT=$?
+# 3. Test bronze + gold (captured-exit; do NOT halt — we want admin + /trust to still build)
+set +e ; dbt test --select bronze gold ; DBT_TEST_EXIT=$? ; set -e
 
-# 4. Append run_results.json into bronze.raw_dbt_results_raw
+# 4. Append run_results.json into main_bronze.raw_dbt_results_raw
 python dlt/load_dbt_results.py
 
 # 5. Build admin schema from raw_dbt_results_raw + baseline comparisons
 dbt run --select admin
 
-# 5b. Test admin (drift-fail guardrail; capture exit, do NOT halt — Plan 3 D3)
-dbt test --select admin ; DBT_ADMIN_TEST_EXIT=$?
+# 5b. Test admin (drift-fail guardrail; captured-exit — Plan 3 D3)
+set +e ; dbt test --select admin ; DBT_ADMIN_TEST_EXIT=$? ; set -e
 
 # 6. Regenerate dbt docs (served at /docs)
 dbt docs generate
@@ -229,13 +299,20 @@ cp portal/index.html /var/www/somerville/index.html
 # 9. Rebuild docs/limitations/_index.yaml from .md frontmatter (Plan 8)
 python3 scripts/build_limitations_index.py
 
+# 10. Record run end — UPDATE fct_pipeline_run_raw with status + stage outcomes
+#     run_status='partial' if either test stage non-zero, else 'success'
+python scripts/pipeline_run_end.py --run-id="$RUN_ID" --status="$FINAL_STATUS" ...
+
 # Final exit = max(bronze/gold-test exit, admin-test exit)
 FINAL_EXIT=$DBT_TEST_EXIT
 if [ "$DBT_ADMIN_TEST_EXIT" -gt "$FINAL_EXIT" ]; then FINAL_EXIT=$DBT_ADMIN_TEST_EXIT; fi
 exit $FINAL_EXIT
 ```
 
-`run.sh` in the project root is the single entry point. Never run `dlt`, `dbt`, or `oxy` commands individually.
+`run.sh` in the project root is the single entry point. Never run `dlt`,
+`dbt`, or `oxy` commands individually. The captured-exit pattern on the
+two `dbt test` stages is deliberate — tests can fail without losing
+admin tables, the trust page, or the run-end record.
 
 If you see a `database is locked` error, check for competing processes:
 ```bash

@@ -5,9 +5,11 @@
 
 ---
 
-## Next Focus — MVP 2 Plan Scoping
+## Next Focus — Plan 1a: Daily Incremental Refresh + Observability
 
-MVP 1 signed off 2026-05-11 via pivot to `oxy start --local` (see Session 25 narrative and LOG Active Decisions). MVP 2 is now active: **Visual Knowledge Products** — the analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
+Plan 1a active as of 2026-05-11 (post-MVP 1.5). Foundation for Plan 1b (column profiling + ERD). Detailed plan supplied by Gordon in chat; tracked below under "MVP 1.5 — Post-Sign-off Hardening". MVP 2 plan-scoping below is paused until Plan 1a + 1b close.
+
+MVP 1 signed off 2026-05-11 via pivot to `oxy start --local` (see Session 25 narrative and LOG Active Decisions). MVP 2 is queued: **Visual Knowledge Products** — the analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
 
 Per BUILD.md §5 MVP 2, the layers added are Data Apps (`.app.yml`) and Builder Agent (the construction interface). The demo moment is:
 
@@ -56,6 +58,21 @@ The Working Backwards example in MVP.md anchors the first dashboard: service equ
 - [ ] Auto-refresh portal stats dates from DuckDB on `run.sh` *(hardcoded for now; should sed-substitute from `MAX(date_created_dt)` + run timestamp on each pipeline run; small Python script + run.sh step 7.5 pattern)*
 - [ ] Somerville wards map as hero background *(Socrata wards dataset `ym5n-phxd` is blob-only, not exportable as GeoJSON; OpenStreetMap Overpass query returns errors; pragmatic path: render a stylized SVG outline manually from MassGIS shapefile or trace the city PDF at https://www.somervillema.gov/sites/default/files/ward-and-precinct-map.pdf; deferred for a focused pass)*
 - [x] Public chat access via nginx Basic Auth at `/chat` *(2026-05-11; final design: auth-gate only `/chat` entry; SPA internal paths `/api`, `/assets`, `/home`, `/threads`, `/oxygen-*` proxy unauth (the SPA's streaming agent POST omits credentials, so gating those paths loops). bcrypt `analyst` credential in `/etc/nginx/.htpasswd` root:www-data 640 — NOT in repo, .gitignore hardened. Portal hero pill clickable. **Gate 4 PASSED**: Gordon SPA-tested in browser, asked "how many requests", agent returned 1,170,023 with execute_sql artifact + Citations, no second auth prompt. Trade-off recorded at `docs/limitations/chat-auth-basic-cleartext.md` — API-token-burn risk only, no data exposure; replaced by MVP 4's Magic Link + HTTPS)*
+
+#### Plan 1a — Daily Incremental Refresh + Observability *(2026-05-11 — in progress)*
+Foundation for Plan 1b. Architectural decisions resolved in chat: (A) Python owns `*_raw` admin tables; (B) systemd unit drops oxy dependency; (C) dlt-direct-to-DuckDB merge replaces filesystem Parquet; (D) preserve captured-exit pattern in run.sh; (E) /trust surfacing deferred to follow-on; (F) load_dbt_results lives in `dlt/`, no `check_drift.py` (drift via `dbt test --select admin`); (G) modified-field name TBD from SODA pre-flight.
+
+- [x] Step 0 — Pre-flight: dlt 1.26.0 ✓ python-ulid installed ✓ bronze schema captured ✓ gold count 1,170,023 ✓ PK confirmed `id` (not `case_id`) ✓ **modified-field finding**: dataset has NO publisher-maintained per-row modified column; Socrata's `:updated_at` is republish-batch-level → switched plan from watermark+3-day-lookback to **full-pull + merge on `id`** per pre-flight recommendation (path 1)
+- [x] Step 1 — Audit columns on bronze: `_extracted_at`, `_extracted_run_id`, `_first_seen_at`, `_source_endpoint` populated on 1,170,591 rows; 0 NULLs across all four; bronze.yml descriptions updated *(commit pending)*
+- [x] Step 2 — Pipeline refactor: filesystem-Parquet → DuckDB direct, `dlt.destinations.duckdb`, write_disposition=merge on `id`, full pull (no watermark); bronze view repointed at `main_bronze.raw_311_requests_raw`; gold rebuilt; 19/19 tests pass; **2024 regression check: 113,961 (exact match to Plan 6 D3)**
+- [x] Step 3 — `scripts/pipeline_run_start.py` + `scripts/pipeline_run_end.py` + Python-owned `main_admin.fct_pipeline_run_raw`; smoke-tested with manual run_id 01KRD6G8EHV0J4RJAM1XQWKWA3, INSERT + UPDATE both work; `run.sh` rewritten preserving captured-exit pattern (decision D) with trap-on-error → record failed status
+- [x] Step 4 — `scripts/source_health_check.py` + Python-owned `main_admin.fct_source_health_raw`; smoke-tested, check_status=ok, source_row_count=1,170,591, 7 hours since `rowsUpdatedAt`, HTTP 200
+- [x] Step 5 — End-to-end `./run.sh manual` validation: first attempt's `set +e ; cmd ; set -e` captured-exit tripped the ERR trap on bash 5.x (run logged as failed at stage `dbt_test_admin`); switched to the `cmd || rc=$?` idiom (POSIX-exempt from errexit), reverified via partial-run test on EC2 → all 10 stages execute, `run_status='partial'` recorded when admin tests fail. Three rows now in `main_admin.fct_pipeline_run_raw` (the 5s standalone test, the 770s broken-trap run kept as history, the 29s partial run with fix).
+- [x] Step 6 — `systemd/pipeline-refresh.{service,timer}` deployed; `pipeline-refresh.timer` shows next-run **Tue 2026-05-12 10:00:00 UTC = 6:00 AM EDT** in `systemctl list-timers`. No `oxy.service` dependency.
+- [x] Step 7 — `systemd/source-health-check.{service,timer}` deployed; `source-health-check.timer` shows next-run **Tue 2026-05-12 05:00:00 UTC** (top of next hour, 22 min after activation).
+- [x] Step 8 — Two limitations entries written: `source-bulk-republish-no-per-row-modified.md` (honest documentation that source publishes in bulk with no per-row modified field) and `audit-columns-non-analytics.md` (the six underscore-prefixed metadata columns are not analytics). `docs/limitations/_index.yaml` regenerated: 10 → 12 active entries.
+- [x] Step 9 — `ARCHITECTURE.md` gained "Pipeline & Observability" section + Run Order updated to 10 stages with captured-exit + trap detail; `CLAUDE.md` Run Order section synced; `SETUP.md` §5 added `python-ulid` to pip install, new §15 "Pipeline scheduling" with install/verify/manual-invoke/inspect snippets; `LOG.md` Active Decisions row for Plan 1a with full change set; `docs/sessions/session-29-...md` narrative written.
+- [~] Step 10 — Commit pending
 
 ### MVP 2 — Visual Knowledge Products
 - [ ] Airapp `.app.yml` with charts

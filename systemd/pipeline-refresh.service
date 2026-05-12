@@ -1,0 +1,18 @@
+[Unit]
+Description=Somerville 311 pipeline daily refresh
+# Plan 1a (2026-05-12): no oxy.service dependency by design. dlt + dbt
+# write to DuckDB directly; Oxygen reads concurrently. Coupling the
+# timer to oxy.service would block scheduled refreshes any time Oxygen
+# is restarted, and Oxygen's STANDARDS §3.2 systemd-vs-nohup status is
+# still being closed out.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/oxygen-mvp
+EnvironmentFile=/etc/environment
+ExecStart=/home/ubuntu/oxygen-mvp/run.sh daily
+StandardOutput=journal
+StandardError=journal
