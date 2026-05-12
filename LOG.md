@@ -38,6 +38,33 @@
 
 ## Recent Sessions
 
+### Session 28 — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks
+[full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
+
+- **Goal:** Small portal polish — Sonnet → Opus refs in portal HTML, add Last data point + Last pipeline run stats, widen `/trust` Test Results table (clipping Expected column). Research a Somerville wards map for hero background.
+- **Shipped:** Three Sonnet → Opus refs flipped (hero prose + stack-detail + stack-tool); stats bar gained two new entries (2026-05-09 / Last data point, 2026-05-11 / Last pipeline run) with responsive auto-fit grid for the now-6 stats; trust page section max-width 1100 → 1400 → 1600 (two-pass fix), visible thin scrollbar styling cross-browser, `.test-id` switched from `white-space: nowrap` to `word-break: break-all` so 7 columns fit on standard viewports. Deployed live via scp + cp. Wards map deferred to focused pass (Socrata blob, OSM Overpass errored).
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** MVP 2 plan-scoping; queued follow-ups: auto-refresh portal dates from DuckDB on run.sh, Somerville wards map.
+
+### Session 27 — 2026-05-11 19:20 ET → 21:50 ET — mvp1.5-public-chat-basic-auth
+[full narrative](docs/sessions/session-27-2026-05-11-mvp1.5-public-chat-basic-auth.md)
+
+- **Goal:** Execute `docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md` — expose SPA at `http://18.224.151.49/chat` behind nginx Basic Auth (single shared credential, HTTP cleartext, throwaway scaffolding).
+- **Shipped:** `/etc/nginx/.htpasswd` with `analyst` bcrypt cred (root:www-data 640, NOT in repo, .gitignore hardened); nginx config (`nginx/somerville.conf`) adds `/chat` auth-gated + `/api` `/assets` `/home` `/threads` `/oxygen-*.{svg,gif,png}` unauth proxies to :3000 with WebSocket headers on `/chat` and `/api`; portal hero pill flipped to clickable link; curl gates 1-3 PASS; **Gate 4 PASSED** (Gordon SPA-tested 1,170,023 with full trust contract, no second auth prompt); auth scope reduced from "every proxied path" to "/chat only" mid-execution after SPA streaming POST was found to omit credentials; `docs/limitations/chat-auth-basic-cleartext.md` + ARCHITECTURE + SETUP §14 + LOG + TASKS all synced.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Portal/trust polish tweaks (Session 28).
+
+### Session 26 — 2026-05-11 18:50 ET → 19:15 ET — mvp1.5-opus-migration
+[full narrative](docs/sessions/session-26-2026-05-11-mvp1.5-opus-migration.md)
+
+- **Goal:** Execute `docs/plans/mvp-1.5-switch-agent-to-opus-4-7.md` — switch Answer Agent from `claude-sonnet-4-6` (30K/min Tier 1 cap) to `claude-opus-4-7` (500K/min Tier 1 cap, 16× headroom). Resolve `agent-rate-limit-multi-turn-spa` SPA-multi-turn issue.
+- **Shipped:** `config.yml` model `name` + `model_ref` flipped; `agents/answer_agent.agent.yml` `model:` field flipped; both files committed (`a5853d0`) and pulled on EC2; `oxy validate` clean; `sudo systemctl restart oxy` clean; CLI bench 5/5 (Q1 113,961, Q2 49,870 YTD, Q3 top types match, Q4 NA + both limitations surfaced, Q5 satisfaction 4.486 pooled + both survey limitations surfaced); SPA bench 5/5 in a single thread (no `ApiError` banners — rate-limit fix proven); restart-survives test passed; `docs/limitations/agent-rate-limit-multi-turn-spa.md` status `known` → `mitigated-by-opus-4-7-migration`; ARCHITECTURE + LOG + TASKS synced; close-out commit `7b7e650`.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** MVP 1.5 public chat plan execution (Session 27).
+
 ### Session 25 — 2026-05-11 — mvp1-signoff-via-local-pivot
 [full narrative](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md)
 
@@ -56,37 +83,13 @@
 - **Status:** complete
 - **Next:** MVP 1 sign-off blocked on Gordon's §5.8 row 2 call (UI walkthrough vs CLI-only reinterpretation). Every other §6 box re-verified `[x]`.
 
-### Session 23 — 2026-05-10 22:05 ET → 22:45 ET — verification-gates-standard
-[full narrative](docs/sessions/session-23-2026-05-10-verification-gates-standard.md)
-
-- **Goal:** Codify a self-verification standard for live-functional `[x]` ticks in CLAUDE.md, then sweep STANDARDS §6 boxes ticked since Session 15 and flip any that no longer hold.
-- **Shipped:** CLAUDE.md "Verification gates for `[x]` ticks" subsection appended; STANDARDS §6 retroactive-verification banner + inline timestamps on smoke rows 1-5; §5.8 row 2 (`/chat`) flipped `[x]` → `[ ]` (port-80 404, Tailnet `:3000` at onboarding screen); §6 Layers Knowledge Product roll-up 6/6 → 5/6; TASKS.md MVP 1 sign-off chat-UI row flipped `[x]` → `[!]`.
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** MVP 1 sign-off session re-runs all 5 Plan 6 D3 bench questions + `./run.sh` end-to-end + re-verifies every §6 `[x]` against the new standard.
-
-### Session 22 — 2026-05-10 21:40 ET → 22:05 ET — oxygen-onboarding-gate
-[full narrative](docs/sessions/session-22-2026-05-10-oxygen-onboarding-gate.md)
-
-- **Goal:** Diagnose Oxygen's chat-UI onboarding screen (Gordon hit "Welcome to Oxygen / Create organization" tonight) and restore the org/workspace state so the web UI works again.
-- **Shipped:** Pre-flight EC2 sync resolved (drop-and-pull pattern, 4 files matched origin/main, 1 was the stale 4,187 dept-tags version); Oxygen state recon — DuckDB intact (1,169,935 rows), postgres container up with persistent volume but `organizations` = 0, only user is tonight's `local-user@example.com`; CLI agent regression PASS (2024 → 113,961 with full trust contract); decision gate hit "STOP — Code can't drive a browser."
-- **Decisions:** 2 decisions — see Decisions Log
-- **Status:** blocked (browser-only onboarding flow required; Code-safe path doesn't exist)
-- **Next:** Gordon decides — walk the UI wizard tomorrow (then re-tick §5.8 row 2 on a passing SPA query), OR reinterpret §5.8 row 2 as CLI-only and sign off on the `oxy run` evidence.
-
-### Session 21 — 2026-05-10 16:00 ET → 16:45 ET — git-allowlist-fix
-[full narrative](docs/sessions/session-21-2026-05-10-git-allowlist-fix.md)
-
-- **Goal:** Fix git read-op allowlist gap that blocked overnight sessions all weekend: piped git commands (`git -C <path> op 2>&1 | head`) were prompting because `*` does not match `|` in allowlist patterns.
-- **Shipped:** Pipe patterns added to worktree `settings.json` in merge commit `997dc04` (`Bash(git * | *)`, `Bash(git -C * * | *)`, `Bash(git * | * | *)`); missing read-ops added (`rev-list`, `ls-remote`, broad `branch *`); duplicate `Bash(bash *)` removed; CLAUDE.md pipe-coverage notes added.
-- **Decisions:** 1 decision — see Decisions Log
-- **Status:** complete
-- **Next:** Gordon merges `claude/gifted-cartwright-9b6bac` to main so pipe patterns reach all branches; then resume Plan 10/11. *(merge landed 2026-05-10 21:30 ET — `d71e7d0..5ebb569` pushed to origin/main)*
-
 ---
 
 ## Earlier Sessions
 
+- **Session 23** — 2026-05-10 22:05 ET → 22:45 ET — verification-gates-standard; CLAUDE.md "Verification gates for `[x]` ticks" subsection appended; STANDARDS §6 retroactive-verification banner + inline timestamps; §5.8 row 2 (`/chat`) flipped `[x]` → `[ ]`; §6 Knowledge Product roll-up 6/6 → 5/6; TASKS.md MVP 1 chat-UI row flipped to `[!]`. [full narrative](docs/sessions/session-23-2026-05-10-verification-gates-standard.md)
+- **Session 22** — 2026-05-10 21:40 ET → 22:05 ET — oxygen-onboarding-gate; Oxygen state recon — DuckDB intact (1,169,935 rows), postgres `organizations`=0, only user is tonight's `local-user@example.com`; CLI agent regression PASS; decision gate hit "STOP — Code can't drive a browser." [full narrative](docs/sessions/session-22-2026-05-10-oxygen-onboarding-gate.md)
+- **Session 21** — 2026-05-10 16:00 ET → 16:45 ET — git-allowlist-fix; Pipe patterns added to worktree `settings.json` (`Bash(git * | *)`, `Bash(git -C * * | *)`, `Bash(git * | * | *)`); missing read-ops + duplicate `Bash(bash *)` removed; CLAUDE.md pipe-coverage notes added. [full narrative](docs/sessions/session-21-2026-05-10-git-allowlist-fix.md)
 - **Session 20** — 2026-05-09 21:45 ET → 2026-05-10 09:55 ET — Plan 5 Tech Debt Sweep; D1 settings reconciliation (settings.local.json pruned, `Bash(bash *)` added to settings.json), D2 `dbt/profiles.example.yml` + SETUP §8 rewrite, D5 doc reconciliation (CLAUDE Run Order 7→9 steps, ARCHITECTURE Portal routes + Process management corrected). [full narrative](docs/sessions/session-20-2026-05-09-plan-5-tech-debt.md)
 - **Session 19** — 2026-05-09 21:05 ET → 21:45 ET — Plan 7 MVP 1 Sign-off Sweep; STANDARDS §6 walked (23/25 `[x]` with evidence); portal copy refresh deployed (hero, stats, asset cards, "Built on Oxygen" prose); LOG Active Blockers row written with 2 Gordon-decision boxes. [full narrative](docs/sessions/session-19-2026-05-09-plan-7-signoff-sweep.md)
 - **Session 18** — 2026-05-09 19:40 ET → 21:05 ET — Plans 6 + 8 — Trust Contract + Limitations Expansion; trust contract in `agents/answer_agent.agent.yml` (4-section reply, runtime renders SQL+result, prompt-enforced citations + limitations); 10 limitation entries + `_index.yaml` + `scripts/build_limitations_index.py` + run.sh step 9/9; 5/5 test bench pass with transcripts in `scratch/plan6_test_bench/`; STANDARDS §4.1 4/4, §4.4 row 2, §5.7 4/4. [full narrative](docs/sessions/session-18-2026-05-09-plans-6-and-8-trust-contract-and-limitations.md)
@@ -238,6 +241,7 @@
 | 2026-05-11 | **MVP 1 signed off via pivot to `oxy start --local` (single-workspace mode)** | Multi-workspace onboarding wizard incompatible with existing populated DuckDB — wizard only accepts CSV/Parquet uploads into a fresh `.db/` directory; no path for pointing at a pre-built medallion DuckDB. `oxy start --local` reads `config.yml` and the workspace directly, manages Docker postgres lifecycle, enables single-workspace + guest-auth mode. SPA tested in browser at `oxygen-mvp.taildee698.ts.net:3000`: 113,961 with full trust contract (execute_sql + row count + citations + analyst-honest limitations note). Reboot test: oxy back active 11s after kernel up; CLI agent regression 113,961 post-reboot. Customer-feedback finding logged for Oxy: wizard needs an "existing DuckDB file path" option for users coming to Oxygen with a pre-built warehouse. Multi-workspace migration deferred to MVP 4 (sharing surfaces, public chat via Magic Link auth). |
 | 2026-05-11 | **MVP 1.5: Switched Answer Agent from `claude-sonnet-4-6` to `claude-opus-4-7`** | Sonnet's 30K input-tokens/min Tier 1 rate limit was being hit on SPA multi-turn conversations (3–5 dense turns). Opus has 500K limit on the same tier (16× headroom). Quality improves on instruction-following + multi-turn reasoning; latency ~50% slower per token; cost ~5× per token (still trivial at $5.52/$100/month current spend; projected $25–30/month). Bench 5/5 re-verified on CLI (Q1 113,961, Q2 49,870 YTD 2026, Q3 Welcome desk-info top, Q4 NA sentinel + 2 limitations surfaced, Q5 satisfaction + 2 limitations surfaced). SPA bench Q1–Q5 in a single thread completed with no `ApiError` banners — the rate-limit fix works as designed. `agent-rate-limit-multi-turn-spa` limitation entry status updated to `mitigated-by-opus-4-7-migration`. Changed both `config.yml` (model name + model_ref) and `agents/answer_agent.agent.yml` (model field). See `docs/plans/mvp-1.5-switch-agent-to-opus-4-7.md`. |
 | 2026-05-11 | **MVP 1.5: Public chat at `/chat` via nginx Basic Auth** | Same-site experience — portal at `/` (unauth), chat SPA at `/chat` (auth-gated). nginx config (`nginx/somerville.conf`) adds `/chat` (auth-gated), and `/api`, `/assets`, `/home`, `/threads`, `/oxygen-*.{svg,gif,png}` (unauth, proxy to `localhost:3000`). Initial design tried auth on every proxied path; that failed at SPA browser test because the streaming agent POST (`/api/.../threads/<id>/agent`) omits Basic Auth credentials, looping the prompt. Auth moved to `/chat`-only entry gate; internal SPA paths open. Trade-off: anyone who discovers `/api/*` URL patterns directly could query the agent without auth (API-token-burn risk, no data exposure). Mitigated by Anthropic spend cap + URL not widely shared + Tailnet `:3000` remaining the project-team path. Credential: `/etc/nginx/.htpasswd` with `analyst` user, bcrypt hash, root:www-data 640, NOT in repo. Portal hero pill flipped from `<span>` to `<a href="/chat">Private beta — try the chat →</a>`. **Gate 4 passed** — Gordon SPA-tested in browser, asked "how many requests", agent returned 1,170,023 with execute_sql artifact + Citations + no second auth prompt. Replaced by MVP 4's Magic Link + HTTPS via Oxygen multi-workspace mode. |
+| 2026-05-11 | Portal + trust polish (Session 28): Sonnet → Opus refs, Last data point + Last pipeline run stats, trust table width 1100 → 1600 + visible scrollbar + word-break | 3 Sonnet → Opus refs flipped in portal/index.html (hero prose + 2 stack-table rows). Stats bar gains "2026-05-09 / Last data point" + "2026-05-11 / Last pipeline run"; grid responsive auto-fit so 6 stats wrap cleanly. Trust page section max-width bumped twice (1100→1400 first didn't visually fix it because table has 7 columns and macOS hides scrollbars); 1400→1600 + visible scrollbar styling (cross-browser) + `.test-id` `word-break: break-all` for long mono test IDs. Wards-map hero background deferred — Socrata wards dataset is blob-only, OSM Overpass first attempts errored; queued as follow-up with documented dead-ends (`docs/plans/` candidates: trace city PDF, MassGIS shapefile, or stylized SVG). Stats dates hardcoded for now — auto-refresh from DuckDB on `run.sh` queued as separate follow-up. |
 
 ---
 
