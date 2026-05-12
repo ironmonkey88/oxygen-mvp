@@ -5,29 +5,44 @@
 
 ---
 
-## Next Focus — Plan 1a: Daily Incremental Refresh + Observability
+## Next Focus — MVP 2 Plan-Scoping: First Data App via Builder Agent
 
-Plan 1a active as of 2026-05-11 (post-MVP 1.5). Foundation for Plan 1b (column profiling + ERD). Detailed plan supplied by Gordon in chat; tracked below under "MVP 1.5 — Post-Sign-off Hardening". MVP 2 plan-scoping below is paused until Plan 1a + 1b close.
+MVP 1 fully closed. Sign-off landed Session 25 (`oxy start --local` pivot); MVP 1.5 closed Sessions 26–28 (Opus 4.7 + public `/chat`); Plans 1a + 1b closed Sessions 29–30 (daily incremental refresh + observability + column profiling + `/erd` + `/profile`). Retrospective at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md) (Session 31).
 
-MVP 1 signed off 2026-05-11 via pivot to `oxy start --local` (see Session 25 narrative and LOG Active Decisions). MVP 2 is queued: **Visual Knowledge Products** — the analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
+The first MVP 2 deliverable is **one dashboard built through conversation with Builder Agent**. The dashboard demonstrates the analyst-outcome test from BUILD.md §5: "The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML."
 
-Per BUILD.md §5 MVP 2, the layers added are Data Apps (`.app.yml`) and Builder Agent (the construction interface). The demo moment is:
+Per the MVP.md Working Backwards example, the anchor target is service equity across neighborhoods, with four investigative angles (volume, resolution rate, resolution time, service mix) one click apart.
 
-> "Show me service request volume by neighborhood, monthly, with a drill-down on top categories." → Dashboard appears, fully configured, in chat.
+### Scope decisions to be made (in plan-scoping session)
 
-The Working Backwards example in MVP.md anchors the first dashboard: service equity across neighborhoods, with the four investigative angles (volume, resolution rate, resolution time, service mix) one click apart.
+- [ ] **Which first dashboard?** Options: single-angle (resolution time by ward) vs multi-angle (full equity dashboard) vs two-step build (single-angle then expand via conversation)
+- [ ] **What semantic-layer additions are required?** Likely `avg_days_to_close` measure, resolution-time-band dimension, possibly category rollup
+- [ ] **What does the Builder Agent conversation look like?** Capture the intended demo transcript before construction so we can measure how close the actual session lands
+- [ ] **What surface?** Portal `/dashboard` route, in-chat embedding (`run_app` tool), or both
+- [ ] **Where does the dashboard reference the new audit columns and trust signals?** Should `_extracted_at` of the latest record appear somewhere — and does the dashboard read from `fct_pipeline_run_raw` for a "last refreshed" line?
 
-**Open questions for plan-scoping (Gordon to decide):**
+### Pre-flight verification needed (do BEFORE plan-scoping commits to shape)
 
-- **Builder Agent setup.** Is Builder Agent already configured in the workspace (visible in the SPA's Procedures or Agents surface), or does it need explicit configuration? If it requires setup, what shape?
-- **First Data App scope.** The MVP.md demo phrasing names "service request volume by neighborhood, monthly, with drill-down on top categories." Is that the actual first target, or should we start narrower (e.g., a single chart) and grow?
-- **Semantic-layer additions.** MVP 2 needs new measures (resolution time, response-time bands, category groupings) and computed dimensions (resolution duration, time-of-day) on the fact. What's the priority order?
-- **Builder Agent vs. hand-written YAML.** BUILD.md §7 says Builder Agent is the construction interface from MVP 2 onward, with hand-writing as fallback. Does Builder Agent in `--local` mode work the way the BUILD.md framing assumes, or does it need the multi-workspace surface? (Discovered via the wizard incident: not everything the SPA supports works identically across modes.)
+- [ ] Builder Agent reachable in SPA at `oxygen-mvp.taildee698.ts.net:3000` — does it appear in the Agents/Procedures surface in `--local` mode?
+- [ ] Builder Agent can read/modify YAML files in the workspace — the canonical capability test
+- [ ] Data Apps render in the SPA — try `oxy build` against a stub `.app.yml` and view it
+- [ ] No multi-workspace wizard gates Builder Agent in `--local` mode — would re-introduce the Session 25 blocker
+- [ ] Latest Oxygen changelog reviewed — per retrospective lesson, platform velocity has been delivering Verified Queries, Data Apps, Slack, MCP, A2A during this project
 
-**Pending plan kickoff.** When Gordon's ready, a Code session breaks down the implementation with full context. Reference [`docs/plans/`](docs/plans/) for the canonical plan format.
+### Out of scope for MVP 2's first plan
 
-**Also queued (separate from MVP 2):**
-- MVP 1.5 — Public Chat Access via nginx Basic Auth. Plan saved at [`docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md`](docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md). Independent of MVP 2 — could land before, alongside, or after, depending on demo timing.
+- Additional data sources (weather first, then ward + demographics — each its own plan)
+- Expanded trust page prose (own plan)
+- Full Data Apps library (MVP 4)
+- Routing Agent / multi-topic dispatch (MVP 4)
+- Slack / MCP / A2A sharing surfaces (MVP 4)
+- Return to multi-workspace mode (MVP 4 prerequisite, not MVP 2)
+
+### Carry-over queued items (independent of MVP 2)
+
+- [ ] Auto-refresh portal stats dates from DuckDB on `run.sh` (currently hardcoded — Session 28 follow-up)
+- [ ] Somerville wards map as portal hero background (Socrata blob-only + OSM Overpass errored; pragmatic path is stylized SVG)
+- [ ] Investigate why recent `./run.sh daily` invocations are landing `run_status='partial'` (admin tests failing — likely drift-fail at the new baseline; Session 31 pre-flight observation)
 
 ---
 
@@ -84,7 +99,7 @@ Architectural decisions resolved in chat: **1b/A** = Python-owned `fct_column_pr
 - [x] Phase 5 — `scripts/generate_erd_page.py` assembles `portal/erd.html` with both Mermaid sources via jsdelivr CDN; `nginx/somerville.conf` gains `location = /profile` + `location = /erd`; reload tested. Portal nav (`portal/index.html`) extended with `/erd` and `/profile` links; live homepage verified
 - [x] Phase 6 — `systemd/profile-tables.{service,timer}` deployed; `systemctl list-timers` shows next run **Sun 2026-05-17 06:00:00 UTC = 2:00 AM EDT**; `ExecStartPost` refreshes `/profile` page + deploys after each regen. No `oxy.service` dependency
 - [x] Phase 7 — `ARCHITECTURE.md` (Pipeline & Observability extended; 5-route portal table); `SETUP.md` (§15 → 3 timers, run-order list bumped to 9b–9e); `CLAUDE.md` (Plan 1b workflow note with manual `profile_tables.py + generate_profile_page.py` after dbt model changes); `LOG.md` (Active Decisions row); `docs/sessions/session-30-...md` narrative written
-- [~] Phase 8 — Commit pending
+- [x] Phase 8 — Commit `0a0a065` (2026-05-12 10:36 EDT) on `claude/eloquent-varahamihira-a0c106`
 
 ### MVP 2 — Visual Knowledge Products
 - [ ] Airapp `.app.yml` with charts

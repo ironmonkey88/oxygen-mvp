@@ -30,13 +30,40 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 signed off 2026-05-11 (Session 25) via pivot to `oxy start --local`. The multi-workspace onboarding wizard proved incompatible with existing populated DuckDB; `--local` reads the workspace directly. SPA browser-tested: 113,961 with full trust contract. Reboot survival proven. All 25 STANDARDS §6 boxes `[x]` with re-verified evidence. MVP 2 kickoff pending plan-scoping.
+**Phase:** MVP 1 fully closed. Sign-off landed Session 25 (2026-05-11) via pivot to `oxy start --local`; MVP 1.5 (Opus 4.7 + public `/chat`) closed Sessions 26–28; Plans 1a (daily incremental refresh + observability) and 1b (column profiling + `/erd` + `/profile`) closed Sessions 29–30. Retrospective written Session 31 at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md). Next: MVP 2 plan-scoping (first Data App via Builder Agent).
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-11 (Session 25 — MVP 1 sign-off via `oxy start --local` pivot)
+**Last Updated:** 2026-05-12 (Session 31 — MVP 1 retrospective + MVP 2 prep)
 
 ---
 
 ## Recent Sessions
+
+### Session 31 — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep
+[full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
+
+- **Goal:** Capture institutional knowledge from MVP 1 (Sessions 1–28 + Plans 1a/1b in Sessions 29–30) and orient TASKS.md "Next Focus" at MVP 2 plan-scoping.
+- **Shipped:** [docs/retrospective/mvp1-lessons-learned.md](docs/retrospective/mvp1-lessons-learned.md) (2,144 words covering Oxygen findings, build pattern, customer feedback, what's load-bearing for MVPs 2–4); LOG.md Current Status + Active Decisions + Recent Sessions rotated; TASKS.md Sign-off Status reflects MVP 1 fully closed + Plan 1b Phase 8 ticked; TASKS.md Next Focus rewritten as MVP 2 plan-scoping with scope decisions and pre-flight items enumerated.
+- **Decisions:** 1 decision — retrospective as durable artifact, not session note — see Decisions Log
+- **Status:** complete
+- **Next:** MVP 2 plan-scoping (in Chat). First scope decision: which first dashboard for Builder Agent to construct.
+
+### Session 30 — 2026-05-12 10:15 ET → 10:36 ET — plan-1b-profiles-and-erd
+[full narrative](docs/sessions/session-30-2026-05-12-plan-1b-profiles-and-erd.md)
+
+- **Goal:** Execute Plan 1b — Python-owned column profiling + dedicated `/profile` portal page + Mermaid `/erd` page. Resolve 1b/D (schema.yml hand-written vs auto-generated) as option (c).
+- **Shipped:** `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (75 cols / 5 tables in 5.5s with `_dlt_*` + `*_raw` exclusions); `check_profile_staleness.py` wired into run.sh stages 9b/9c; `generate_profile_page.py` + `generate_warehouse_erd.py` + `generate_semantic_layer_diagram.py` + `generate_erd_page.py`; nginx `/profile` + `/erd` locations; `systemd/profile-tables.{service,timer}` weekly Sunday 2 AM EDT with ExecStartPost regen+deploy; ARCHITECTURE + SETUP + CLAUDE synced; commit `0a0a065`.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** MVP 1 retrospective + MVP 2 plan-scoping (Session 31).
+
+### Session 29 — 2026-05-11 23:30 ET → 2026-05-12 00:39 ET — plan-1a-daily-refresh-and-observability
+[full narrative](docs/sessions/session-29-2026-05-12-plan-1a-daily-refresh-and-observability.md)
+
+- **Goal:** Execute Plan 1a — switch pipeline to merge-on-id, add audit columns, ship Python-owned run + source observability tables, wire systemd timers. Resolve modified-field finding from pre-flight.
+- **Shipped:** dlt destination filesystem-Parquet → DuckDB direct with `write_disposition=merge` on PK `id`; bronze view repointed at `main_bronze.raw_311_requests_raw`; audit cols `_extracted_at`/`_extracted_run_id`/`_first_seen_at`/`_source_endpoint`; `scripts/pipeline_run_{start,end}.py` + `main_admin.fct_pipeline_run_raw`; `scripts/source_health_check.py` + `fct_source_health_raw`; run.sh 9→10 stages with captured-exit + `trap on_error ERR`; systemd `pipeline-refresh.timer` (daily 6 AM EDT) + `source-health-check.timer` (hourly) both drop oxy.service dependency; 2 limitations entries; ARCHITECTURE + SETUP + CLAUDE synced; commit `a0f4904`. 2024 regression: 113,961 exact.
+- **Decisions:** 5 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 1b (column profiling + portal ERD) — Session 30.
 
 ### Session 28 — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks
 [full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
@@ -56,37 +83,13 @@
 - **Status:** complete
 - **Next:** Portal/trust polish tweaks (Session 28).
 
-### Session 26 — 2026-05-11 18:50 ET → 19:15 ET — mvp1.5-opus-migration
-[full narrative](docs/sessions/session-26-2026-05-11-mvp1.5-opus-migration.md)
-
-- **Goal:** Execute `docs/plans/mvp-1.5-switch-agent-to-opus-4-7.md` — switch Answer Agent from `claude-sonnet-4-6` (30K/min Tier 1 cap) to `claude-opus-4-7` (500K/min Tier 1 cap, 16× headroom). Resolve `agent-rate-limit-multi-turn-spa` SPA-multi-turn issue.
-- **Shipped:** `config.yml` model `name` + `model_ref` flipped; `agents/answer_agent.agent.yml` `model:` field flipped; both files committed (`a5853d0`) and pulled on EC2; `oxy validate` clean; `sudo systemctl restart oxy` clean; CLI bench 5/5 (Q1 113,961, Q2 49,870 YTD, Q3 top types match, Q4 NA + both limitations surfaced, Q5 satisfaction 4.486 pooled + both survey limitations surfaced); SPA bench 5/5 in a single thread (no `ApiError` banners — rate-limit fix proven); restart-survives test passed; `docs/limitations/agent-rate-limit-multi-turn-spa.md` status `known` → `mitigated-by-opus-4-7-migration`; ARCHITECTURE + LOG + TASKS synced; close-out commit `7b7e650`.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** MVP 1.5 public chat plan execution (Session 27).
-
-### Session 25 — 2026-05-11 — mvp1-signoff-via-local-pivot
-[full narrative](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md)
-
-- **Goal:** Resolve STANDARDS §5.8 row 2 (the last open MVP 1 sign-off box) by getting a working chat agent in the SPA with Gordon as the user.
-- **Shipped:** Tried path-choice B (multi-workspace wizard) — failed at the DuckDB step (wizard only accepts CSV/Parquet uploads, no path for existing populated DuckDB). Pivoted to A (`oxy start --local`). systemd unit ExecStart updated; reboot test passed (oxy back active 11s after kernel up). Gordon SPA-tested in browser: 113,961 with full trust contract (execute_sql artifact + Returned 1 row + Citations + analyst-honest Known limitations). All STANDARDS §6 boxes `[x]`; §6 header note "MVP 1 signed off 2026-05-11"; §5.8 6/6; LOG Current Status → MVP 2; CLAUDE MVP Sequence + TASKS Sign-off + ARCHITECTURE process management + SETUP.md §11 all updated. Customer-feedback finding documented for Oxy.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete (MVP 1 signed off)
-- **Next:** MVP 2 plan-scoping; MVP 1.5 (public chat via nginx Basic Auth) plan saved at [`docs/plans/`](docs/plans/) for separate scheduling.
-
-### Session 24 — 2026-05-10 23:20 ET → 00:15 ET — systemd-deploy-and-bench-completion
-[full narrative](docs/sessions/session-24-2026-05-10-systemd-deploy-and-bench-completion.md)
-
-- **Goal:** Resume the overnight brief after Session 22/23 wake-up; close bench Q2/Q4/Q5 gaps, run `./run.sh` end-to-end, ship Session C D1 (systemd deploy + reboot) + D2 (repo-clonable tick).
-- **Shipped:** Bench 5/5 re-verified (Q1 113,961, Q2 49,782 YTD, Q3 top types, Q4 NA sentinel, Q5 satisfaction 4.44/5); `./run.sh` exit 0 (drift-fail guardrail PASS at new baseline 1,169,935); `oxy.service` deployed with hardened `After=docker.service Requires=docker.service`; **reboot test PASSED** — oxy back active 7s after kernel up, volume persistence proven (Session 22 user record survived); STANDARDS §3.2 row 4 + §4.5 row 1 both `[x]`; §6 §3.2 4/5 → 5/5, §4.5 2/3 → 3/3; SETUP.md §11 updated.
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** MVP 1 sign-off blocked on Gordon's §5.8 row 2 call (UI walkthrough vs CLI-only reinterpretation). Every other §6 box re-verified `[x]`.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 26** — 2026-05-11 18:50 ET → 19:15 ET — mvp1.5-opus-migration; Answer Agent switched from `claude-sonnet-4-6` (30K/min) to `claude-opus-4-7` (500K/min, 16× headroom); CLI bench 5/5 + SPA bench 5/5 in single thread no ApiError; `agent-rate-limit-multi-turn-spa` limitation marked mitigated; commit `7b7e650`. [full narrative](docs/sessions/session-26-2026-05-11-mvp1.5-opus-migration.md)
+- **Session 25** — 2026-05-11 — mvp1-signoff-via-local-pivot; multi-workspace wizard incompatible with existing DuckDB; pivoted to `oxy start --local`; SPA browser-tested 113,961 with full trust contract; reboot test passed; **MVP 1 signed off**; all 25 STANDARDS §6 boxes `[x]`. [full narrative](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md)
+- **Session 24** — 2026-05-10 23:20 ET → 00:15 ET — systemd-deploy-and-bench-completion; bench 5/5 re-verified; `oxy.service` deployed with hardened deps; reboot test PASSED (oxy back active 7s after kernel up); STANDARDS §3.2 row 4 + §4.5 row 1 ticked. [full narrative](docs/sessions/session-24-2026-05-10-systemd-deploy-and-bench-completion.md)
 - **Session 23** — 2026-05-10 22:05 ET → 22:45 ET — verification-gates-standard; CLAUDE.md "Verification gates for `[x]` ticks" subsection appended; STANDARDS §6 retroactive-verification banner + inline timestamps; §5.8 row 2 (`/chat`) flipped `[x]` → `[ ]`; §6 Knowledge Product roll-up 6/6 → 5/6; TASKS.md MVP 1 chat-UI row flipped to `[!]`. [full narrative](docs/sessions/session-23-2026-05-10-verification-gates-standard.md)
 - **Session 22** — 2026-05-10 21:40 ET → 22:05 ET — oxygen-onboarding-gate; Oxygen state recon — DuckDB intact (1,169,935 rows), postgres `organizations`=0, only user is tonight's `local-user@example.com`; CLI agent regression PASS; decision gate hit "STOP — Code can't drive a browser." [full narrative](docs/sessions/session-22-2026-05-10-oxygen-onboarding-gate.md)
 - **Session 21** — 2026-05-10 16:00 ET → 16:45 ET — git-allowlist-fix; Pipe patterns added to worktree `settings.json` (`Bash(git * | *)`, `Bash(git -C * * | *)`, `Bash(git * | * | *)`); missing read-ops + duplicate `Bash(bash *)` removed; CLAUDE.md pipe-coverage notes added. [full narrative](docs/sessions/session-21-2026-05-10-git-allowlist-fix.md)
@@ -244,6 +247,7 @@
 | 2026-05-11 | Portal + trust polish (Session 28): Sonnet → Opus refs, Last data point + Last pipeline run stats, trust table width 1100 → 1600 + visible scrollbar + word-break | 3 Sonnet → Opus refs flipped in portal/index.html (hero prose + 2 stack-table rows). Stats bar gains "2026-05-09 / Last data point" + "2026-05-11 / Last pipeline run"; grid responsive auto-fit so 6 stats wrap cleanly. Trust page section max-width bumped twice (1100→1400 first didn't visually fix it because table has 7 columns and macOS hides scrollbars); 1400→1600 + visible scrollbar styling (cross-browser) + `.test-id` `word-break: break-all` for long mono test IDs. Wards-map hero background deferred — Socrata wards dataset is blob-only, OSM Overpass first attempts errored; queued as follow-up with documented dead-ends (`docs/plans/` candidates: trace city PDF, MassGIS shapefile, or stylized SVG). Stats dates hardcoded for now — auto-refresh from DuckDB on `run.sh` queued as separate follow-up. |
 | 2026-05-12 | **Plan 1b: Column profiling + `/erd` + `/profile` portal documentation.** Builds on Plan 1a. New Python-owned admin table `main_admin.fct_column_profile_raw` carrying per-(schema, table, column) shape data: row counts, distinct counts, null%, type-specific stats (numeric distribution + percentiles, date ranges, text top-5 + length, boolean true/false). Two regeneration cadences: weekly `profile-tables.timer` (Sunday 2 AM ET) and a daily cheap staleness check inside run.sh stage 9b (regen triggered on schema-change or >10% table row-count delta). **1b/D resolved as option (c)**: dbt's `schema.yml` files stay hand-written — profile data is NOT injected into dbt docs descriptions. Editorial content (descriptions) stays at `dbt/models/*/schema.yml`; observational content (shape data) lives in `fct_column_profile_raw` and renders on a new `/profile` portal route. Mermaid `/erd` route added showing both warehouse ERD (from dbt `relationships:` tests) and semantic-layer graph (topics → views → base tables, from `semantics/views/*.view.yml` + `topics/*.topic.yml`). nginx config gains `location = /profile` and `location = /erd`. Five portal data routes total: /docs (dbt), /erd (Plan 1b), /metrics (Airlayer), /profile (Plan 1b), /trust. Exclusion patterns in `profile_tables.py` and `check_profile_staleness.py` keep dlt internals (`_dlt_*`) and landing tables (`*_raw`) out of the profile — the analyst-facing dbt views are profiled instead. python-yaml needed (was already a transitive dep via dbt). 75 columns profiled across 5 tables in 5.5s; staleness check ~100ms; full /profile + /erd regen <2s end-to-end. |
 | 2026-05-12 | **Plan 1a: Daily incremental refresh + observability.** Pipeline switched from filesystem-Parquet (year-partitioned, `write_disposition=replace`) to DuckDB destination with `write_disposition=merge` on source PK `id`. Bronze layer now split: `main_bronze.raw_311_requests_raw` (dlt-owned merge target) + `main_bronze.raw_311_requests` (dbt-owned passthrough view via `source('bronze_raw', ...)`). Audit columns added to every bronze row: `_extracted_at`, `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`. Two new Python-owned admin tables: `fct_pipeline_run_raw` (one row per `./run.sh`, INSERT at stage 0 by `pipeline_run_start.py`, UPDATE at stage 10 by `pipeline_run_end.py`, trap-on-error → `failed`) and `fct_source_health_raw` (hourly source ping). run.sh expanded 9 → 10 stages preserving the captured-exit pattern on both `dbt test` invocations. Watermark + 3-day lookback dropped during pre-flight after finding the source has NO publisher-maintained per-row modified field (verified: `rowsUpdatedAt` is republish-batch-level across the entire dataset; Socrata's `:updated_at` matches that single value for every row). Full pull on every run is correct for this source — see [`docs/limitations/source-bulk-republish-no-per-row-modified.md`](docs/limitations/source-bulk-republish-no-per-row-modified.md). dlt 1.26.0 + python-ulid 3.1.0 (new dep, added to SETUP §5). systemd timers `pipeline-refresh.timer` (daily 6 AM ET, runs `./run.sh daily`) and `source-health-check.timer` (hourly) explicitly drop `oxy.service` dependency to avoid blocking refreshes on Oxygen restarts. 2024 regression check: 113,961 (exact match to Plan 6 D3 baseline). |
+| 2026-05-12 17:41 ET | **MVP 1 retrospective written; institutional knowledge captured before MVP 2 kicks off.** Document at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md) covers Oxygen findings (`--local` canonical for existing-warehouse users; Builder Agent / `--local` interaction not yet pre-flight-verified for MVP 2; rate limits matter more than expected), build pattern (config-over-code, docs-as-deliverable, verification gates), Gordon-as-customer (compass works, real friction surfaces real feedback), and what's load-bearing for MVPs 2–4. Closes the institutional-knowledge gap before MVP 2 plan-scoping. |
 
 ---
 
@@ -263,6 +267,8 @@ Resolved blockers moved to [`docs/log-archive.md`](docs/log-archive.md) per the 
 
 ## Pointers
 
+- MVP 1 lessons learned: [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md)
+- MVP 2 first move: TASKS.md "Next Focus" section
 - Older sessions: [`docs/sessions/`](docs/sessions/)
 - Older decisions and resolved blockers: [`docs/log-archive.md`](docs/log-archive.md)
 - "Sign-off Status" (formerly "Accomplishments by MVP") moved to [`TASKS.md`](TASKS.md)
