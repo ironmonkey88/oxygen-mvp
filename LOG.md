@@ -24,6 +24,7 @@
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
 | 10 | BUILD.md §7 opportunistic principle | done | Session 33 |
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
+| 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | in progress | Phase 1 (Socrata inventory) done Session 35; Phases 2 + 3 overnight |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -32,13 +33,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 (BUILD.md §7 opportunistic principle) Session 33; Plan 11 scoping document Session 34. Next: Plan 11 execution pending Gordon's review of the scoping document.
+**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; Plan 12 overnight (Phase 1 Socrata inventory done Session 35; Phases 2 + 3 in progress). Plan 11 execution pending Gordon's review.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 34 — Plan 11 scoping)
+**Last Updated:** 2026-05-13 (Session 35 — Plan 12 Phase 1 Socrata inventory)
 
 ---
 
 ## Recent Sessions
+
+### Session 35 — 2026-05-13 00:46 ET — plan-12-phase-1-socrata-inventory
+[full narrative](docs/sessions/session-35-2026-05-13-plan-12-phase-1-socrata-inventory.md)
+
+- **Goal:** Execute Plan 12 Phase 1 — Socrata catalog inventory for `data.somervillema.gov`. Persist as append-only admin table; produce human-readable markdown summary with top-3-plus recommendation menu.
+- **Shipped:** [`scripts/build_socrata_inventory.py`](scripts/build_socrata_inventory.py) + [`scripts/generate_socrata_inventory_page.py`](scripts/generate_socrata_inventory_page.py); `main_admin.fct_socrata_catalog_raw` (49 rows, 1 snapshot — Python-owned `_raw` table per Plan 1a/1b convention); [`docs/socrata-inventory.md`](docs/socrata-inventory.md) (17.5KB, 49 datasets grouped by category, 29 tabular + 20 blob); [`docs/plans/plan-12-additional-data-sources-socrata-inventory-wards-crime.md`](docs/plans/plan-12-additional-data-sources-socrata-inventory-wards-crime.md). Key findings: wards is blob-only on Socrata (confirms Session 28); Crime Reports `aghs-hqvg` is the Phase 3 target (22K rows, ward + block_code geo, 2017–present, daily refresh, source-level PII redaction already applied).
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 12 Phase 2 (wards) — Session 36.
 
 ### Session 34 — 2026-05-13 01:05 ET — plan-11-scoping
 [full narrative](docs/sessions/session-34-2026-05-13-plan-11-scoping.md)
@@ -76,19 +86,11 @@
 - **Status:** complete
 - **Next:** MVP 2 plan-scoping (in Chat). First scope decision: which first dashboard for Builder Agent to construct.
 
-### Session 30 — 2026-05-12 10:15 ET → 10:36 ET — plan-1b-profiles-and-erd
-[full narrative](docs/sessions/session-30-2026-05-12-plan-1b-profiles-and-erd.md)
-
-- **Goal:** Execute Plan 1b — Python-owned column profiling + dedicated `/profile` portal page + Mermaid `/erd` page. Resolve 1b/D (schema.yml hand-written vs auto-generated) as option (c).
-- **Shipped:** `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (75 cols / 5 tables in 5.5s with `_dlt_*` + `*_raw` exclusions); `check_profile_staleness.py` wired into run.sh stages 9b/9c; `generate_profile_page.py` + `generate_warehouse_erd.py` + `generate_semantic_layer_diagram.py` + `generate_erd_page.py`; nginx `/profile` + `/erd` locations; `systemd/profile-tables.{service,timer}` weekly Sunday 2 AM EDT with ExecStartPost regen+deploy; ARCHITECTURE + SETUP + CLAUDE synced; commit `0a0a065`.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** MVP 1 retrospective + MVP 2 plan-scoping (Session 31).
-
 ---
 
 ## Earlier Sessions
 
+- **Session 30** — 2026-05-12 10:15 ET → 10:36 ET — plan-1b-profiles-and-erd; `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (75 cols in 5.5s); `check_profile_staleness.py` wired into run.sh; `/profile` + `/erd` portal routes via nginx; weekly `profile-tables.timer`; commit `0a0a065`. [full narrative](docs/sessions/session-30-2026-05-12-plan-1b-profiles-and-erd.md)
 - **Session 29** — 2026-05-11 23:30 ET → 2026-05-12 00:39 ET — plan-1a-daily-refresh-and-observability; dlt destination filesystem-Parquet → DuckDB direct with `write_disposition=merge` on PK `id`; bronze view repointed at `main_bronze.raw_311_requests_raw`; audit cols added; Python-owned `fct_pipeline_run_raw` + `fct_source_health_raw`; run.sh 9→10 stages with captured-exit + `trap on_error ERR`; systemd `pipeline-refresh.timer` + `source-health-check.timer`; commit `a0f4904`; 2024 regression 113,961 exact. [full narrative](docs/sessions/session-29-2026-05-12-plan-1a-daily-refresh-and-observability.md)
 - **Session 28** — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks; 3 Sonnet → Opus refs flipped in portal/index.html; stats bar gained "Last data point" + "Last pipeline run" entries (responsive auto-fit grid); trust page widened 1100 → 1600 + visible scrollbar + word-break for test IDs; wards-map hero deferred (Socrata blob-only, OSM Overpass errored). [full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
 - **Session 27** — 2026-05-11 19:20 ET → 21:50 ET — mvp1.5-public-chat-basic-auth; `/chat` exposed at `http://18.224.151.49/chat` via nginx Basic Auth (`analyst` bcrypt cred at `/etc/nginx/.htpasswd`); auth scope reduced to `/chat`-only mid-execution after SPA streaming POST was found to omit credentials; portal hero pill flipped clickable; Gate 4 PASSED — Gordon browser-tested 1,170,023 with full trust contract. [full narrative](docs/sessions/session-27-2026-05-11-mvp1.5-public-chat-basic-auth.md)
@@ -256,6 +258,9 @@
 | 2026-05-12 18:35 ET | `claude/eloquent-varahamihira-a0c106` fast-forward-merged to `origin/main` (`0a0a065..a36e28e`). Covers Session 31 retrospective + LOG/TASKS rotation + Plan 1b Phase 8 tick. Plans 1a (`a0f4904`) and 1b (`0a0a065`) had already been pushed to `origin/main` between Sessions 30 and 31; this merge brings the retrospective + paper-trail catch-up across. |
 | 2026-05-13 01:00 ET | **BUILD.md §7 opportunistic principle landed** (Plan 10) | Analyst experience leads; Oxygen tech gets reached for when it produces a better analyst experience than custom scaffolding (or vice versa). Inverts the prior framing where custom scaffolding was tagged-for-replacement-when-the-platform-catches-up. New §7 lead subsection + Builder Agent subsection rewrite + §4 commitment #2 + §7 Component Trajectory subsection all reconciled. Operationalizes the retrospective lesson (Session 31) that platform-adherence is not the test. Pre-flight verification has teeth: when a plan reaches for an Oxygen primitive, pre-flight verifies the primitive produces the experience the plan assumes; if it doesn't, the plan stops. |
 | 2026-05-13 01:25 ET | **Plan 11 is scoping-only, not execution** | First plan after the opportunistic principle landed. Plan 11 reaches for Builder Agent + Data Apps in `oxy start --local` — neither pre-flight-verified at scale. If pre-flight fails, plan shape changes significantly (worst case: hand-written `.app.yml` with Builder deferred). Better to scope, hand back for Gordon's review, and let Gordon decide whether to execute as-written or refine. Two carry-forward questions flagged inline (neighborhood dimension scope before Phase 3; demo transcript as portal artifact before Phase 5); not pre-decided. |
+| 2026-05-13 01:15 ET | **Direct Python + duckdb for Socrata catalog, not dlt** | Plan 12 Phase 1. The 49-row admin table refreshed manually doesn't warrant the dlt template (filesystem → DuckDB merge + audit columns + run-id tracking is overkill). Inline DDL + bare `INSERT` keeps the script readable and the table free of `_dlt_*` columns. Same approach as `scripts/profile_tables.py` and the other Python-owned `*_raw` admin tables. Opportunistic principle in action: the existing dlt pipeline pattern doesn't fit static reference data, so don't force it. |
+| 2026-05-13 01:15 ET | **Inventory annotations live in the generator script, not the database** | Plan 12 Phase 1. Per-dataset "why this might matter" lines are editorial content (Code's judgment on relevance), not data. Same pattern as `dbt/models/*/schema.yml` per Plan 1b/D resolution. Updating annotations is a code change, not a data change. |
+| 2026-05-13 01:15 ET | **Wards is blob-only on Socrata — confirms Session 28** | Plan 12 Phase 1 inventory shows all 19 entries in the GIS Data category are blob (`resource_type=file`); no tabular geometry feed. Phase 2 will probe the blob format directly via the Socrata view endpoint to learn whether it's shapefile, geojson, or other. |
 
 ---
 
