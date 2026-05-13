@@ -30,13 +30,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Sign-off landed Session 25 (2026-05-11) via pivot to `oxy start --local`; MVP 1.5 (Opus 4.7 + public `/chat`) closed Sessions 26–28; Plans 1a (daily incremental refresh + observability) and 1b (column profiling + `/erd` + `/profile`) closed Sessions 29–30. Retrospective written Session 31 at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md). Next: MVP 2 plan-scoping (first Data App via Builder Agent).
+**Phase:** MVP 1 fully closed. Sign-off landed Session 25 (2026-05-11) via pivot to `oxy start --local`; MVP 1.5 (Opus 4.7 + public `/chat`) closed Sessions 26–28; Plans 1a + 1b closed Sessions 29–30. Retrospective written Session 31. PRODUCT_NOTES.md exploratory notebook created Session 32. Next: Plan 10 (BUILD.md §7 opportunistic principle) + Plan 11 scoping (first Data App — rat complaints by ward).
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-12 (Session 31 — MVP 1 retrospective + MVP 2 prep)
+**Last Updated:** 2026-05-13 (Session 32 — PRODUCT_NOTES.md created)
 
 ---
 
 ## Recent Sessions
+
+### Session 32 — 2026-05-13 00:30 ET — product-notes-creation
+[full narrative](docs/sessions/session-32-2026-05-13-product-notes-creation.md)
+
+- **Goal:** Create `PRODUCT_NOTES.md` exploratory notebook at repo root and wire it into CLAUDE.md reading list as exploratory orientation.
+- **Shipped:** [`PRODUCT_NOTES.md`](PRODUCT_NOTES.md) with Purpose (Is / Isn't / Reading guidance / Lifecycle), four entries (knowledge-graph expansion, component-graph expansion, self-extension as meta-pattern, project as Oxy customer-feedback loop), and Naming conventions section; CLAUDE.md reading list gained an "Exploratory (orientation, not authority)" subsection.
+- **Decisions:** None new — all decisions made in prior Chat session
+- **Status:** complete
+- **Next:** Plan 10 (BUILD.md §7 opportunistic principle) — Session 33.
 
 ### Session 31 — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep
 [full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
@@ -74,19 +83,11 @@
 - **Status:** complete
 - **Next:** MVP 2 plan-scoping; queued follow-ups: auto-refresh portal dates from DuckDB on run.sh, Somerville wards map.
 
-### Session 27 — 2026-05-11 19:20 ET → 21:50 ET — mvp1.5-public-chat-basic-auth
-[full narrative](docs/sessions/session-27-2026-05-11-mvp1.5-public-chat-basic-auth.md)
-
-- **Goal:** Execute `docs/plans/mvp-1.5-public-chat-via-nginx-basic-auth.md` — expose SPA at `http://18.224.151.49/chat` behind nginx Basic Auth (single shared credential, HTTP cleartext, throwaway scaffolding).
-- **Shipped:** `/etc/nginx/.htpasswd` with `analyst` bcrypt cred (root:www-data 640, NOT in repo, .gitignore hardened); nginx config (`nginx/somerville.conf`) adds `/chat` auth-gated + `/api` `/assets` `/home` `/threads` `/oxygen-*.{svg,gif,png}` unauth proxies to :3000 with WebSocket headers on `/chat` and `/api`; portal hero pill flipped to clickable link; curl gates 1-3 PASS; **Gate 4 PASSED** (Gordon SPA-tested 1,170,023 with full trust contract, no second auth prompt); auth scope reduced from "every proxied path" to "/chat only" mid-execution after SPA streaming POST was found to omit credentials; `docs/limitations/chat-auth-basic-cleartext.md` + ARCHITECTURE + SETUP §14 + LOG + TASKS all synced.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Portal/trust polish tweaks (Session 28).
-
 ---
 
 ## Earlier Sessions
 
+- **Session 27** — 2026-05-11 19:20 ET → 21:50 ET — mvp1.5-public-chat-basic-auth; `/chat` exposed at `http://18.224.151.49/chat` via nginx Basic Auth (`analyst` bcrypt cred at `/etc/nginx/.htpasswd`); auth scope reduced to `/chat`-only mid-execution after SPA streaming POST was found to omit credentials; portal hero pill flipped clickable; Gate 4 PASSED — Gordon browser-tested 1,170,023 with full trust contract. [full narrative](docs/sessions/session-27-2026-05-11-mvp1.5-public-chat-basic-auth.md)
 - **Session 26** — 2026-05-11 18:50 ET → 19:15 ET — mvp1.5-opus-migration; Answer Agent switched from `claude-sonnet-4-6` (30K/min) to `claude-opus-4-7` (500K/min, 16× headroom); CLI bench 5/5 + SPA bench 5/5 in single thread no ApiError; `agent-rate-limit-multi-turn-spa` limitation marked mitigated; commit `7b7e650`. [full narrative](docs/sessions/session-26-2026-05-11-mvp1.5-opus-migration.md)
 - **Session 25** — 2026-05-11 — mvp1-signoff-via-local-pivot; multi-workspace wizard incompatible with existing DuckDB; pivoted to `oxy start --local`; SPA browser-tested 113,961 with full trust contract; reboot test passed; **MVP 1 signed off**; all 25 STANDARDS §6 boxes `[x]`. [full narrative](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md)
 - **Session 24** — 2026-05-10 23:20 ET → 00:15 ET — systemd-deploy-and-bench-completion; bench 5/5 re-verified; `oxy.service` deployed with hardened deps; reboot test PASSED (oxy back active 7s after kernel up); STANDARDS §3.2 row 4 + §4.5 row 1 ticked. [full narrative](docs/sessions/session-24-2026-05-10-systemd-deploy-and-bench-completion.md)

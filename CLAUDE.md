@@ -10,6 +10,9 @@ This file is instructions for Claude Code. The project has a hierarchy of docume
 - `BUILD.md` — the *how*: Knowledge Product Pipeline instantiated stage-by-stage, Component Trajectory (best-of-breed today, Oxygen-native at the destination), the four-MVP build sequence with what each retires/produces, disciplines that hold the work together, scope boundaries, glossary.
 - `STACK.md` — the *what*: self-contained reference for every Oxygen component (Answer Agent, Builder Agent, Semantic Layer, Data Apps, Verified Queries, workspace modes, etc.) and every external tool (dlt, DuckDB, dbt, nginx, Tailscale, Claude API). Written so Chat understands the technologies without fetching Oxygen docs. Update when a new component is adopted or an Oxygen changelog redefines an existing one.
 
+**Exploratory (orientation, not authority):**
+- `PRODUCT_NOTES.md` — exploratory notebook for product ideas surfaced during MVP work. Read for inspiration and orientation, not for planning — MVP.md and BUILD.md remain the authorities. If a notebook idea and an authoritative doc disagree, the authoritative doc wins.
+
 **Operational (this file and downstream):**
 - `CLAUDE.md` — operating instructions for Claude Code (this file)
 - `ARCHITECTURE.md` — stack decisions, component map, data flow, constraints
