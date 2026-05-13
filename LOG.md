@@ -25,6 +25,7 @@
 | 10 | BUILD.md §7 opportunistic principle | done | Session 33 |
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
 | 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | done | Phase 1 (inventory) Session 35; Phase 2 (wards) Session 36; Phase 3 (crime bronze) Session 37 |
+| 13 | Crime Gold Layer — fct_crime_incidents + dim_offense_* + public_safety topic | done | Session 38 (6 phases — pre-flight + fact + 2 dims + semantic + limitations + close) |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -33,13 +34,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; **Plan 12 done overnight Sessions 35–37** (Socrata inventory + wards spatial dim + crime bronze). Plan 11 execution pending Gordon's review.
+**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; Plan 12 done Sessions 35–37; **Plan 13 done Session 38** (crime gold layer — fct_crime_incidents + dim_offense_code + dim_offense_category + public_safety topic + 1 renamed/3 new limitations). Plan 11 execution still pending Gordon's review.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 37 — Plan 12 Phase 3 crime bronze)
+**Last Updated:** 2026-05-13 (Session 38 — Plan 13 crime gold layer)
 
 ---
 
 ## Recent Sessions
+
+### Session 38 — 2026-05-13 12:18 ET — plan-13-crime-gold-layer
+[full narrative](docs/sessions/session-38-2026-05-13-plan-13-crime-gold-layer.md)
+
+- **Goal:** Plan 13 — design + build the gold layer for crime data on top of Plan 12 Phase 3's bronze. Chat designed in the previous turn; Code executed the design with honest deviation handling.
+- **Shipped:** 6 phases / 6 commits — pre-flight (no commit), `fct_crime_incidents` ([fb51194](https://github.com/ironmonkey88/oxygen-mvp/commit/fb51194)), `dim_offense_code` + `dim_offense_category` ([7648917](https://github.com/ironmonkey88/oxygen-mvp/commit/7648917)), 3 new view files + `public_safety.topic.yml` ([eda1c5d](https://github.com/ironmonkey88/oxygen-mvp/commit/eda1c5d)), limitations registry 1-renamed-3-new ([28743fc](https://github.com/ironmonkey88/oxygen-mvp/commit/28743fc)), docs reconciliation. 22,325 incidents → gold; 39 offense codes + 4 categories; 5 cross-view airlayer queries verified. Pre-flight caught 3 design assumptions that needed update (multi-offense = 2,875 not 1; sensitive-incident sentinel format; blockcode-NULL parallel to day-NULL).
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 11 review still pending; LOG.md compression overdue; portal-deploy ownership durable fix queued.
 
 ### Session 37 — 2026-05-13 02:00 ET — plan-12-phase-3-crime-bronze
 [full narrative](docs/sessions/session-37-2026-05-13-plan-12-phase-3-crime-bronze.md)
@@ -77,19 +87,11 @@
 - **Status:** complete
 - **Next:** Plan 11 execution waits on Gordon's review. No further Code work this session.
 
-### Session 33 — 2026-05-13 00:45 ET — plan-10-opportunistic-principle
-[full narrative](docs/sessions/session-33-2026-05-13-plan-10-opportunistic-principle.md)
-
-- **Goal:** Execute Plan 10 — encode the opportunistic principle as the lead §7 subsection of BUILD.md; rewrite Builder Agent subsection in place; reconcile the two BUILD.md spots that contradicted the new framing.
-- **Shipped:** [docs/plans/plan-10-buildmd-7-opportunistic-principle.md](docs/plans/plan-10-buildmd-7-opportunistic-principle.md); BUILD.md §7 gains "The opportunistic principle" subsection at top (analyst experience leads; 2 corollaries — pre-flight has teeth, custom scaffolding earns its keep); Builder Agent subsection body rewritten ("earns the role by producing a better analyst experience"); §4 commitment #2 + §7 Component Trajectory subsection reconciled to the new framing.
-- **Decisions:** 1 decision — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 11 scoping (rat complaints by ward Data App) — Session 34. Execution pending Gordon's review.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 33** — 2026-05-13 00:45 ET — plan-10-opportunistic-principle; [`docs/plans/plan-10-buildmd-7-opportunistic-principle.md`](docs/plans/plan-10-buildmd-7-opportunistic-principle.md); BUILD.md §7 gains "The opportunistic principle" subsection + Builder Agent subsection rewritten + §4 reconciled. [full narrative](docs/sessions/session-33-2026-05-13-plan-10-opportunistic-principle.md)
 - **Session 32** — 2026-05-13 00:30 ET — product-notes-creation; [`PRODUCT_NOTES.md`](PRODUCT_NOTES.md) at repo root with four exploratory entries (knowledge-graph expansion, component-graph expansion, self-extension, project as Oxy customer-feedback loop) + naming conventions; CLAUDE.md reading list gained an "Exploratory" subsection. [full narrative](docs/sessions/session-32-2026-05-13-product-notes-creation.md)
 - **Session 31** — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep; [docs/retrospective/mvp1-lessons-learned.md](docs/retrospective/mvp1-lessons-learned.md) written (2,144 words); LOG/TASKS rotated to MVP 2 plan-scoping framing; sessions 29/30 added to Recent (had been missed at commit time). [full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
 - **Session 30** — 2026-05-12 10:15 ET → 10:36 ET — plan-1b-profiles-and-erd; `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (75 cols in 5.5s); `check_profile_staleness.py` wired into run.sh; `/profile` + `/erd` portal routes via nginx; weekly `profile-tables.timer`; commit `0a0a065`. [full narrative](docs/sessions/session-30-2026-05-12-plan-1b-profiles-and-erd.md)
@@ -272,6 +274,8 @@
 | 2026-05-13 02:35 ET | **Crime bronze gated; silver redaction is MVP 3 work — but PII risk is real-but-low** | Plan 12 Phase 3. Empirical audit found no names / addresses / phone / email / DOB; `incdesc` is generic NIBRS legal definitions (0 rows with `@` or phone-pattern); source-level redaction already strips time + location from sensitive incidents. Remaining concerns: `incnum` as re-identification key + `blockcode + offense + date` for rare offenses in small blocks. Limitation entry is precise about what's at risk rather than catastrophizing. |
 | 2026-05-13 02:35 ET | **`/profile` is allowed to include crime bronze view** | Plan 12 Phase 3. /profile surfaces column shape (distinct counts, null %, top-5 values) — top-5 of `incdesc` are public NIBRS legal definitions; not PII. The gating in the limitation entry applies to row-level public consumption, not column-shape metadata. /profile auto-included via existing `scripts/profile_tables.py` — 112 cols (was 95) across 11 models (was 10). |
 | 2026-05-13 02:55 ET | **Plan 12 end-to-end `./run.sh manual` verified — `run_status=partial`, all 10 stages completed.** Final exit 1 from pre-existing drift-fail (Session 31 carry-forward); stages 0–10 ran clean including new stage 1b/10 dlt ingest crime. 27/27 bronze+gold tests PASS including the new wards (3) + crime (2) tests. dbt run 8/8 OK. Portal regen completed: /metrics (3 measures × 5 views), /trust (44 tests), /profile (112 cols), /erd (11 models, 5 views). Crime bronze fully integrated. | First end-to-end attempt failed at stage 9d due to a portal-file ownership regression (root-owned `/var/www/somerville/profile.html` blocked plain `cp`) — unrelated to Phase 3. Documented in `docs/limitations/portal-deploy-file-ownership.md`; today's daily run at 10:00 UTC also failed for the same reason. Manual `sudo chown ubuntu:ubuntu` on the affected files restored the path; durable fix is a follow-up plan (3 options named in the limitation entry). |
+| 2026-05-13 13:00 ET | **Plan 13 deviation: `offense_code` kept as raw source string, not NULLed for multi-code rows** | Pre-flight (Phase 1) found 2,875 multi-code rows, not 1 as the Chat design assumed. Two source-side groupings (`'991, 998, 999'` = Other Criminal MV Offenses 2,500 rows; `'11A - 11D, 36A, 36B'` = Sex Offenses 375 rows). Keeping `offense_code` populated + including both groupings in `dim_offense_code` (39 rows, with `is_multi_offense_grouping` flag) produces a cleaner analyst surface than 12.9% NULLs + relationships-test carve-out. `multi_offense_flag` retained for analyst filtering. Limitation `crime-multi-offense-rows` reframes "1 row" → "2,875 rows in 2 NIBRS source-side groupings" and records the deviation rationale. |
+| 2026-05-13 13:00 ET | **Plan 13 closed — crime gold layer landed cleanly** | `fct_crime_incidents` (22,325 rows) + `dim_offense_code` (39) + `dim_offense_category` (4); new `public_safety` topic separate from `service_requests` (shared `wards` + `dates`); 5 cross-view airlayer queries verified including auto-join through the multi-code groupings. Limitations: 1 rename (`crime-data-pii-unredacted-in-bronze` → `crime-bronze-restricted-from-analysis`) + 3 new (`crime-sensitive-incidents-no-month`, `crime-ward-coverage-gaps`, `crime-multi-offense-rows`). 17 active limitations total. dbt tests: 10/10 fact + 11/11 dim + 6 relationships = 27/27 PASS. The cross-topic "crime vs 311 by ward" pattern works as two side-by-side queries on the shared `wards` view, per the design's §6 trust-contract walk-through. |
 
 ---
 

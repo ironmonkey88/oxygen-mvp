@@ -178,6 +178,50 @@ CREATE TABLE IF NOT EXISTS gold.dim_origin (
     origin          VARCHAR NOT NULL
 );
 
+-- NIBRS offense code dim — 39 rows (37 atomic NIBRS codes + 2 source-side
+-- multi-code grouping strings). Sources from fct_crime_incidents.
+CREATE TABLE IF NOT EXISTS gold.dim_offense_code (
+    offense_code                VARCHAR PRIMARY KEY,
+    offense                     VARCHAR NOT NULL,
+    offense_type                VARCHAR NOT NULL,
+    offense_category            VARCHAR NOT NULL,
+    is_multi_offense_grouping   BOOLEAN NOT NULL,
+    is_active                   BOOLEAN NOT NULL
+);
+
+-- NIBRS top-level category dim — 4 rows, hardcoded.
+-- severity_rank is editorial (1=Person, 2=Property, 3=Society, 4=Other).
+CREATE TABLE IF NOT EXISTS gold.dim_offense_category (
+    offense_category    VARCHAR PRIMARY KEY,
+    severity_rank       SMALLINT NOT NULL UNIQUE
+);
+
+-- One row per Somerville Police incident report. Source: bronze.raw_somerville_crime
+-- via dlt merge on `incnum`. Three source-data realities surfaced via flags +
+-- limitations: sensitive-incident redaction (incident_year_only), multi-code offense
+-- groupings (multi_offense_flag), ward coverage gaps (ward NULL / 'CAM').
+CREATE TABLE IF NOT EXISTS gold.fct_crime_incidents (
+    incident_id                 VARCHAR PRIMARY KEY,                  -- md5(case_number)
+    case_number                 VARCHAR NOT NULL UNIQUE,              -- NK: source `incnum`
+    incident_dt                 DATE,                                 -- NULL for sensitive incidents
+    incident_year               SMALLINT NOT NULL,
+    incident_year_only          BOOLEAN NOT NULL,                     -- TRUE = day-and-month stripped at source
+    police_shift                VARCHAR,                              -- NULL for sensitive incidents
+    offense_code                VARCHAR NOT NULL REFERENCES gold.dim_offense_code(offense_code),
+    multi_offense_flag          BOOLEAN NOT NULL,
+    offense                     VARCHAR,                              -- denormalized from dim_offense_code
+    offense_type                VARCHAR,                              -- denormalized from dim_offense_code
+    offense_category            VARCHAR NOT NULL REFERENCES gold.dim_offense_category(offense_category),
+    ward                        VARCHAR,                              -- 1–7 (FK to dim_ward) / NULL / 'CAM'
+    block_code                  VARCHAR,                              -- 15-char census block; NULL for sensitive
+
+    -- audit columns (passthrough from bronze)
+    _extracted_at               TIMESTAMP,
+    _extracted_run_id           VARCHAR,
+    _first_seen_at              TIMESTAMP,
+    _source_endpoint            VARCHAR
+);
+
 -- One row per 311 request. Grain: one request.
 -- Location fields (ward, block_code) are denormalized here for MVP 1.
 -- dim_location will be introduced in MVP 3.

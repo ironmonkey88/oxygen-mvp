@@ -7,7 +7,7 @@
 
 ## Next Focus — Plan 11 Execution (pending Gordon's review of scoping doc)
 
-Plan 10 closed Session 33 — BUILD.md §7 opportunistic principle landed. PRODUCT_NOTES.md created Session 32. Plan 11 scoping document drafted Session 34 at [`docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md`](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md); execution pending Gordon's review.
+Plan 10 closed Session 33 — BUILD.md §7 opportunistic principle landed. PRODUCT_NOTES.md created Session 32. Plan 11 scoping document drafted Session 34 at [`docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md`](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md); execution pending Gordon's review. Plan 12 closed Sessions 35–37 (Socrata inventory + wards spatial dim + crime bronze). **Plan 13 closed Session 38** (crime gold layer — fct_crime_incidents, dim_offense_code, dim_offense_category, public_safety topic, 4 limitations); two open Q's flagged for Gordon's review (case_number exposure + offense/offense_type denormalization).
 
 The first MVP 2 deliverable is **one dashboard built through conversation with Builder Agent**. The dashboard demonstrates the analyst-outcome test from BUILD.md §5: "The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML."
 
