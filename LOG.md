@@ -32,13 +32,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Retrospective written Session 31; PRODUCT_NOTES.md created Session 32; Plan 10 closed Session 33 (BUILD.md §7 opportunistic principle landed). Next: Plan 11 scoping (first Data App — rat complaints by ward). Plan 11 execution pending Gordon's review of the scoping document.
+**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 (BUILD.md §7 opportunistic principle) Session 33; Plan 11 scoping document Session 34. Next: Plan 11 execution pending Gordon's review of the scoping document.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 33 — Plan 10 close)
+**Last Updated:** 2026-05-13 (Session 34 — Plan 11 scoping)
 
 ---
 
 ## Recent Sessions
+
+### Session 34 — 2026-05-13 01:05 ET — plan-11-scoping
+[full narrative](docs/sessions/session-34-2026-05-13-plan-11-scoping.md)
+
+- **Goal:** Write Plan 11 (first MVP 2 Data App — rat complaints by ward via Builder Agent) as a scoping document only; execution pending Gordon's review.
+- **Shipped:** [docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md) — 9-phase plan covering Builder Agent pre-flight (7 gates G1–G7 + gate budget), data pre-flight, directional transcript, construction session, trust signal integration, portal `/dashboards` listing, honest limitations, light retro, sign-off; two carry-forward questions flagged inline (neighborhood scope before Phase 3; transcript-as-portal-artifact before Phase 5); inputs decided in Chat carried forward; risk register named. LOG.md Plans Registry row Plan 11 = `scoping`; Recent Sessions rotated; Active Decisions row.
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 11 execution waits on Gordon's review. No further Code work this session.
 
 ### Session 33 — 2026-05-13 00:45 ET — plan-10-opportunistic-principle
 [full narrative](docs/sessions/session-33-2026-05-13-plan-10-opportunistic-principle.md)
@@ -76,19 +85,11 @@
 - **Status:** complete
 - **Next:** MVP 1 retrospective + MVP 2 plan-scoping (Session 31).
 
-### Session 29 — 2026-05-11 23:30 ET → 2026-05-12 00:39 ET — plan-1a-daily-refresh-and-observability
-[full narrative](docs/sessions/session-29-2026-05-12-plan-1a-daily-refresh-and-observability.md)
-
-- **Goal:** Execute Plan 1a — switch pipeline to merge-on-id, add audit columns, ship Python-owned run + source observability tables, wire systemd timers. Resolve modified-field finding from pre-flight.
-- **Shipped:** dlt destination filesystem-Parquet → DuckDB direct with `write_disposition=merge` on PK `id`; bronze view repointed at `main_bronze.raw_311_requests_raw`; audit cols `_extracted_at`/`_extracted_run_id`/`_first_seen_at`/`_source_endpoint`; `scripts/pipeline_run_{start,end}.py` + `main_admin.fct_pipeline_run_raw`; `scripts/source_health_check.py` + `fct_source_health_raw`; run.sh 9→10 stages with captured-exit + `trap on_error ERR`; systemd `pipeline-refresh.timer` (daily 6 AM EDT) + `source-health-check.timer` (hourly) both drop oxy.service dependency; 2 limitations entries; ARCHITECTURE + SETUP + CLAUDE synced; commit `a0f4904`. 2024 regression: 113,961 exact.
-- **Decisions:** 5 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 1b (column profiling + portal ERD) — Session 30.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 29** — 2026-05-11 23:30 ET → 2026-05-12 00:39 ET — plan-1a-daily-refresh-and-observability; dlt destination filesystem-Parquet → DuckDB direct with `write_disposition=merge` on PK `id`; bronze view repointed at `main_bronze.raw_311_requests_raw`; audit cols added; Python-owned `fct_pipeline_run_raw` + `fct_source_health_raw`; run.sh 9→10 stages with captured-exit + `trap on_error ERR`; systemd `pipeline-refresh.timer` + `source-health-check.timer`; commit `a0f4904`; 2024 regression 113,961 exact. [full narrative](docs/sessions/session-29-2026-05-12-plan-1a-daily-refresh-and-observability.md)
 - **Session 28** — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks; 3 Sonnet → Opus refs flipped in portal/index.html; stats bar gained "Last data point" + "Last pipeline run" entries (responsive auto-fit grid); trust page widened 1100 → 1600 + visible scrollbar + word-break for test IDs; wards-map hero deferred (Socrata blob-only, OSM Overpass errored). [full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
 - **Session 27** — 2026-05-11 19:20 ET → 21:50 ET — mvp1.5-public-chat-basic-auth; `/chat` exposed at `http://18.224.151.49/chat` via nginx Basic Auth (`analyst` bcrypt cred at `/etc/nginx/.htpasswd`); auth scope reduced to `/chat`-only mid-execution after SPA streaming POST was found to omit credentials; portal hero pill flipped clickable; Gate 4 PASSED — Gordon browser-tested 1,170,023 with full trust contract. [full narrative](docs/sessions/session-27-2026-05-11-mvp1.5-public-chat-basic-auth.md)
 - **Session 26** — 2026-05-11 18:50 ET → 19:15 ET — mvp1.5-opus-migration; Answer Agent switched from `claude-sonnet-4-6` (30K/min) to `claude-opus-4-7` (500K/min, 16× headroom); CLI bench 5/5 + SPA bench 5/5 in single thread no ApiError; `agent-rate-limit-multi-turn-spa` limitation marked mitigated; commit `7b7e650`. [full narrative](docs/sessions/session-26-2026-05-11-mvp1.5-opus-migration.md)
@@ -254,6 +255,7 @@
 | 2026-05-12 17:41 ET | **MVP 1 retrospective written; institutional knowledge captured before MVP 2 kicks off.** Document at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md) covers Oxygen findings (`--local` canonical for existing-warehouse users; Builder Agent / `--local` interaction not yet pre-flight-verified for MVP 2; rate limits matter more than expected), build pattern (config-over-code, docs-as-deliverable, verification gates), Gordon-as-customer (compass works, real friction surfaces real feedback), and what's load-bearing for MVPs 2–4. Closes the institutional-knowledge gap before MVP 2 plan-scoping. |
 | 2026-05-12 18:35 ET | `claude/eloquent-varahamihira-a0c106` fast-forward-merged to `origin/main` (`0a0a065..a36e28e`). Covers Session 31 retrospective + LOG/TASKS rotation + Plan 1b Phase 8 tick. Plans 1a (`a0f4904`) and 1b (`0a0a065`) had already been pushed to `origin/main` between Sessions 30 and 31; this merge brings the retrospective + paper-trail catch-up across. |
 | 2026-05-13 01:00 ET | **BUILD.md §7 opportunistic principle landed** (Plan 10) | Analyst experience leads; Oxygen tech gets reached for when it produces a better analyst experience than custom scaffolding (or vice versa). Inverts the prior framing where custom scaffolding was tagged-for-replacement-when-the-platform-catches-up. New §7 lead subsection + Builder Agent subsection rewrite + §4 commitment #2 + §7 Component Trajectory subsection all reconciled. Operationalizes the retrospective lesson (Session 31) that platform-adherence is not the test. Pre-flight verification has teeth: when a plan reaches for an Oxygen primitive, pre-flight verifies the primitive produces the experience the plan assumes; if it doesn't, the plan stops. |
+| 2026-05-13 01:25 ET | **Plan 11 is scoping-only, not execution** | First plan after the opportunistic principle landed. Plan 11 reaches for Builder Agent + Data Apps in `oxy start --local` — neither pre-flight-verified at scale. If pre-flight fails, plan shape changes significantly (worst case: hand-written `.app.yml` with Builder deferred). Better to scope, hand back for Gordon's review, and let Gordon decide whether to execute as-written or refine. Two carry-forward questions flagged inline (neighborhood dimension scope before Phase 3; demo transcript as portal artifact before Phase 5); not pre-decided. |
 
 ---
 
