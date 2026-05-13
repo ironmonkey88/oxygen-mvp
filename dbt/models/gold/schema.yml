@@ -194,3 +194,70 @@ models:
         description: 'Lineage — canonical Socrata permalink for the source dataset.'
       - name: _extracted_at
         description: 'Lineage — UTC timestamp when the shapefile was last ingested.'
+
+  - name: fct_crime_incidents
+    description: |
+      Gold fact over Somerville Police incident reports (Socrata
+      `aghs-hqvg`). One row per source case number. 22,325 rows
+      covering 2017–present. Surrogate PK with the source case_number
+      preserved for analyst back-reference to the public police log.
+      Three source-data realities handled in-model (sensitive incident
+      redaction, multi-code offense groupings, ward coverage gaps);
+      each is documented in a gold-level limitation. See
+      docs/sessions/session-NN-...-plan-13-crime-gold-layer.md for the
+      design walk-through and the multi_offense_flag deviation from
+      the Plan 13 design.
+    columns:
+      - name: incident_id
+        description: 'Surrogate PK — md5(case_number). Matches the gold-dim pattern.'
+        data_tests:
+          - not_null
+          - unique
+      - name: case_number
+        description: 'Source case number from Somerville Police. Non-sensitive incidents use 8-char `YYxxxxxx` format; sensitive incidents use 9-char `1xxxxxxxx` sentinel format.'
+        data_tests:
+          - not_null
+          - unique
+      - name: incident_dt
+        description: 'Date the incident was reported. NULL for ~12.5% of rows (sensitive incidents — day-and-month withheld at source). See docs/limitations/crime-sensitive-incidents-no-month.md.'
+      - name: incident_year
+        description: 'Year the incident was reported. Populated for all rows.'
+        data_tests:
+          - not_null
+      - name: incident_year_only
+        description: 'TRUE when only the year is known (sensitive incident with day-and-month stripped at source). Filter `WHERE NOT incident_year_only` to exclude these rows from sub-annual time-series.'
+        data_tests:
+          - not_null
+      - name: police_shift
+        description: 'Shift during which the incident was reported. NULL for sensitive incidents.'
+      - name: offense_code
+        description: 'NIBRS offense code from source. Atomic 3-char code for single-offense rows (37 distinct values); also includes 2 multi-code grouping strings used by the source for "Other Criminal MV Offenses" (`991, 998, 999`, 2,500 rows) and "Sex Offenses" (`11A - 11D, 36A, 36B`, 375 rows). See docs/limitations/crime-multi-offense-rows.md.'
+        data_tests:
+          - not_null
+      - name: multi_offense_flag
+        description: 'TRUE when offense_code is a multi-code grouping string. 2,875 rows (12.9%); filter `WHERE NOT multi_offense_flag` for single-NIBRS-code analysis.'
+        data_tests:
+          - not_null
+      - name: offense
+        description: 'NIBRS offense name (denormalized from dim_offense_code for query convenience). E.g. "Motor Vehicle Theft".'
+      - name: offense_type
+        description: 'NIBRS offense type (denormalized from dim_offense_code). Sub-category grouping similar offenses.'
+      - name: offense_category
+        description: 'NIBRS top-level category (denormalized from dim_offense_category). One of "Crimes against Property" / "Crimes against Person" / "Crimes against Society" / "Other".'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
+      - name: ward
+        description: 'Somerville ward (TRIM applied; source pads to length 15). 7 valid ward strings (1–7), NULL for ~13% of rows, "CAM" for 2 cross-jurisdiction rows. See docs/limitations/crime-ward-coverage-gaps.md.'
+      - name: block_code
+        description: '15-character census block code. NULL for sensitive incidents (same 2,798 rows as NULL incident_dt). Block-level analysis on the full dataset is therefore similarly bounded.'
+      - name: _extracted_at
+        description: 'Lineage — UTC timestamp when the most recent pipeline run touched this row.'
+      - name: _extracted_run_id
+        description: 'Lineage — ULID of the pipeline run that touched this row.'
+      - name: _first_seen_at
+        description: 'Lineage — UTC timestamp when this incident was first ingested. Preserved across re-extractions.'
+      - name: _source_endpoint
+        description: 'Lineage — Socrata SODA URL the row came from.'
