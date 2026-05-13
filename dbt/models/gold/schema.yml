@@ -261,3 +261,85 @@ models:
         description: 'Lineage — UTC timestamp when this incident was first ingested. Preserved across re-extractions.'
       - name: _source_endpoint
         description: 'Lineage — Socrata SODA URL the row came from.'
+      - name: ward
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL AND ward <> 'CAM'"
+      - name: offense_code
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_offense_code')
+                field: offense_code
+      - name: offense_category
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_offense_category')
+                field: offense_category
+
+  - name: dim_offense_code
+    description: |
+      One row per distinct offense_code value observed on
+      fct_crime_incidents. 39 rows: 37 atomic NIBRS codes plus 2
+      source-side multi-code grouping strings. Carries the NIBRS
+      offense hierarchy (offense → offense_type → offense_category)
+      denormalized. is_multi_offense_grouping flags the 2 grouping-
+      string rows.
+    columns:
+      - name: offense_code
+        description: 'NIBRS offense code or source-side grouping string. PK.'
+        data_tests:
+          - not_null
+          - unique
+      - name: offense
+        description: 'NIBRS offense name.'
+        data_tests:
+          - not_null
+      - name: offense_type
+        description: 'NIBRS offense type — sub-category grouping.'
+        data_tests:
+          - not_null
+      - name: offense_category
+        description: 'NIBRS top-level category.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
+          - relationships:
+              arguments:
+                to: ref('dim_offense_category')
+                field: offense_category
+      - name: is_multi_offense_grouping
+        description: 'TRUE when offense_code is a multi-code grouping string (2 rows today). FALSE for atomic NIBRS codes (37 rows).'
+        data_tests:
+          - not_null
+      - name: is_active
+        description: 'TRUE for all 39 rows today. Placeholder for future code retirement.'
+        data_tests:
+          - not_null
+
+  - name: dim_offense_category
+    description: |
+      NIBRS top-level offense category. 4 rows. severity_rank is an
+      editorial ordinal (Person/Property/Society/Other) used for
+      consistent sort order across dashboards; not source-derived.
+    columns:
+      - name: offense_category
+        description: 'NIBRS top-level category name. PK.'
+        data_tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
+      - name: severity_rank
+        description: 'Editorial ordinal — 1=Person, 2=Property, 3=Society, 4=Other.'
+        data_tests:
+          - not_null
+          - unique
