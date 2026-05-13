@@ -33,15 +33,38 @@
     - bronze.raw_311_requests
     - main_bronze.raw_311_requests
   path: docs/limitations/bronze-varchar-source-cols.md
-- id: crime-data-pii-unredacted-in-bronze
-  title: Crime data carries source-level PII risk; not redacted in bronze
+- id: crime-bronze-restricted-from-analysis
+  title: Crime bronze table is for lineage and reprocessing — not analysis
   severity: warning
   affects:
     - main_bronze.raw_somerville_crime_raw
     - main_bronze.raw_somerville_crime
-    - incnum
-    - blockcode
-  path: docs/limitations/crime-data-pii-unredacted-in-bronze.md
+  path: docs/limitations/crime-bronze-restricted-from-analysis.md
+- id: crime-multi-offense-rows
+  title: Two NIBRS offense types use multi-code grouping strings as offense_code
+  severity: warning
+  affects:
+    - main_gold.fct_crime_incidents
+    - offense_code
+    - multi_offense_flag
+  path: docs/limitations/crime-multi-offense-rows.md
+- id: crime-sensitive-incidents-no-month
+  title: Sensitive crime incidents have year-only — no month, day, or block
+  severity: warning
+  affects:
+    - main_gold.fct_crime_incidents
+    - incident_dt
+    - incident_year_only
+    - block_code
+    - day_and_month
+  path: docs/limitations/crime-sensitive-incidents-no-month.md
+- id: crime-ward-coverage-gaps
+  title: 13% of crime incidents have no ward — and 2 are cross-jurisdiction
+  severity: warning
+  affects:
+    - main_gold.fct_crime_incidents
+    - ward
+  path: docs/limitations/crime-ward-coverage-gaps.md
 - id: current-year-partial
   title: Year-to-date counts are partial, not full-year
   severity: warning
