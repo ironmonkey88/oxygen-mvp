@@ -23,11 +23,14 @@ Per the MVP.md Working Backwards example, the anchor target is service equity ac
 
 ### Pre-flight verification needed (do BEFORE plan-scoping commits to shape)
 
-- [ ] Builder Agent reachable in SPA at `oxygen-mvp.taildee698.ts.net:3000` — does it appear in the Agents/Procedures surface in `--local` mode?
-- [ ] Builder Agent can read/modify YAML files in the workspace — the canonical capability test
-- [ ] Data Apps render in the SPA — try `oxy build` against a stub `.app.yml` and view it
-- [ ] No multi-workspace wizard gates Builder Agent in `--local` mode — would re-introduce the Session 25 blocker
-- [ ] Latest Oxygen changelog reviewed — per retrospective lesson, platform velocity has been delivering Verified Queries, Data Apps, Slack, MCP, A2A during this project
+Builder Agent is documented in Oxygen changelogs ([2026-04-09](docs/oxygen-docs/changelog/2026-04-09.md) intro, [2026-04-16](docs/oxygen-docs/changelog/2026-04-16.md) improvements, [2026-05-07](docs/oxygen-docs/changelog/2026-05-07.md) major upgrade) but NOT in the canonical `learn-about-oxy/` guide. Per the changelogs, Builder is "a builder copilot agent that can read, modify, and iterate on your Oxygen project files" — workspace-wide, not Data-App-specific. UI surface is the chat panel's "Build mode" (alongside "Ask mode"), plus a dedicated Builder Dialog. Tools include `run_app` (executes a Data App by path, fed back as context), `read_file`, file-edit tools with HITL approvals, and 15+ dbt-aware tools.
+
+- [ ] **"Build mode" reachable in the chat panel** at `http://18.224.151.49/chat` (Basic Auth) or `http://oxygen-mvp.taildee698.ts.net:3000` (Tailnet) — does the chat panel offer Build mode alongside Ask mode in `--local` mode?
+- [ ] **Builder can read/modify YAML files in the workspace** — the canonical capability test; should produce `FileChangePending` events with HITL approval
+- [ ] **Data Apps render in the SPA** — `oxy run apps/foo.app.yml` or the IDE's app browser; note that `oxy build` is for vector embeddings, not Data App rendering
+- [ ] **Builder's `run_app` tool works in `--local` mode** — the key MVP 2 capability (Builder builds → runs → refines a dashboard in one loop)
+- [ ] **No multi-workspace wizard gates Build mode in `--local`** — would re-introduce the Session 25 blocker
+- [ ] **Latest Oxygen changelog reviewed at plan-scoping** — per retrospective lesson, platform velocity has been delivering Verified Queries, Data Apps, Slack, MCP, A2A throughout this project
 
 ### Out of scope for MVP 2's first plan
 

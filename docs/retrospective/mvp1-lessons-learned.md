@@ -42,13 +42,27 @@ as Oxy customer feedback at Session 25 sign-off.
 
 ### Builder Agent and Data Apps in `--local` mode
 
+Builder Agent is broader than this project initially framed it. The canonical
+Oxygen definition (changelog 2026-04-09) is "a builder copilot agent that can
+read, modify, and iterate on your Oxygen project files through an AI-driven
+pipeline" — i.e., a workspace-wide copilot for editing semantic-layer YAML,
+SQL files, dbt configs, agent definitions, *and* Data Apps. Constructing an
+`.app.yml` dashboard from conversation is one workflow it supports, enabled
+by the `run_app` tool added in the 2026-05-07 release. The UI surface is the
+chat panel's "Build mode" (alongside "Ask mode"), plus a dedicated Builder
+Dialog — not the Procedures/Agents browser where Answer Agent appears.
+
+There is no `learn-about-oxy/builder-agent.md` page in the canonical guide;
+Builder is documented only via changelogs (2026-04-09 intro, 2026-04-16
+improvements, 2026-05-07 major upgrade). That is a real gap in Oxygen's
+docs — a project this far in shouldn't have to reconstruct what Builder is
+from changelog entries.
+
 The MVP 2 dependency we haven't yet pre-flight-verified is whether Builder
-Agent (the agent that constructs `.app.yml` dashboards by conversation) is
-available and functional in `--local` mode. The Procedures/Agents surface
-in the SPA renders fine for the Answer Agent; whether Builder Agent appears
-identically — or requires a multi-workspace org context — is the first thing
-MVP 2's pre-flight needs to confirm. Flagging it here so the next plan-scoping
-session doesn't assume it.
+is reachable and functional in `--local` mode. Builder was introduced in
+the same April release that introduced the three deployment modes
+(`oxy start`, `oxy start --local`, hosted), so local-mode availability is
+plausible but not stated explicitly. First MVP 2 pre-flight task.
 
 ### Platform velocity is real
 
@@ -250,12 +264,12 @@ Future plans reference this section. Each dependency is named once; if it
 breaks, the plan that depends on it stops working.
 
 - **Builder Agent + Data Apps (MVP 2)** depends on `--local` mode supporting
-  the Builder Agent surface. **Not yet pre-flight-verified.** First MVP 2
-  task.
+  the chat panel's "Build mode" (the canonical Builder UI surface). **Not yet
+  pre-flight-verified.** First MVP 2 task.
 - **First Data App scoping (MVP 2)** depends on the semantic layer growing a
   resolution-time measure and a resolution-time-band dimension. Both are
-  small, but they're prerequisites — Builder Agent constructs against the
-  semantic layer.
+  small, but they're prerequisites — Builder edits semantic-layer YAML and
+  the Data App reads against it.
 - **Verified Queries (MVP 3)** depends on the agent test bench moving from
   hand-rolled `scratch/plan6_test_bench/` to `.agent.test.yml` + `oxy test`.
   Plan-as-handed-off for MVP 3 should explicitly retire the hand-rolled
