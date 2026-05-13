@@ -32,8 +32,16 @@ external ward-to-neighborhood mapping (none is shipped with this MVP).
 Block-level analysis works directly off `block_code` once the
 `block-code-padded` limitation is also handled.
 
+**For ward-level geography**, the project now ships `main_gold.dim_ward`
+(Plan 12 Phase 2, 2026-05-13) — 7 administrative wards with polygon
+geometry in WGS84 WKT, area in sq km, and perimeter in meters. The
+Airlayer auto-join via the `ward` foreign entity on `requests` brings
+ward geometry into any ward-keyed query. This **does not** add per-row
+lat/lng to 311; it only enriches the ward dimension.
+
 ## Resolution path
 
 Planned for MVP 3 — `gold/dim_location.sql` will surface a richer
-location dim sourced from the Somerville open-data parcel layer. Until
-then, queries are bounded to ward + block.
+location dim sourced from the Somerville open-data parcel layer (or
+the `n5md-vqta` neighborhoods blob). Until then, queries are bounded
+to ward + block, with the ward polygons available via `dim_ward`.

@@ -48,6 +48,28 @@ CREATE TABLE IF NOT EXISTS bronze.raw_311_requests (
     _dlt_id                                         VARCHAR   -- dlt row identifier, retained for lineage
 );
 
+-- Raw Somerville wards shapefile mirror — owned by scripts/ingest_somerville_wards.py.
+-- Source: Socrata `ym5n-phxd` (Wards) blob, ESRI shapefile bundle.
+-- Static reference data; drop+recreate on each ingestion run. One row per ward (7).
+-- Geometry held in the source projection (NAD83/MA Mainland, EPSG:2249, US survey feet)
+-- via DuckDB's spatial extension; WKT strings in both source projection and WGS84
+-- are also persisted for portability + dbt-view compatibility.
+CREATE TABLE IF NOT EXISTS bronze.raw_somerville_wards_raw (
+    OGC_FID             BIGINT,   -- assigned by the spatial reader
+    OBJECTID            BIGINT,   -- ESRI internal id
+    WARD                BIGINT,   -- ward number 1–7
+    Shape_Leng          DOUBLE,   -- polygon perimeter in US survey feet (source projection unit)
+    Shape_Area          DOUBLE,   -- polygon area in sq US survey feet
+    geom                GEOMETRY, -- binary geometry in NAD83/MA Mainland (EPSG:2249)
+    geometry_wkt_wgs84  VARCHAR,  -- WKT in WGS84 (EPSG:4326) — analyst-friendly
+    geometry_wkt_source VARCHAR,  -- WKT in source projection — round-trip-ready
+    area_source_units   DOUBLE,   -- redundant with Shape_Area; double-check
+    _extracted_at       TIMESTAMP,
+    _source_url         VARCHAR,  -- canonical Socrata permalink
+    _source_filename    VARCHAR,  -- source shapefile filename inside the ZIP blob
+    _source_srid        VARCHAR   -- always 'EPSG:2249' for this dataset
+);
+
 -- Raw load of dbt run_results.json after each pipeline run.
 -- Loaded by dlt/load_dbt_results.py. Parsed by admin models.
 CREATE TABLE IF NOT EXISTS bronze.raw_dbt_results (
@@ -106,6 +128,21 @@ CREATE TABLE IF NOT EXISTS gold.dim_status (
 
 -- How the request was submitted: Contact Center, Website, etc.
 -- Low cardinality — typically 5–10 distinct values.
+-- Ward dim — 7 administrative wards (2020 Census redistricting).
+-- Sourced from `scripts/ingest_somerville_wards.py` via bronze.raw_somerville_wards_raw.
+-- Static reference data. Natural-key joins to fct_311_requests on `ward`.
+CREATE TABLE IF NOT EXISTS gold.dim_ward (
+    ward_id             VARCHAR PRIMARY KEY,  -- md5(ward) surrogate key
+    ward                VARCHAR NOT NULL UNIQUE,  -- ward number 1–7 (VARCHAR for natural-key join)
+    ward_name           VARCHAR,              -- 'Ward N' display label
+    geometry_wkt_wgs84  VARCHAR,              -- polygon WKT in WGS84 (EPSG:4326)
+    area_sqm            DOUBLE,               -- polygon area in sq meters
+    area_sqkm           DOUBLE,               -- polygon area in sq kilometers (~1.3–2.7)
+    perimeter_m         DOUBLE,               -- polygon perimeter in meters
+    _source_url         VARCHAR,
+    _extracted_at       TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS gold.dim_origin (
     origin_sk       INTEGER PRIMARY KEY,
     origin_id       VARCHAR NOT NULL,     -- natural key: raw origin value

@@ -38,3 +38,13 @@ Thumbs.db
 scratch/
 .htpasswd
 *.htpasswd
+
+# Generated portal pages — tracked through their generator scripts
+# (scripts/generate_*_page.py), not as committed outputs. portal/index.html
+# IS source and is committed; the generated pages are not.
+portal/erd.html
+portal/profile.html
+portal/metrics.html
+portal/trust.html
+portal/erd-warehouse.mmd
+portal/erd-semantic-layer.mmd

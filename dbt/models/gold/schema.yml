@@ -161,3 +161,36 @@ models:
         description: 'Department tag — public space cleanliness and environmental health. Boolean. Sparse.'
       - name: is_voting_tag
         description: 'Department tag — voting and election information. Boolean. Sparse.'
+
+  - name: dim_ward
+    description: |
+      Gold dimension over Somerville's 7 administrative wards. Sourced
+      from the Socrata `ym5n-phxd` shapefile (2020 Census redistricting).
+      Static reference data — drops + rebuilds on each
+      `scripts/ingest_somerville_wards.py` run. Natural-key joins to
+      `fct_311_requests` on `ward` (VARCHAR in both tables).
+    columns:
+      - name: ward_id
+        description: 'Surrogate key — md5(ward). Matches the SK pattern of the other gold dims.'
+        data_tests:
+          - not_null
+          - unique
+      - name: ward
+        description: 'Ward number (1–7) as VARCHAR. Matches `fct_311_requests.ward` for natural-key joins.'
+        data_tests:
+          - not_null
+          - unique
+      - name: ward_name
+        description: 'Human-readable label, "Ward N". Derived (the source shapefile has no name column — just numbers).'
+      - name: geometry_wkt_wgs84
+        description: 'Polygon geometry as WKT in WGS84 (EPSG:4326). Lat/lng-friendly; use ST_GeomFromText to re-parse for spatial operations.'
+      - name: area_sqm
+        description: 'Polygon area in square meters, converted from the source projection (NAD83 / MA Mainland, US survey feet).'
+      - name: area_sqkm
+        description: 'Polygon area in square kilometers. Wards are ~1.3–2.7 sq km.'
+      - name: perimeter_m
+        description: 'Polygon perimeter in meters, converted from US survey feet.'
+      - name: _source_url
+        description: 'Lineage — canonical Socrata permalink for the source dataset.'
+      - name: _extracted_at
+        description: 'Lineage — UTC timestamp when the shapefile was last ingested.'

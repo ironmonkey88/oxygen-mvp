@@ -24,7 +24,7 @@
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
 | 10 | BUILD.md §7 opportunistic principle | done | Session 33 |
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
-| 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | in progress | Phase 1 (Socrata inventory) done Session 35; Phases 2 + 3 overnight |
+| 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | in progress | Phase 1 done Session 35; Phase 2 (wards) done Session 36; Phase 3 (crime) in progress |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -33,13 +33,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; Plan 12 overnight (Phase 1 Socrata inventory done Session 35; Phases 2 + 3 in progress). Plan 11 execution pending Gordon's review.
+**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; Plan 12 overnight (Phase 1 done Session 35 — Socrata inventory; Phase 2 done Session 36 — wards spatial dim; Phase 3 crime in progress). Plan 11 execution pending Gordon's review.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 35 — Plan 12 Phase 1 Socrata inventory)
+**Last Updated:** 2026-05-13 (Session 36 — Plan 12 Phase 2 wards)
 
 ---
 
 ## Recent Sessions
+
+### Session 36 — 2026-05-13 01:15 ET — plan-12-phase-2-wards-ingestion
+[full narrative](docs/sessions/session-36-2026-05-13-plan-12-phase-2-wards-ingestion.md)
+
+- **Goal:** Plan 12 Phase 2 — ingest Somerville ward polygons as static reference data; pre-flight Socrata blob format; build bronze + gold + semantic-layer wiring; validate join.
+- **Shipped:** `scripts/ingest_somerville_wards.py` (DuckDB spatial extension reads Socrata `ym5n-phxd` ZIP-bundled shapefile, materializes `main_bronze.raw_somerville_wards_raw` with geom + WKT-source + WKT-WGS84 + audit cols); `dbt/models/bronze/raw_somerville_wards.sql` passthrough view; `dbt/models/gold/dim_ward.sql` with surrogate key + ward_name + sq-km area + sq-m perimeter; bronze + gold schema.yml extensions; `semantics/views/wards.view.yml` + foreign-entity addition to requests; topic updated. dbt 2/2 OK + 6/6 PASS; oxy validate 7/7; airlayer auto-join compiled to `LEFT JOIN dim_ward ... ON wards.ward = requests.ward`, returned 7 wards with 78K–121K requests each. `docs/limitations/location-ward-block-only.md` + `docs/schema.sql` updated; `/profile` + `/erd` regenerated (10 dbt models, 5 views, 95 cols profiled).
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 12 Phase 3 (crime data bronze) — Session 37.
 
 ### Session 35 — 2026-05-13 00:46 ET — plan-12-phase-1-socrata-inventory
 [full narrative](docs/sessions/session-35-2026-05-13-plan-12-phase-1-socrata-inventory.md)
@@ -77,19 +86,11 @@
 - **Status:** complete
 - **Next:** Plan 10 (BUILD.md §7 opportunistic principle) — Session 33.
 
-### Session 31 — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep
-[full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
-
-- **Goal:** Capture institutional knowledge from MVP 1 (Sessions 1–28 + Plans 1a/1b in Sessions 29–30) and orient TASKS.md "Next Focus" at MVP 2 plan-scoping.
-- **Shipped:** [docs/retrospective/mvp1-lessons-learned.md](docs/retrospective/mvp1-lessons-learned.md) (2,144 words covering Oxygen findings, build pattern, customer feedback, what's load-bearing for MVPs 2–4); LOG.md Current Status + Active Decisions + Recent Sessions rotated; TASKS.md Sign-off Status reflects MVP 1 fully closed + Plan 1b Phase 8 ticked; TASKS.md Next Focus rewritten as MVP 2 plan-scoping with scope decisions and pre-flight items enumerated.
-- **Decisions:** 1 decision — retrospective as durable artifact, not session note — see Decisions Log
-- **Status:** complete
-- **Next:** MVP 2 plan-scoping (in Chat). First scope decision: which first dashboard for Builder Agent to construct.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 31** — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep; [docs/retrospective/mvp1-lessons-learned.md](docs/retrospective/mvp1-lessons-learned.md) written (2,144 words); LOG/TASKS rotated to MVP 2 plan-scoping framing; sessions 29/30 added to Recent (had been missed at commit time). [full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
 - **Session 30** — 2026-05-12 10:15 ET → 10:36 ET — plan-1b-profiles-and-erd; `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (75 cols in 5.5s); `check_profile_staleness.py` wired into run.sh; `/profile` + `/erd` portal routes via nginx; weekly `profile-tables.timer`; commit `0a0a065`. [full narrative](docs/sessions/session-30-2026-05-12-plan-1b-profiles-and-erd.md)
 - **Session 29** — 2026-05-11 23:30 ET → 2026-05-12 00:39 ET — plan-1a-daily-refresh-and-observability; dlt destination filesystem-Parquet → DuckDB direct with `write_disposition=merge` on PK `id`; bronze view repointed at `main_bronze.raw_311_requests_raw`; audit cols added; Python-owned `fct_pipeline_run_raw` + `fct_source_health_raw`; run.sh 9→10 stages with captured-exit + `trap on_error ERR`; systemd `pipeline-refresh.timer` + `source-health-check.timer`; commit `a0f4904`; 2024 regression 113,961 exact. [full narrative](docs/sessions/session-29-2026-05-12-plan-1a-daily-refresh-and-observability.md)
 - **Session 28** — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks; 3 Sonnet → Opus refs flipped in portal/index.html; stats bar gained "Last data point" + "Last pipeline run" entries (responsive auto-fit grid); trust page widened 1100 → 1600 + visible scrollbar + word-break for test IDs; wards-map hero deferred (Socrata blob-only, OSM Overpass errored). [full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
@@ -261,6 +262,10 @@
 | 2026-05-13 01:15 ET | **Direct Python + duckdb for Socrata catalog, not dlt** | Plan 12 Phase 1. The 49-row admin table refreshed manually doesn't warrant the dlt template (filesystem → DuckDB merge + audit columns + run-id tracking is overkill). Inline DDL + bare `INSERT` keeps the script readable and the table free of `_dlt_*` columns. Same approach as `scripts/profile_tables.py` and the other Python-owned `*_raw` admin tables. Opportunistic principle in action: the existing dlt pipeline pattern doesn't fit static reference data, so don't force it. |
 | 2026-05-13 01:15 ET | **Inventory annotations live in the generator script, not the database** | Plan 12 Phase 1. Per-dataset "why this might matter" lines are editorial content (Code's judgment on relevance), not data. Same pattern as `dbt/models/*/schema.yml` per Plan 1b/D resolution. Updating annotations is a code change, not a data change. |
 | 2026-05-13 01:15 ET | **Wards is blob-only on Socrata — confirms Session 28** | Plan 12 Phase 1 inventory shows all 19 entries in the GIS Data category are blob (`resource_type=file`); no tabular geometry feed. Phase 2 will probe the blob format directly via the Socrata view endpoint to learn whether it's shapefile, geojson, or other. |
+| 2026-05-13 02:00 ET | **Wards blob is a ZIP-bundled ESRI shapefile — usable via DuckDB spatial extension** | Plan 12 Phase 2 pre-flight. Socrata `ym5n-phxd` ships `Wards.zip` (~116KB) containing standard shapefile bundle (.shp/.shx/.dbf/.prj + spatial-index files); projection NAD83 / MA Mainland (EPSG:2249, US survey feet); 7 polygons, attributes `WARD` + `OBJECTID` + `Shape_Leng` + `Shape_Area`. DuckDB's `spatial` extension reads it directly via `ST_Read`; `ST_Transform` reprojects to WGS84 cleanly. Session 28's "Socrata blob, OSM Overpass errored" is now precisely "the blob is the right shape; we needed the spatial extension, not OSM." |
+| 2026-05-13 02:00 ET | **One-shot Python ingest, not the dlt pipeline pattern, for wards** | Plan 12 Phase 2. Wards is static reference data (7 rows, won't change without redistricting); the dlt template's daily refresh + run-id tracking + systemd timer is overkill. Opportunistic principle in action: the existing pattern doesn't fit, so don't force it. Re-runnable manually; not in `./run.sh`. |
+| 2026-05-13 02:00 ET | **WKT-in-text geometry in passthrough + gold; binary GEOMETRY only on bronze raw** | Plan 12 Phase 2. Bronze raw holds DuckDB's binary `GEOMETRY` for fast spatial ops; the dbt passthrough view drops it and exposes WKT strings. Keeps dbt/duckdb compatibility clean (no geometry-type translations in views) and makes geometry portable (any analyst can `ST_GeomFromText` re-parse). |
+| 2026-05-13 02:00 ET | **Natural-key column `ward` (not `ward_number`) in gold dim** | Plan 12 Phase 2. The 311 fact column is `ward` (VARCHAR); aligning the dim's natural key to the same column name lets Airlayer's auto-join work without custom join SQL. The shapefile's `WARD` (BIGINT 1–7) is cast to VARCHAR in dim_ward to match 311's source type. |
 
 ---
 

@@ -5,3 +5,4 @@ views:
   - request_types
   - statuses
   - dates
+  - wards

@@ -15,6 +15,16 @@ sources:
           pull each run; merge key is `id`. Audit columns added by the
           pipeline: `_extracted_at`, `_extracted_run_id`, `_first_seen_at`,
           `_source_endpoint`, plus dlt's own `_dlt_load_id` / `_dlt_id`.
+      - name: raw_somerville_wards_raw
+        description: |
+          Python-owned mirror of the Socrata `ym5n-phxd` (Wards) blob
+          shapefile, materialized via DuckDB's spatial extension. Source:
+          ESRI polygon feature class from the 2020 Census redistricting.
+          One row per administrative ward (7 wards). Drop+recreate on
+          each `scripts/ingest_somerville_wards.py` run (static reference
+          data, no incremental tracking). Holds the binary GEOMETRY column
+          in the source projection (NAD83 / MA Mainland, EPSG:2249) plus
+          WKT strings in both source projection and WGS84 EPSG:4326.
 
 models:
   - name: raw_311_requests
@@ -108,3 +118,38 @@ models:
         description: 'dlt load identifier — retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
         description: 'dlt row identifier — retained at every layer for source-to-pipeline lineage.'
+
+  - name: raw_somerville_wards
+    description: |
+      Bronze view over the wards shapefile mirror. Drops the binary
+      GEOMETRY column (kept on the raw table for spatial operations);
+      exposes WKT strings + numeric metadata. One row per ward (7).
+      Geometry stored in both source projection (NAD83 / MA Mainland,
+      EPSG:2249, units = US survey feet) and WGS84 (EPSG:4326,
+      lat/lng). Use `geometry_wkt_wgs84` for analyst-facing work.
+    columns:
+      - name: ward_number
+        description: 'Ward number (1–7). Joins to `fct_311_requests.ward` (which stores ward as VARCHAR — cast at the join).'
+        data_tests:
+          - not_null
+          - unique
+      - name: object_id
+        description: 'ESRI internal OBJECTID. Pipeline metadata; not for analysis.'
+      - name: ogc_fid
+        description: 'OGC feature id assigned by the spatial reader. Pipeline metadata; not for analysis.'
+      - name: shape_length_ftus
+        description: 'Polygon perimeter length in US survey feet (source projection unit). Gold layer converts to meters.'
+      - name: shape_area_sqftus
+        description: 'Polygon area in square US survey feet (source projection unit). Gold layer converts to sq km.'
+      - name: geometry_wkt_wgs84
+        description: 'Polygon geometry as WKT in WGS84 (EPSG:4326). Lat/lng-friendly; the analyst-facing geometry column.'
+      - name: geometry_wkt_source
+        description: 'Polygon geometry as WKT in source projection (EPSG:2249). Retained for round-trip back to shapefile + projection-aware spatial joins.'
+      - name: _source_srid
+        description: '**PIPELINE METADATA.** Source projection identifier. Static `EPSG:2249` for this dataset.'
+      - name: _extracted_at
+        description: '**PIPELINE METADATA.** UTC timestamp when the shapefile was loaded.'
+      - name: _source_url
+        description: '**PIPELINE METADATA.** Canonical Socrata permalink for the source dataset.'
+      - name: _source_filename
+        description: '**PIPELINE METADATA.** Source shapefile filename inside the Socrata ZIP blob.'

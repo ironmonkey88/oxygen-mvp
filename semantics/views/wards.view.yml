@@ -1,0 +1,42 @@
+name: wards
+description: "Somerville administrative ward dimension (7 wards, 2020 Census redistricting)"
+table: main_gold.dim_ward
+datasource: somerville
+
+entities:
+  - name: ward
+    type: primary
+    key: ward
+
+dimensions:
+  - name: ward_id
+    type: string
+    expr: ward_id
+    description: "Surrogate key (md5 of ward)"
+  - name: ward
+    type: string
+    expr: ward
+    primary_key: true
+    description: "Ward number 1–7 (VARCHAR). Natural-key match to requests.ward."
+    samples: ["1", "2", "3", "4", "5", "6", "7"]
+  - name: ward_name
+    type: string
+    expr: ward_name
+    description: 'Human-readable label, "Ward N".'
+  - name: area_sqkm
+    type: number
+    expr: area_sqkm
+    description: "Polygon area in square kilometers. Wards range from ~1.3 to ~2.7 sq km."
+  - name: perimeter_m
+    type: number
+    expr: perimeter_m
+    description: "Polygon perimeter in meters."
+  - name: geometry_wkt_wgs84
+    type: string
+    expr: geometry_wkt_wgs84
+    description: "Polygon geometry as WKT in WGS84 (EPSG:4326). Use ST_GeomFromText for spatial ops."
+
+measures:
+  - name: ward_count
+    type: count
+    description: "Total wards (always 7)"

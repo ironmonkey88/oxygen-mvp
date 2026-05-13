@@ -16,6 +16,9 @@ entities:
   - name: status
     type: foreign
     key: status_id
+  - name: ward
+    type: foreign
+    key: ward
 
 dimensions:
   - name: id
