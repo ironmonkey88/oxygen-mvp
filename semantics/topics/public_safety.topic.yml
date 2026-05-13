@@ -1,0 +1,13 @@
+name: public_safety
+description: |
+  Somerville Police incident reports from the city's public open-data
+  feed. One row per source incident with NIBRS offense classification,
+  ward, and date. Shares the wards and dates dimensions with
+  service_requests so cross-topic comparison queries (crime by ward
+  vs 311 by ward) join via the common dims.
+views:
+  - crime
+  - offense_codes
+  - offense_categories
+  - wards
+  - dates

@@ -1,0 +1,97 @@
+name: crime
+description: |
+  Somerville Police incident reports. One row per source case number
+  from the city's public open-data feed (Socrata `aghs-hqvg`). Carries
+  NIBRS offense classification, ward, date, and shift. Joins to wards
+  and dates dimensions for cross-topic comparison with 311 service
+  requests via shared dim views.
+table: main_gold.fct_crime_incidents
+datasource: somerville
+
+entities:
+  - name: incident
+    type: primary
+    key: incident_id
+  - name: ward
+    type: foreign
+    key: ward
+  - name: date
+    type: foreign
+    key: incident_dt
+  - name: offense_code
+    type: foreign
+    key: offense_code
+  - name: offense_category
+    type: foreign
+    key: offense_category
+
+dimensions:
+  - name: incident_id
+    type: string
+    expr: incident_id
+    primary_key: true
+    description: "Surrogate primary key (md5 of case_number)."
+  - name: case_number
+    type: string
+    expr: case_number
+    description: "Source case number from Somerville Police. 8-char `YYxxxxxx` for non-sensitive incidents; 9-char `1xxxxxxxx` sentinel for sensitive incidents."
+  - name: incident_dt
+    type: date
+    expr: incident_dt
+    description: "Date of the incident. NULL for ~12.5% of cases (sensitive incidents — day-and-month withheld at source). See crime-sensitive-incidents-no-month limitation."
+  - name: incident_year
+    type: number
+    expr: incident_year
+    description: "Year of the incident. Populated for all rows."
+  - name: incident_year_only
+    type: boolean
+    expr: incident_year_only
+    description: "TRUE when only the year is known (sensitive-incident sentinel)."
+  - name: police_shift
+    type: string
+    expr: police_shift
+    description: "Shift during which the incident was reported."
+    samples: ["Day Shift (8AM - 4PM)", "First Half (4PM - Midnight)", "Last Half (Midnight - 8AM)"]
+  - name: offense_code
+    type: string
+    expr: offense_code
+    description: "NIBRS offense code. Atomic 3-char NIBRS codes for 87% of rows; source-side grouping strings ('991, 998, 999' and '11A - 11D, 36A, 36B') for the remaining 13%. See crime-multi-offense-rows limitation."
+  - name: multi_offense_flag
+    type: boolean
+    expr: multi_offense_flag
+    description: "TRUE when offense_code is a multi-code grouping string (2,875 rows). Filter `WHERE NOT multi_offense_flag` for single-NIBRS-code analysis."
+  - name: offense
+    type: string
+    expr: offense
+    description: "NIBRS offense name (denormalized from dim_offense_code)."
+  - name: offense_type
+    type: string
+    expr: offense_type
+    description: "NIBRS offense type (denormalized from dim_offense_code)."
+  - name: offense_category
+    type: string
+    expr: offense_category
+    description: "NIBRS top-level category (denormalized from dim_offense_category)."
+    samples: ["Crimes against Property", "Crimes against Person", "Crimes against Society", "Other"]
+  - name: ward
+    type: string
+    expr: ward
+    description: "Somerville ward 1–7. NULL for ~13% of rows; 'CAM' for 2 cross-jurisdiction rows. See crime-ward-coverage-gaps limitation."
+    samples: ["1", "2", "3", "4", "5", "6", "7"]
+  - name: block_code
+    type: string
+    expr: block_code
+    description: "15-character census block code where the incident occurred. NULL for sensitive incidents."
+
+measures:
+  - name: total_incidents
+    type: count
+    description: "Total count of crime incidents."
+  - name: incidents_with_ward
+    type: count
+    description: "Crime incidents with a known Somerville ward (excludes the ~13% NULL-ward and 2 CAM rows)."
+    expr: ward
+  - name: incidents_with_date
+    type: count
+    description: "Crime incidents with a known incident date (excludes the ~12.5% sensitive incidents)."
+    expr: incident_dt

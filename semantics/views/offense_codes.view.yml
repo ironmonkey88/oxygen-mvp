@@ -1,0 +1,44 @@
+name: offense_codes
+description: "NIBRS offense code dimension (39 distinct codes — 37 atomic NIBRS codes + 2 source-side multi-code grouping strings)."
+table: main_gold.dim_offense_code
+datasource: somerville
+
+entities:
+  - name: offense_code
+    type: primary
+    key: offense_code
+  - name: offense_category
+    type: foreign
+    key: offense_category
+
+dimensions:
+  - name: offense_code
+    type: string
+    expr: offense_code
+    primary_key: true
+    description: "NIBRS code or source-side grouping string."
+  - name: offense
+    type: string
+    expr: offense
+    description: "NIBRS offense name."
+  - name: offense_type
+    type: string
+    expr: offense_type
+    description: "NIBRS offense type — sub-category grouping similar offenses."
+  - name: offense_category
+    type: string
+    expr: offense_category
+    description: "NIBRS top-level category."
+  - name: is_multi_offense_grouping
+    type: boolean
+    expr: is_multi_offense_grouping
+    description: "TRUE for the 2 source-side grouping rows (Other Criminal MV Offenses, Sex Offenses)."
+  - name: is_active
+    type: boolean
+    expr: is_active
+    description: "TRUE for all rows today. Placeholder for future code retirement."
+
+measures:
+  - name: code_count
+    type: count
+    description: "Total distinct offense codes (always 39 today)."
