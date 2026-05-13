@@ -101,13 +101,47 @@ cadence and wire to `./run.sh` if appropriate.
 
 ## End-to-end verification
 
-`./run.sh manual` ran end-to-end with the new stage 1b included. Final
-status + exit code captured in the session note appendix below if
-the run completed in time; otherwise this section is updated on next
-session.
+`./run.sh manual` ran end-to-end with the new stage 1b included.
+
+**First attempt — `01KRGVJQ26GQXNFNRT4FA0ZHW4`, 916s** — FAILED at
+stage 9d/10 (`profile_page`) with `cp: cannot create regular file
+'/var/www/somerville/profile.html': Permission denied`. Root cause:
+a `sudo cp` from this session's earlier manual portal regen had
+flipped the file ownership to root; run.sh runs as `ubuntu` and uses
+plain `cp` (no sudo) on portal-deploy stages. The new crime stage 1b
+ran clean — the failure was downstream and unrelated to Phase 3.
+Today's earlier daily run at 10:00 UTC (`01KRGCF7Y18QZCXX1X2NK65ZT9`)
+failed at the same stage for the same reason; the pre-existing
+daily-runs-landing-`partial` pattern (Session 31) flipped to `failed`
+today.
+
+**Fix** — `sudo chown ubuntu:ubuntu /var/www/somerville/profile.html
+erd.html erd-warehouse.mmd erd-semantic-layer.mmd`. Documented in
+`docs/limitations/portal-deploy-file-ownership.md`; durable fix
+(sudo cp vs setgid vs systemd-as-root) is a follow-up plan.
+
+**Second attempt — `01KRGWG8N51MHZX09SX4Z61J6G`, 833s** — landed
+clean past stage 9d. Final status: `partial` (final exit 1 from the
+pre-existing `dq_drift_fail_guardrail` Session-31 carry-forward; all
+other stages green).
+
+- Stages 0–10 all executed
+- Stage 1 (dlt 311): 1,171,107 rows fetched, ~9 min load
+- Stage 1b (dlt crime, NEW): 22,325 rows in 7.94 s
+- Stage 2 (dbt run bronze + gold): 8/8 OK
+- Stage 3 (dbt test bronze + gold): 27/27 PASS — including the new
+  wards (3) + crime (2) tests
+- Stage 5 (dbt run admin): 3/3 OK
+- Stage 5b (dbt test admin): 12/13 PASS, 1 ERROR (drift-fail, expected
+  carry-forward)
+- Stages 6–10: dbt docs + /metrics (3 measures × 5 views) + /trust
+  (44 tests) + limitations index (14 entries — incl. new
+  portal-deploy-file-ownership) + /profile (112 cols) + /erd (11
+  models, 5 semantic views) all clean
+
+Crime bronze fully integrated end-to-end. Plan 12 verified.
 
 ## Next action
 
-Plan 12 close — write the close session note, update LOG.md Plans
-Registry to `done`, push final commit. Plan 11 review still pending
-Gordon's review; not blocked.
+None on this branch — Plan 12 closed. Plan 11 execution still pending
+Gordon's review of the scoping document.

@@ -86,6 +86,14 @@
   affects:
     - deploy.oxy_build
   path: docs/limitations/oxy-build-postgres-dependency.md
+- id: portal-deploy-file-ownership
+  title: "run.sh's portal-deploy stages fail when /var/www files are root-owned"
+  severity: warning
+  affects:
+    - deploy.run_sh
+    - profile.html
+    - erd.html
+  path: docs/limitations/portal-deploy-file-ownership.md
 - id: source-bulk-republish-no-per-row-modified
   title: Source publishes the dataset in bulk; there is no per-row modified field
   severity: info
