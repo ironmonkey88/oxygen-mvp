@@ -8,6 +8,7 @@ This file is instructions for Claude Code. The project has a hierarchy of docume
 **Strategic + construction (project authorities):**
 - `MVP.md` — the *why*: protagonist, emotional arc (relief → momentum → ownership → pride → sharing), success test ("you have to try this"), the compass, the portal as opening note, the four-MVP roadmap.
 - `BUILD.md` — the *how*: Knowledge Product Pipeline instantiated stage-by-stage, Component Trajectory (best-of-breed today, Oxygen-native at the destination), the four-MVP build sequence with what each retires/produces, disciplines that hold the work together, scope boundaries, glossary.
+- `STACK.md` — the *what*: self-contained reference for every Oxygen component (Answer Agent, Builder Agent, Semantic Layer, Data Apps, Verified Queries, workspace modes, etc.) and every external tool (dlt, DuckDB, dbt, nginx, Tailscale, Claude API). Written so Chat understands the technologies without fetching Oxygen docs. Update when a new component is adopted or an Oxygen changelog redefines an existing one.
 
 **Operational (this file and downstream):**
 - `CLAUDE.md` — operating instructions for Claude Code (this file)
@@ -45,12 +46,13 @@ Gordon is an experienced Snowflake/dbt/Looker architect who is new to Oxygen.
 | Ingestion | dlt |
 | Warehouse | DuckDB |
 | Transformation | dbt Core |
-| Semantic Layer | Airlayer (`.view.yml`) — standalone Rust CLI + Oxygen built-in engine |
+| Semantic Layer | Airlayer (`.view.yml` + `.topic.yml`) |
 | Q&A Agent | Answer Agent (`.agent.yml`) |
-| Routing | Routing Agent (`type: routing`) — MVP 4 only |
-| Dashboards | Airapp (`.app.yml`) |
+| Builder Agent | Build mode in Oxygen chat panel (workspace-wide AI copilot, MVP 2+) |
+| Routing | Routing Agent (`.agent.yml` `type: routing`) — MVP 4 only |
+| Dashboards | Data Apps (`.app.yml`) |
 
-See `ARCHITECTURE.md` for full detail.
+See [STACK.md](STACK.md) for full self-contained definitions of each Oxygen component and external tool. See [ARCHITECTURE.md](ARCHITECTURE.md) for system flow and design decisions.
 
 ---
 
