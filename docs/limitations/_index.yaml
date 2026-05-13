@@ -33,6 +33,15 @@
     - bronze.raw_311_requests
     - main_bronze.raw_311_requests
   path: docs/limitations/bronze-varchar-source-cols.md
+- id: crime-data-pii-unredacted-in-bronze
+  title: Crime data carries source-level PII risk; not redacted in bronze
+  severity: warning
+  affects:
+    - main_bronze.raw_somerville_crime_raw
+    - main_bronze.raw_somerville_crime
+    - incnum
+    - blockcode
+  path: docs/limitations/crime-data-pii-unredacted-in-bronze.md
 - id: current-year-partial
   title: Year-to-date counts are partial, not full-year
   severity: warning

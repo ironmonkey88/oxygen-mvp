@@ -9,7 +9,8 @@
 #
 # Order:
 #   0. record run start  — main_admin.fct_pipeline_run_raw, returns run_id
-#   1. dlt ingest        — Somerville 311 SODA API → raw_311_requests_raw (merge on `id`)
+#   1. dlt ingest 311    — Somerville 311 SODA API → raw_311_requests_raw (merge on `id`)
+#   1b. dlt ingest crime — Somerville crime SODA API → raw_somerville_crime_raw (merge on `incnum`)
 #   2. dbt run bronze gold
 #   3. dbt test bronze gold (capture exit; do NOT halt)
 #   4. dlt load_dbt_results — append run_results.json into raw_dbt_results_raw
@@ -64,10 +65,17 @@ on_error() {
 }
 trap on_error ERR
 
-# Step 1: dlt ingest (full pull + merge on `id`)
-ERROR_STAGE="dlt_ingest"
+# Step 1: dlt ingest 311 (full pull + merge on `id`)
+ERROR_STAGE="dlt_ingest_311"
 echo "==> 1/10 dlt ingest somerville 311"
 python dlt/somerville_311_pipeline.py "$RUN_ID"
+
+# Step 1b: dlt ingest crime (full pull + merge on `incnum`)
+# 22K rows / ~8 sec. Source updates daily with 1-month delay, so daily
+# refresh on the 311 cadence fits. Added Plan 12 Phase 3 (2026-05-13).
+ERROR_STAGE="dlt_ingest_crime"
+echo "==> 1b/10 dlt ingest somerville crime"
+python dlt/somerville_crime_pipeline.py "$RUN_ID"
 
 # Step 2: dbt run bronze + gold
 ERROR_STAGE="dbt_run_bronze_gold"

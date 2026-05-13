@@ -70,6 +70,35 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_wards_raw (
     _source_srid        VARCHAR   -- always 'EPSG:2249' for this dataset
 );
 
+-- Raw Somerville Police crime reports mirror — owned by
+-- dlt/somerville_crime_pipeline.py. Source: Socrata `aghs-hqvg`.
+-- Full pull + merge on PK `incnum` each run. 22K rows as of 2026-05-13;
+-- data 2017-present. Source-level PII redaction already applied to
+-- sensitive incidents (time/location stripped); project-side silver-layer
+-- redaction is MVP 3 work. See
+-- docs/limitations/crime-data-pii-unredacted-in-bronze.md.
+CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
+    incnum              VARCHAR,  -- PK from source; the dlt merge key
+    day_and_month       VARCHAR,  -- "M/D"; NULL/blank for sensitive incidents stripped at source
+    year                VARCHAR,  -- "2017"–present
+    police_shift        VARCHAR,
+    offensecode         VARCHAR,  -- 3-char NIBRS code
+    offense             VARCHAR,
+    incdesc             VARCHAR,  -- NIBRS standard definition text; not victim-specific
+    offensetype         VARCHAR,
+    category            VARCHAR,  -- NIBRS top-level (Property/Person/Society/Other)
+    blockcode           VARCHAR,  -- 15-char census block code; ~750 blocks
+    ward                VARCHAR,  -- '1'–'7', space-padded to length 15 in source
+
+    -- pipeline metadata (added by dlt/somerville_crime_pipeline.py)
+    _extracted_at       TIMESTAMP,
+    _extracted_run_id   VARCHAR,
+    _first_seen_at      TIMESTAMP,  -- post-merge UPDATE; preserved across re-extractions
+    _source_endpoint    VARCHAR,
+    _dlt_load_id        VARCHAR,
+    _dlt_id             VARCHAR
+);
+
 -- Raw load of dbt run_results.json after each pipeline run.
 -- Loaded by dlt/load_dbt_results.py. Parsed by admin models.
 CREATE TABLE IF NOT EXISTS bronze.raw_dbt_results (

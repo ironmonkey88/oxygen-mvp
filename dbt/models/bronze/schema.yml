@@ -25,6 +25,19 @@ sources:
           data, no incremental tracking). Holds the binary GEOMETRY column
           in the source projection (NAD83 / MA Mainland, EPSG:2249) plus
           WKT strings in both source projection and WGS84 EPSG:4326.
+      - name: raw_somerville_crime_raw
+        description: |
+          dlt merge target for the Somerville Police Department crime
+          reports SODA API
+          (https://data.somervillema.gov/resource/aghs-hqvg.json). Full
+          pull each run; merge key is `incnum`. ~22K rows as of
+          2026-05-13; data goes back to 2017. Source refreshes daily with
+          a one-month publication delay. Source-level PII redaction is
+          applied to sensitive incidents (time / location stripped); see
+          docs/limitations/crime-data-pii-unredacted-in-bronze.md for the
+          full breakdown. Audit columns: `_extracted_at`,
+          `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`, plus
+          dlt's `_dlt_load_id` / `_dlt_id`.
 
 models:
   - name: raw_311_requests
@@ -153,3 +166,50 @@ models:
         description: '**PIPELINE METADATA.** Canonical Socrata permalink for the source dataset.'
       - name: _source_filename
         description: '**PIPELINE METADATA.** Source shapefile filename inside the Socrata ZIP blob.'
+
+  - name: raw_somerville_crime
+    description: |
+      Bronze view over the Somerville Police crime reports mirror. Passes
+      the 11 source columns through `main_bronze.raw_somerville_crime_raw`
+      (dlt-owned) plus the audit + dlt-lineage columns. Arrival data only;
+      type casts, deduplication, and any further redaction are deferred
+      to silver/gold (MVP 3 work). **PII risk audit:** see
+      docs/limitations/crime-data-pii-unredacted-in-bronze.md.
+    columns:
+      - name: incnum
+        description: 'Incident number — case identifier from SPD records management. Primary key from source; the dlt merge key.'
+        data_tests:
+          - not_null
+          - unique
+      - name: day_and_month
+        description: 'Calendar day + month (e.g. "1/9"). NULL or blank for sensitive incidents stripped of time at source.'
+      - name: year
+        description: 'Year the incident was reported (VARCHAR; source values "2017"–"2026" as of 2026-05-13).'
+      - name: police_shift
+        description: 'Shift during which the incident was reported (e.g. "First Half (4PM - Midnight)").'
+      - name: offensecode
+        description: 'Three-character NIBRS offense code.'
+      - name: offense
+        description: 'Offense type label.'
+      - name: incdesc
+        description: 'NIBRS standard definition of the offense type. Generic legal text, not victim-specific narrative.'
+      - name: offensetype
+        description: 'Sub-category grouping similar offense types.'
+      - name: category
+        description: 'Top-level NIBRS category. One of "Crimes against Property" / "Crimes against Person" / "Crimes against Society" / "Other".'
+      - name: blockcode
+        description: 'Fixed-length 15-character census block code (state + county + tract + block + suffix). Geographic granularity floor — ~750 blocks across Somerville.'
+      - name: ward
+        description: 'Ward number (1–7) — **space-padded to length 15 in source** (e.g. "1              "). Trim at join to gold dim_ward.ward. NULL for ~13% of rows.'
+      - name: _extracted_at
+        description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
+      - name: _extracted_run_id
+        description: '**PIPELINE METADATA.** ULID of the pipeline run.'
+      - name: _first_seen_at
+        description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
+      - name: _source_endpoint
+        description: '**PIPELINE METADATA.** Source SODA URL.'
+      - name: _dlt_load_id
+        description: 'dlt load identifier — retained at every layer for source-to-pipeline lineage.'
+      - name: _dlt_id
+        description: 'dlt row identifier — retained at every layer for source-to-pipeline lineage.'

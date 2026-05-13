@@ -24,7 +24,7 @@
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
 | 10 | BUILD.md §7 opportunistic principle | done | Session 33 |
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
-| 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | in progress | Phase 1 done Session 35; Phase 2 (wards) done Session 36; Phase 3 (crime) in progress |
+| 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | done | Phase 1 (inventory) Session 35; Phase 2 (wards) Session 36; Phase 3 (crime bronze) Session 37 |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -33,13 +33,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; Plan 12 overnight (Phase 1 done Session 35 — Socrata inventory; Phase 2 done Session 36 — wards spatial dim; Phase 3 crime in progress). Plan 11 execution pending Gordon's review.
+**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; **Plan 12 done overnight Sessions 35–37** (Socrata inventory + wards spatial dim + crime bronze). Plan 11 execution pending Gordon's review.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 36 — Plan 12 Phase 2 wards)
+**Last Updated:** 2026-05-13 (Session 37 — Plan 12 Phase 3 crime bronze)
 
 ---
 
 ## Recent Sessions
+
+### Session 37 — 2026-05-13 02:00 ET — plan-12-phase-3-crime-bronze
+[full narrative](docs/sessions/session-37-2026-05-13-plan-12-phase-3-crime-bronze.md)
+
+- **Goal:** Plan 12 Phase 3 — ingest Somerville Police crime reports (Socrata `aghs-hqvg`) to bronze, parallel to 311. Bronze only; silver/gold/semantic deferred to MVP 3 alongside PII review.
+- **Shipped:** `dlt/somerville_crime_pipeline.py` (adapted from 311 — full pull + merge on `incnum`, 22,325 rows in 7.94s); `main_bronze.raw_somerville_crime_raw` (dlt-owned) + dbt bronze view `raw_somerville_crime` (1/1 OK + 2/2 PASS); bronze schema.yml extended with new source + per-column descriptions; `docs/limitations/crime-data-pii-unredacted-in-bronze.md` (honest audit: no names/addresses/phone/email/DOB; `incdesc` is generic NIBRS legal text; source-level redaction already strips time + location from sensitive incidents); limitations index regenerated → 13 entries; `docs/schema.sql` gains crime DDL; `run.sh` gains stage 1b/10 dlt ingest crime between 311 and dbt run. Portal: `/profile` 95→112 cols, `/erd` 10→11 models, `/trust` re-rendered to surface the new limitation.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** None on this branch — Plan 12 closed; LOG.md flagged as 320+ lines (queued tech debt; not compressed overnight per brief).
 
 ### Session 36 — 2026-05-13 01:15 ET — plan-12-phase-2-wards-ingestion
 [full narrative](docs/sessions/session-36-2026-05-13-plan-12-phase-2-wards-ingestion.md)
@@ -77,19 +86,11 @@
 - **Status:** complete
 - **Next:** Plan 11 scoping (rat complaints by ward Data App) — Session 34. Execution pending Gordon's review.
 
-### Session 32 — 2026-05-13 00:30 ET — product-notes-creation
-[full narrative](docs/sessions/session-32-2026-05-13-product-notes-creation.md)
-
-- **Goal:** Create `PRODUCT_NOTES.md` exploratory notebook at repo root and wire it into CLAUDE.md reading list as exploratory orientation.
-- **Shipped:** [`PRODUCT_NOTES.md`](PRODUCT_NOTES.md) with Purpose (Is / Isn't / Reading guidance / Lifecycle), four entries (knowledge-graph expansion, component-graph expansion, self-extension as meta-pattern, project as Oxy customer-feedback loop), and Naming conventions section; CLAUDE.md reading list gained an "Exploratory (orientation, not authority)" subsection.
-- **Decisions:** None new — all decisions made in prior Chat session
-- **Status:** complete
-- **Next:** Plan 10 (BUILD.md §7 opportunistic principle) — Session 33.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 32** — 2026-05-13 00:30 ET — product-notes-creation; [`PRODUCT_NOTES.md`](PRODUCT_NOTES.md) at repo root with four exploratory entries (knowledge-graph expansion, component-graph expansion, self-extension, project as Oxy customer-feedback loop) + naming conventions; CLAUDE.md reading list gained an "Exploratory" subsection. [full narrative](docs/sessions/session-32-2026-05-13-product-notes-creation.md)
 - **Session 31** — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep; [docs/retrospective/mvp1-lessons-learned.md](docs/retrospective/mvp1-lessons-learned.md) written (2,144 words); LOG/TASKS rotated to MVP 2 plan-scoping framing; sessions 29/30 added to Recent (had been missed at commit time). [full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
 - **Session 30** — 2026-05-12 10:15 ET → 10:36 ET — plan-1b-profiles-and-erd; `scripts/profile_tables.py` + `main_admin.fct_column_profile_raw` (75 cols in 5.5s); `check_profile_staleness.py` wired into run.sh; `/profile` + `/erd` portal routes via nginx; weekly `profile-tables.timer`; commit `0a0a065`. [full narrative](docs/sessions/session-30-2026-05-12-plan-1b-profiles-and-erd.md)
 - **Session 29** — 2026-05-11 23:30 ET → 2026-05-12 00:39 ET — plan-1a-daily-refresh-and-observability; dlt destination filesystem-Parquet → DuckDB direct with `write_disposition=merge` on PK `id`; bronze view repointed at `main_bronze.raw_311_requests_raw`; audit cols added; Python-owned `fct_pipeline_run_raw` + `fct_source_health_raw`; run.sh 9→10 stages with captured-exit + `trap on_error ERR`; systemd `pipeline-refresh.timer` + `source-health-check.timer`; commit `a0f4904`; 2024 regression 113,961 exact. [full narrative](docs/sessions/session-29-2026-05-12-plan-1a-daily-refresh-and-observability.md)
@@ -266,6 +267,10 @@
 | 2026-05-13 02:00 ET | **One-shot Python ingest, not the dlt pipeline pattern, for wards** | Plan 12 Phase 2. Wards is static reference data (7 rows, won't change without redistricting); the dlt template's daily refresh + run-id tracking + systemd timer is overkill. Opportunistic principle in action: the existing pattern doesn't fit, so don't force it. Re-runnable manually; not in `./run.sh`. |
 | 2026-05-13 02:00 ET | **WKT-in-text geometry in passthrough + gold; binary GEOMETRY only on bronze raw** | Plan 12 Phase 2. Bronze raw holds DuckDB's binary `GEOMETRY` for fast spatial ops; the dbt passthrough view drops it and exposes WKT strings. Keeps dbt/duckdb compatibility clean (no geometry-type translations in views) and makes geometry portable (any analyst can `ST_GeomFromText` re-parse). |
 | 2026-05-13 02:00 ET | **Natural-key column `ward` (not `ward_number`) in gold dim** | Plan 12 Phase 2. The 311 fact column is `ward` (VARCHAR); aligning the dim's natural key to the same column name lets Airlayer's auto-join work without custom join SQL. The shapefile's `WARD` (BIGINT 1–7) is cast to VARCHAR in dim_ward to match 311's source type. |
+| 2026-05-13 02:35 ET | **Crime data ingested at bronze via the 311 dlt template** | Plan 12 Phase 3. `aghs-hqvg` is the closest data shape to 311 — incident-grain, time-series, ongoing — so the 311 dlt template applies directly: full pull + merge on PK (`incnum` for crime, `id` for 311), same audit columns, same DuckDB destination. 22,325 rows / ~8s; trivial vs 311's 1.17M. |
+| 2026-05-13 02:35 ET | **Daily refresh on `./run.sh`, not a separate timer for crime** | Plan 12 Phase 3. Source updates daily (1-month publication delay); 22K-row pull adds ~8s to `./run.sh`. Same cadence as 311 keeps the timer surface simple. New stage `1b/10` between dlt 311 and dbt run. The opportunistic principle: an analyst doesn't care about timer topology, they care about whether the data is current. |
+| 2026-05-13 02:35 ET | **Crime bronze gated; silver redaction is MVP 3 work — but PII risk is real-but-low** | Plan 12 Phase 3. Empirical audit found no names / addresses / phone / email / DOB; `incdesc` is generic NIBRS legal definitions (0 rows with `@` or phone-pattern); source-level redaction already strips time + location from sensitive incidents. Remaining concerns: `incnum` as re-identification key + `blockcode + offense + date` for rare offenses in small blocks. Limitation entry is precise about what's at risk rather than catastrophizing. |
+| 2026-05-13 02:35 ET | **`/profile` is allowed to include crime bronze view** | Plan 12 Phase 3. /profile surfaces column shape (distinct counts, null %, top-5 values) — top-5 of `incdesc` are public NIBRS legal definitions; not PII. The gating in the limitation entry applies to row-level public consumption, not column-shape metadata. /profile auto-included via existing `scripts/profile_tables.py` — 112 cols (was 95) across 11 models (was 10). |
 
 ---
 
