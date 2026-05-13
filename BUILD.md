@@ -145,7 +145,7 @@ The primer's "Oxygen" column maps each platform layer to a forward-looking produ
 
 1. **Periodic review.** Every plan kickoff checks the Oxygen changelog against this project's custom scaffolding. When a native component reaches production maturity for something we've built custom, the question is asked: do we migrate now, or wait? The default answer is "evaluate and decide deliberately," not "leave it alone."
 
-2. **Willingness to deprecate.** The project is built single-developer with Claude Code, configuration over custom code. Custom scaffolding exists where Oxygen doesn't yet, not because we prefer custom — when the platform catches up, we migrate. Sunk cost is not a reason to keep a custom thing alive.
+2. **Willingness to deprecate.** The project is built single-developer with Claude Code. Custom scaffolding exists where it produces a better analyst experience than the available Oxygen primitive; when an Oxygen primitive can produce that same experience better, the migration is scoped. Sunk cost is not a reason to keep a custom thing alive, and platform-adherence is not a reason to deprecate one before its replacement is actually better. The test is analyst experience, not calendar — see §7's opportunistic principle.
 
 ---
 
@@ -263,13 +263,26 @@ The MVP demonstrates how this kind of investigation can be done. An analyst with
 
 The architectural decisions above don't enforce themselves. A handful of disciplines run across the entire build and keep it coherent.
 
+### The opportunistic principle
+
+Analyst experience leads. Oxygen tech gets reached for when it accelerates the analyst's path through the emotional arc, when it replaces custom scaffolding with something measurably better for the analyst, or when extending the portal directly would cost more than adopting the native primitive. The criterion is analyst delight, not platform adherence.
+
+This inverts the default that earlier framings of this section implied. Custom scaffolding is not tagged-for-replacement-when-the-platform-catches-up; it is tagged-for-replacement-when-the-replacement-is-better-for-the-analyst. The Component Trajectory review at every plan kickoff (below) is the moment that judgment gets made — explicitly, with the analyst's experience as the test, not configuration-over-custom-code as the default.
+
+Two corollaries follow:
+
+1. **Pre-flight verification has teeth.** When a plan reaches for an Oxygen primitive (Builder Agent, Data Apps, Verified Queries, Routing Agent), pre-flight verifies the primitive produces the analyst experience the plan assumes. If it doesn't, the plan stops, the gap gets named, and the tool choice gets revisited — not pushed through.
+2. **Custom scaffolding earns its keep.** The portal, the answer agent's custom trust contract, the limitations registry, the auto-generated `/metrics` and `/trust` pages — these stay because they produce the analyst experience the project commits to. When an Oxygen primitive can produce that same experience better, the migration is scoped. When it can't, custom stays.
+
+The other disciplines in this section (configuration over custom code, semantic-layer-as-single-source-of-truth, verification gates, Component Trajectory) operate in service of the opportunistic principle, not as competing defaults.
+
 ### Configuration over custom code
 
-Oxygen is a declarative platform. The build uses YAML and SQL configuration wherever Oxygen supports it; custom code (Python scripts, custom agents, hand-written application logic) is the exception, reserved for places Oxygen does not yet have a native primitive. Every time custom scaffolding goes in, it's tagged for replacement when the Oxygen-native path catches up. See [Component Trajectory](#4-component-trajectory) above.
+Oxygen is a declarative platform. The build uses YAML and SQL configuration wherever Oxygen supports it; custom code (Python scripts, custom agents, hand-written application logic) is the exception, reserved for places Oxygen does not yet have a native primitive. Every time custom scaffolding goes in, it's tagged for replacement when the Oxygen-native path produces a better analyst experience. See [Component Trajectory](#4-component-trajectory) above.
 
 ### Builder Agent as the construction interface
 
-From MVP 2 onward, the construction interface for the analyst is Builder Agent. The analyst describes what they want; Builder Agent reads, modifies, and iterates on the project files. Hand-writing `.view.yml`, `.app.yml`, or `.agent.yml` is fallback, not default. This is what protects the *ownership* phase of the emotional arc — the analyst's conversational instructions are what produce the artifact.
+From MVP 2 onward, Builder Agent is the intended construction interface for the analyst — the analyst describes what they want, Builder Agent reads, modifies, and iterates on the project files. Under the opportunistic principle, Builder Agent earns this role by producing a better analyst experience than hand-writing YAML. Where it does, it's used. Where it doesn't yet — in a particular mode, against a particular file shape, at a particular maturity — hand-writing is not fallback but a deliberate tool choice, revisited as Builder Agent matures.
 
 ### Airlayer is the single semantic source of truth
 
@@ -286,7 +299,7 @@ State-gated routes (anything that requires a user account, an org, or runtime st
 
 ### Component Trajectory reviews at every plan kickoff
 
-Every plan begins with a check against the Oxygen changelog. New native components are evaluated against existing custom scaffolding. When the native option has caught up, migration is scoped explicitly — not deferred indefinitely. Custom scaffolding has an expiration date; the question is when, not whether.
+Every plan begins with a check against the Oxygen changelog. New native components are evaluated against existing custom scaffolding using the opportunistic principle as the test — does the native option produce a better analyst experience? When the answer is yes, migration is scoped explicitly. When the answer is no, custom stays without apology and the review is logged for the next plan kickoff. Custom scaffolding has an expiration date when its replacement is actually better; until then, "configuration over custom code" is the heuristic that usually serves analyst experience, not a rule that overrides it.
 
 ### The compass
 

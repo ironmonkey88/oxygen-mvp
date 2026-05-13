@@ -22,6 +22,8 @@
 | 5 | Tech Debt Sweep | done | Session 20 |
 | 9 | Allowlist Coverage, Once and For All | done | Session 16 |
 | 9 rev 2 | Allowlist Coverage + Bash Safety Hook | done | Session 17 |
+| 10 | BUILD.md §7 opportunistic principle | done | Session 33 |
+| 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -30,13 +32,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Sign-off landed Session 25 (2026-05-11) via pivot to `oxy start --local`; MVP 1.5 (Opus 4.7 + public `/chat`) closed Sessions 26–28; Plans 1a + 1b closed Sessions 29–30. Retrospective written Session 31. PRODUCT_NOTES.md exploratory notebook created Session 32. Next: Plan 10 (BUILD.md §7 opportunistic principle) + Plan 11 scoping (first Data App — rat complaints by ward).
+**Phase:** MVP 1 fully closed. Retrospective written Session 31; PRODUCT_NOTES.md created Session 32; Plan 10 closed Session 33 (BUILD.md §7 opportunistic principle landed). Next: Plan 11 scoping (first Data App — rat complaints by ward). Plan 11 execution pending Gordon's review of the scoping document.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 32 — PRODUCT_NOTES.md created)
+**Last Updated:** 2026-05-13 (Session 33 — Plan 10 close)
 
 ---
 
 ## Recent Sessions
+
+### Session 33 — 2026-05-13 00:45 ET — plan-10-opportunistic-principle
+[full narrative](docs/sessions/session-33-2026-05-13-plan-10-opportunistic-principle.md)
+
+- **Goal:** Execute Plan 10 — encode the opportunistic principle as the lead §7 subsection of BUILD.md; rewrite Builder Agent subsection in place; reconcile the two BUILD.md spots that contradicted the new framing.
+- **Shipped:** [docs/plans/plan-10-buildmd-7-opportunistic-principle.md](docs/plans/plan-10-buildmd-7-opportunistic-principle.md); BUILD.md §7 gains "The opportunistic principle" subsection at top (analyst experience leads; 2 corollaries — pre-flight has teeth, custom scaffolding earns its keep); Builder Agent subsection body rewritten ("earns the role by producing a better analyst experience"); §4 commitment #2 + §7 Component Trajectory subsection reconciled to the new framing.
+- **Decisions:** 1 decision — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 11 scoping (rat complaints by ward Data App) — Session 34. Execution pending Gordon's review.
 
 ### Session 32 — 2026-05-13 00:30 ET — product-notes-creation
 [full narrative](docs/sessions/session-32-2026-05-13-product-notes-creation.md)
@@ -74,19 +85,11 @@
 - **Status:** complete
 - **Next:** Plan 1b (column profiling + portal ERD) — Session 30.
 
-### Session 28 — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks
-[full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
-
-- **Goal:** Small portal polish — Sonnet → Opus refs in portal HTML, add Last data point + Last pipeline run stats, widen `/trust` Test Results table (clipping Expected column). Research a Somerville wards map for hero background.
-- **Shipped:** Three Sonnet → Opus refs flipped (hero prose + stack-detail + stack-tool); stats bar gained two new entries (2026-05-09 / Last data point, 2026-05-11 / Last pipeline run) with responsive auto-fit grid for the now-6 stats; trust page section max-width 1100 → 1400 → 1600 (two-pass fix), visible thin scrollbar styling cross-browser, `.test-id` switched from `white-space: nowrap` to `word-break: break-all` so 7 columns fit on standard viewports. Deployed live via scp + cp. Wards map deferred to focused pass (Socrata blob, OSM Overpass errored).
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** MVP 2 plan-scoping; queued follow-ups: auto-refresh portal dates from DuckDB on run.sh, Somerville wards map.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 28** — 2026-05-11 22:00 ET → 23:15 ET — portal-and-trust-tweaks; 3 Sonnet → Opus refs flipped in portal/index.html; stats bar gained "Last data point" + "Last pipeline run" entries (responsive auto-fit grid); trust page widened 1100 → 1600 + visible scrollbar + word-break for test IDs; wards-map hero deferred (Socrata blob-only, OSM Overpass errored). [full narrative](docs/sessions/session-28-2026-05-11-portal-and-trust-tweaks.md)
 - **Session 27** — 2026-05-11 19:20 ET → 21:50 ET — mvp1.5-public-chat-basic-auth; `/chat` exposed at `http://18.224.151.49/chat` via nginx Basic Auth (`analyst` bcrypt cred at `/etc/nginx/.htpasswd`); auth scope reduced to `/chat`-only mid-execution after SPA streaming POST was found to omit credentials; portal hero pill flipped clickable; Gate 4 PASSED — Gordon browser-tested 1,170,023 with full trust contract. [full narrative](docs/sessions/session-27-2026-05-11-mvp1.5-public-chat-basic-auth.md)
 - **Session 26** — 2026-05-11 18:50 ET → 19:15 ET — mvp1.5-opus-migration; Answer Agent switched from `claude-sonnet-4-6` (30K/min) to `claude-opus-4-7` (500K/min, 16× headroom); CLI bench 5/5 + SPA bench 5/5 in single thread no ApiError; `agent-rate-limit-multi-turn-spa` limitation marked mitigated; commit `7b7e650`. [full narrative](docs/sessions/session-26-2026-05-11-mvp1.5-opus-migration.md)
 - **Session 25** — 2026-05-11 — mvp1-signoff-via-local-pivot; multi-workspace wizard incompatible with existing DuckDB; pivoted to `oxy start --local`; SPA browser-tested 113,961 with full trust contract; reboot test passed; **MVP 1 signed off**; all 25 STANDARDS §6 boxes `[x]`. [full narrative](docs/sessions/session-25-2026-05-11-mvp1-signoff-via-local-pivot.md)
@@ -250,6 +253,7 @@
 | 2026-05-12 | **Plan 1a: Daily incremental refresh + observability.** Pipeline switched from filesystem-Parquet (year-partitioned, `write_disposition=replace`) to DuckDB destination with `write_disposition=merge` on source PK `id`. Bronze layer now split: `main_bronze.raw_311_requests_raw` (dlt-owned merge target) + `main_bronze.raw_311_requests` (dbt-owned passthrough view via `source('bronze_raw', ...)`). Audit columns added to every bronze row: `_extracted_at`, `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`. Two new Python-owned admin tables: `fct_pipeline_run_raw` (one row per `./run.sh`, INSERT at stage 0 by `pipeline_run_start.py`, UPDATE at stage 10 by `pipeline_run_end.py`, trap-on-error → `failed`) and `fct_source_health_raw` (hourly source ping). run.sh expanded 9 → 10 stages preserving the captured-exit pattern on both `dbt test` invocations. Watermark + 3-day lookback dropped during pre-flight after finding the source has NO publisher-maintained per-row modified field (verified: `rowsUpdatedAt` is republish-batch-level across the entire dataset; Socrata's `:updated_at` matches that single value for every row). Full pull on every run is correct for this source — see [`docs/limitations/source-bulk-republish-no-per-row-modified.md`](docs/limitations/source-bulk-republish-no-per-row-modified.md). dlt 1.26.0 + python-ulid 3.1.0 (new dep, added to SETUP §5). systemd timers `pipeline-refresh.timer` (daily 6 AM ET, runs `./run.sh daily`) and `source-health-check.timer` (hourly) explicitly drop `oxy.service` dependency to avoid blocking refreshes on Oxygen restarts. 2024 regression check: 113,961 (exact match to Plan 6 D3 baseline). |
 | 2026-05-12 17:41 ET | **MVP 1 retrospective written; institutional knowledge captured before MVP 2 kicks off.** Document at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md) covers Oxygen findings (`--local` canonical for existing-warehouse users; Builder Agent / `--local` interaction not yet pre-flight-verified for MVP 2; rate limits matter more than expected), build pattern (config-over-code, docs-as-deliverable, verification gates), Gordon-as-customer (compass works, real friction surfaces real feedback), and what's load-bearing for MVPs 2–4. Closes the institutional-knowledge gap before MVP 2 plan-scoping. |
 | 2026-05-12 18:35 ET | `claude/eloquent-varahamihira-a0c106` fast-forward-merged to `origin/main` (`0a0a065..a36e28e`). Covers Session 31 retrospective + LOG/TASKS rotation + Plan 1b Phase 8 tick. Plans 1a (`a0f4904`) and 1b (`0a0a065`) had already been pushed to `origin/main` between Sessions 30 and 31; this merge brings the retrospective + paper-trail catch-up across. |
+| 2026-05-13 01:00 ET | **BUILD.md §7 opportunistic principle landed** (Plan 10) | Analyst experience leads; Oxygen tech gets reached for when it produces a better analyst experience than custom scaffolding (or vice versa). Inverts the prior framing where custom scaffolding was tagged-for-replacement-when-the-platform-catches-up. New §7 lead subsection + Builder Agent subsection rewrite + §4 commitment #2 + §7 Component Trajectory subsection all reconciled. Operationalizes the retrospective lesson (Session 31) that platform-adherence is not the test. Pre-flight verification has teeth: when a plan reaches for an Oxygen primitive, pre-flight verifies the primitive produces the experience the plan assumes; if it doesn't, the plan stops. |
 
 ---
 

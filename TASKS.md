@@ -5,41 +5,17 @@
 
 ---
 
-## Next Focus — MVP 2 Plan-Scoping: First Data App via Builder Agent
+## Next Focus — Plan 11 Execution (pending Gordon's review of scoping doc)
 
-MVP 1 fully closed. Sign-off landed Session 25 (`oxy start --local` pivot); MVP 1.5 closed Sessions 26–28 (Opus 4.7 + public `/chat`); Plans 1a + 1b closed Sessions 29–30 (daily incremental refresh + observability + column profiling + `/erd` + `/profile`). Retrospective at [`docs/retrospective/mvp1-lessons-learned.md`](docs/retrospective/mvp1-lessons-learned.md) (Session 31).
+Plan 10 closed Session 33 — BUILD.md §7 opportunistic principle landed. PRODUCT_NOTES.md created Session 32. Plan 11 scoping document drafted Session 34 at [`docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md`](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md); execution pending Gordon's review.
 
 The first MVP 2 deliverable is **one dashboard built through conversation with Builder Agent**. The dashboard demonstrates the analyst-outcome test from BUILD.md §5: "The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML."
 
-Per the MVP.md Working Backwards example, the anchor target is service equity across neighborhoods, with four investigative angles (volume, resolution rate, resolution time, service mix) one click apart.
+Plan 11 commits to **rat complaints by ward** as the single anchor topic (analyst Question 1 — frequency, resolution speed, volume trend, service equity). Survey-by-ward extension and the broader equity dashboard queued as follow-on plans, not bundled in Plan 11.
 
-### Scope decisions to be made (in plan-scoping session)
+### Scoping document
 
-- [ ] **Which first dashboard?** Options: single-angle (resolution time by ward) vs multi-angle (full equity dashboard) vs two-step build (single-angle then expand via conversation)
-- [ ] **What semantic-layer additions are required?** Likely `avg_days_to_close` measure, resolution-time-band dimension, possibly category rollup
-- [ ] **What does the Builder Agent conversation look like?** Capture the intended demo transcript before construction so we can measure how close the actual session lands
-- [ ] **What surface?** Portal `/dashboard` route, in-chat embedding (`run_app` tool), or both
-- [ ] **Where does the dashboard reference the new audit columns and trust signals?** Should `_extracted_at` of the latest record appear somewhere — and does the dashboard read from `fct_pipeline_run_raw` for a "last refreshed" line?
-
-### Pre-flight verification needed (do BEFORE plan-scoping commits to shape)
-
-Builder Agent is documented in Oxygen changelogs ([2026-04-09](docs/oxygen-docs/changelog/2026-04-09.md) intro, [2026-04-16](docs/oxygen-docs/changelog/2026-04-16.md) improvements, [2026-05-07](docs/oxygen-docs/changelog/2026-05-07.md) major upgrade) but NOT in the canonical `learn-about-oxy/` guide. Per the changelogs, Builder is "a builder copilot agent that can read, modify, and iterate on your Oxygen project files" — workspace-wide, not Data-App-specific. UI surface is the chat panel's "Build mode" (alongside "Ask mode"), plus a dedicated Builder Dialog. Tools include `run_app` (executes a Data App by path, fed back as context), `read_file`, file-edit tools with HITL approvals, and 15+ dbt-aware tools.
-
-- [ ] **"Build mode" reachable in the chat panel** at `http://18.224.151.49/chat` (Basic Auth) or `http://oxygen-mvp.taildee698.ts.net:3000` (Tailnet) — does the chat panel offer Build mode alongside Ask mode in `--local` mode?
-- [ ] **Builder can read/modify YAML files in the workspace** — the canonical capability test; should produce `FileChangePending` events with HITL approval
-- [ ] **Data Apps render in the SPA** — `oxy run apps/foo.app.yml` or the IDE's app browser; note that `oxy build` is for vector embeddings, not Data App rendering
-- [ ] **Builder's `run_app` tool works in `--local` mode** — the key MVP 2 capability (Builder builds → runs → refines a dashboard in one loop)
-- [ ] **No multi-workspace wizard gates Build mode in `--local`** — would re-introduce the Session 25 blocker
-- [ ] **Latest Oxygen changelog reviewed at plan-scoping** — per retrospective lesson, platform velocity has been delivering Verified Queries, Data Apps, Slack, MCP, A2A throughout this project
-
-### Out of scope for MVP 2's first plan
-
-- Additional data sources (weather first, then ward + demographics — each its own plan)
-- Expanded trust page prose (own plan)
-- Full Data Apps library (MVP 4)
-- Routing Agent / multi-topic dispatch (MVP 4)
-- Slack / MCP / A2A sharing surfaces (MVP 4)
-- Return to multi-workspace mode (MVP 4 prerequisite, not MVP 2)
+All scope decisions, pre-flight gates, phases, and sign-off gates live in [`docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md`](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md). Plan 11 is a scoping document only — execution waits on Gordon's review.
 
 ### Carry-over queued items (independent of MVP 2)
 
