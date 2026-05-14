@@ -71,6 +71,13 @@
   affects:
     - current_date
   path: docs/limitations/current-year-partial.md
+- id: dashboard-render-spa-only
+  title: Data App visual render verified only in the SPA; CLI rendering not available
+  severity: info
+  affects:
+    - apps/rat_complaints_by_ward.app.yml
+    - main_gold.fct_311_requests
+  path: docs/limitations/dashboard-render-spa-only.md
 - id: dept-tags-as-booleans
   title: Department tags are flat boolean columns on the fact, not a dim
   severity: info
@@ -109,6 +116,12 @@
   affects:
     - deploy.oxy_build
   path: docs/limitations/oxy-build-postgres-dependency.md
+- id: plan-11-builder-cli-token-budget-hang
+  title: "Builder Agent CLI hangs after answering \"Continue with double budget\""
+  severity: info
+  affects:
+    - oxy agentic run --domain builder
+  path: docs/limitations/plan-11-builder-cli-token-budget-hang.md
 - id: portal-deploy-file-ownership
   title: "run.sh's portal-deploy stages fail when /var/www files are root-owned"
   severity: warning

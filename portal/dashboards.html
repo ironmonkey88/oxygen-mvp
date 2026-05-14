@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Somerville Analytics — Dashboards</title>
+  <style>
+    @font-face { font-family: 'DM Serif Display'; src: url('/fonts/DMSerifDisplay-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'DM Mono'; src: url('/fonts/DMMono-Regular.woff2') format('woff2'); }
+    @font-face { font-family: 'DM Mono'; font-weight: 500; src: url('/fonts/DMMono-Medium.woff2') format('woff2'); }
+    @font-face { font-family: 'Instrument Sans'; src: url('/fonts/InstrumentSans-Regular.woff2') format('woff2'); }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #1e4d2b;
+      --green-mid:  #2d6a3f;
+      --green-pale: #e8f0eb;
+      --bg:         #f7f6f2;
+      --border:     #e2dfd8;
+      --text:       #1a1a1a;
+      --text-mid:   #4a4a4a;
+      --text-muted: #8a8a8a;
+      --white:      #ffffff;
+    }
+
+    body {
+      font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 52px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'DM Serif Display', serif; font-size: 18px;
+    }
+    .nav-badge {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      color: var(--green); background: var(--green-pale);
+      padding: 2px 8px; border-radius: 3px;
+    }
+    .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--text-mid); }
+    .nav-links a { transition: color .15s; text-decoration: none; }
+    .nav-links a:hover { color: var(--text); }
+
+    main { max-width: 980px; margin: 56px auto 80px; padding: 0 40px; }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      font-weight: 400;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+    h1 em { font-style: italic; color: var(--green-mid); }
+    .lede {
+      max-width: 720px;
+      color: var(--text-mid);
+      margin-bottom: 40px;
+    }
+
+    .dash {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    .dash-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 32px;
+      transition: border-color .15s, transform .15s;
+    }
+    .dash-card:hover {
+      border-color: var(--green-mid);
+    }
+    .dash-card-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 12px;
+    }
+    .dash-card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      letter-spacing: -0.2px;
+    }
+    .dash-card-id {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .dash-card-desc {
+      color: var(--text-mid);
+      margin-bottom: 16px;
+    }
+    .dash-card-meta {
+      display: flex; flex-wrap: wrap; gap: 16px 32px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .dash-card-meta span strong {
+      font-weight: 500; color: var(--text-mid);
+    }
+    .dash-card-link {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--green);
+      text-decoration: none;
+      padding: 8px 14px;
+      border: 1px solid var(--green-mid);
+      border-radius: 3px;
+      transition: background .15s, color .15s;
+    }
+    .dash-card-link:hover {
+      background: var(--green);
+      color: var(--white);
+    }
+
+    .footnote {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .footnote code {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      background: var(--green-pale);
+      padding: 1px 6px;
+      border-radius: 2px;
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-brand">
+      Somerville Analytics
+      <span class="nav-badge">MVP 2</span>
+    </div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/docs/">Data dictionary</a>
+      <a href="/erd">Schema</a>
+      <a href="/metrics">Metrics</a>
+      <a href="/profile">Profiles</a>
+      <a href="/trust">Trust</a>
+      <a href="/dashboards">Dashboards</a>
+    </div>
+  </nav>
+
+  <main>
+    <h1>Dashboards</h1>
+    <p class="lede">
+      Conversational dashboards built on top of <code style="font-family:'DM Mono',monospace;background:var(--green-pale);color:var(--green);padding:1px 6px;border-radius:2px;font-size:12px">main_gold</code>.
+      Each one is a versioned <code style="font-family:'DM Mono',monospace;background:var(--green-pale);color:var(--green);padding:1px 6px;border-radius:2px;font-size:12px">apps/*.app.yml</code>
+      file in the repo. The rendered view opens in the Oxygen workspace.
+    </p>
+
+    <div class="dash">
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <div class="dash-card-title">Rat complaints by ward</div>
+          <div class="dash-card-id">apps/rat_complaints_by_ward.app.yml</div>
+        </div>
+        <div class="dash-card-desc">
+          Somerville rat complaints — frequency, resolution speed, volume
+          trend (2015–present), and ward-level service equity. 14,036
+          complaints across four request types
+          (<code style="font-family:'DM Mono',monospace;font-size:12px">Rats</code>,
+          <code style="font-family:'DM Mono',monospace;font-size:12px">Rodent Assistance Program request</code>,
+          <code style="font-family:'DM Mono',monospace;font-size:12px">Rodent Assistance Program inquiry</code>,
+          <code style="font-family:'DM Mono',monospace;font-size:12px">School Rodent Control</code>).
+          Citations and limitations are part of the dashboard itself —
+          the same trust contract the chat agent carries.
+        </div>
+        <div class="dash-card-meta">
+          <span><strong>Plan:</strong> 11</span>
+          <span><strong>Rows:</strong> 14,036</span>
+          <span><strong>Wards covered:</strong> 7 (167 NULL excluded)</span>
+          <span><strong>Coverage:</strong> 2015–2026</span>
+          <span><strong>Trust signals:</strong> last_refreshed · citations · limitations</span>
+        </div>
+        <a href="http://oxygen-mvp.taildee698.ts.net:3000/apps/rat_complaints_by_ward" class="dash-card-link">Open in workspace →</a>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Plan 11 (2026-05-13) hand-wrote this listing. Future plans will
+      auto-generate the page from <code>apps/*.app.yml</code> metadata so
+      new dashboards surface automatically. Plan 11 used Builder Agent
+      (Oxygen's project-file copilot) to verify the underlying SQL and
+      data shape before the YAML was written; see the transcript in
+      <code>docs/transcripts/</code>.
+    </p>
+  </main>
+</body>
+</html>
