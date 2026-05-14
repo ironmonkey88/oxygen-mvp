@@ -26,7 +26,7 @@
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
 | 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | done | Phase 1 (inventory) Session 35; Phase 2 (wards) Session 36; Phase 3 (crime bronze) Session 37 |
 | 13 | Crime Gold Layer — fct_crime_incidents + dim_offense_* + public_safety topic | done | Session 38 (6 phases — pre-flight + fact + 2 dims + semantic + limitations + close) |
-| 11 | MVP 2 — First Data App (rat complaints by ward) | done (partial render gate) | Session 39 — 9 phases; Builder CLI used for SQL verification; .app.yml hand-written after CLI token-budget hang; SPA visual render deferred |
+| 11 | MVP 2 — First Data App (rat complaints by ward) | done (visual gate pending operator re-verify after Session 41 fix) | Session 39 — 9 phases. Session 41 — diagnosed `InvalidCharacterError: atob` on the rendered dashboard as the SPA failing on UTF-8 in `.app.yml`; ASCII-ified the 15 non-ASCII chars (10 em-dashes + 1 en-dash + 4 left-right arrows); fix on PR #1. |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -35,9 +35,9 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 closed. Plan 12 done; Plan 13 done; **Plan 11 done Session 39** (rat-complaints-by-ward dashboard, hand-written .app.yml using Builder-verified SQL; SPA visual render gate deferred); Plan 14 (operational hygiene) next.
+**Phase:** MVP 1 closed. Plan 12 done; Plan 13 done; Plan 11 dashboard built Session 39 + render-error fixed Session 41 (ASCII-ified `.app.yml`; operator re-verify pending); Plan 14 done Session 40 (drift-fail + portal-deploy + LOG compression — `./run.sh` lands `success` again).
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 39 — Plan 11 rat-complaints dashboard)
+**Last Updated:** 2026-05-14 (Session 41 — Plan 11 dashboard SPA-render fix)
 
 ---
 

@@ -1,6 +1,6 @@
 name: rat_complaints_by_ward
 description: |
-  Somerville rat complaints — frequency, resolution speed, volume trend,
+  Somerville rat complaints -- frequency, resolution speed, volume trend,
   and ward-level service equity. 14,036 complaints across 4
   request_type values (`Rats`, `Rodent Assistance Program request`,
   `Rodent Assistance Program inquiry`, `School Rodent Control`).
@@ -12,7 +12,7 @@ description: |
   ward and are excluded from the by-ward view).
 
 tasks:
-  # 1 — Frequency: total rat complaints (single number).
+  # 1 -- Frequency: total rat complaints (single number).
   - name: total_rat_complaints
     type: execute_sql
     database: somerville
@@ -30,7 +30,7 @@ tasks:
       )
       SELECT COUNT(*) AS total_rat_complaints FROM rats
 
-  # 2 — Resolution speed: bucketed days-to-close for closed complaints.
+  # 2 -- Resolution speed: bucketed days-to-close for closed complaints.
   #     Median ~4d, long tail to 365+ days. Source-derived buckets.
   - name: resolution_buckets
     type: execute_sql
@@ -71,7 +71,7 @@ tasks:
       GROUP BY 1
       ORDER BY MIN(days_to_close)
 
-  # 3 — Volume trend: complaints by year, 2015–present.
+  # 3 -- Volume trend: complaints by year, 2015-present.
   - name: volume_by_year
     type: execute_sql
     database: somerville
@@ -94,7 +94,7 @@ tasks:
       GROUP BY d.year
       ORDER BY d.year
 
-  # 4 — Service equity: complaints by ward + density per sqkm.
+  # 4 -- Service equity: complaints by ward + density per sqkm.
   #     Excludes the 167 NULL-ward rows (1.2% of complaints).
   - name: complaints_by_ward
     type: execute_sql
@@ -122,7 +122,7 @@ tasks:
       GROUP BY w.ward_name, w.area_sqkm
       ORDER BY w.ward_name
 
-  # 5 — Trust signal: last successful pipeline refresh.
+  # 5 -- Trust signal: last successful pipeline refresh.
   - name: last_refreshed
     type: execute_sql
     database: somerville
@@ -141,8 +141,8 @@ display:
       (`Rats`, `Rodent Assistance Program request`,
       `Rodent Assistance Program inquiry`, `School Rodent Control`)
       from 2015 to present. Source:
-      `main_gold.fct_311_requests` ↔ `main_gold.dim_request_type` ↔
-      `main_gold.dim_status` ↔ `main_gold.dim_ward` ↔
+      `main_gold.fct_311_requests` + `main_gold.dim_request_type` +
+      `main_gold.dim_status` + `main_gold.dim_ward` +
       `main_gold.dim_date`.
 
   - type: table
@@ -154,7 +154,7 @@ display:
     data: total_rat_complaints
 
   - type: bar_chart
-    title: Complaints by ward (excludes 167 rows with NULL ward — see limitation)
+    title: Complaints by ward (excludes 167 rows with NULL ward -- see limitation)
     data: complaints_by_ward
     x: ward_name
     y: complaints
@@ -181,19 +181,19 @@ display:
     content: |
       ## Citations
 
-      - Fact: `main_gold.fct_311_requests` — bronze sourced from Socrata
+      - Fact: `main_gold.fct_311_requests` -- bronze sourced from Socrata
         `4pyi-uqq6` (Somerville 311 SODA API). 1,170,637 total 311 rows
         as of last refresh.
       - Dims: `main_gold.dim_request_type` (rat filter),
         `main_gold.dim_status` (Closed filter on resolution speed),
         `main_gold.dim_ward` (ward name + area), `main_gold.dim_date`
         (year on the trend chart).
-      - Freshness: `main_admin.fct_pipeline_run_raw` — UTC timestamp of
+      - Freshness: `main_admin.fct_pipeline_run_raw` -- UTC timestamp of
         the most recent successful or partial pipeline run.
 
       ## Known limitations
 
-      - **`location-ward-block-only`** — Bronze ward field is the only
+      - **`location-ward-block-only`** -- Bronze ward field is the only
         geo column populated for 311. The 167 rat complaints with
         NULL ward (1.2% of the total) are excluded from the by-ward
         chart. See `docs/limitations/location-ward-block-only.md`.
