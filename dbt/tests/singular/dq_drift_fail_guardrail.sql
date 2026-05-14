@@ -6,7 +6,7 @@
 -- combines into the final exit code.
 --
 -- This is the seam that turns "fct_test_run captures a drift" into
--- "the pipeline run actually fails" — required by STANDARDS.md §5.5
+-- "the pipeline run actually fails" -- required by STANDARDS.md sect.5.5
 -- ("Pipeline returns non-zero exit code on test failure beyond
 -- tolerance").
 

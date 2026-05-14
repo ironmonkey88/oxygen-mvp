@@ -1,5 +1,5 @@
 name: dates
-description: "Date dimension — one row per day"
+description: "Date dimension -- one row per day"
 table: main_gold.dim_date
 datasource: somerville
 

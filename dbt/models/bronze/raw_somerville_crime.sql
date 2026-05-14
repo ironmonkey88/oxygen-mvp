@@ -7,7 +7,7 @@
 --
 -- Source-level PII redaction is already applied at the city level
 -- (sensitive incidents stripped of time / location), but the bronze
--- table is still PII-adjacent — see
+-- table is still PII-adjacent -- see
 -- docs/limitations/crime-data-pii-unredacted-in-bronze.md. Silver-layer
 -- redaction is MVP 3 work.
 --

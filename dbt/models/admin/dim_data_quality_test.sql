@@ -11,14 +11,14 @@
 -- requires a manual update (out of scope for MVP 1).
 --
 -- Three sources of test_ids:
---   1. baseline.raw_311_requests.year_<YYYY>.row_count   — bronze yearly
---   2. baseline.<table>.all.row_count                    — total per table
---   3. dbt_test.<node_name>                              — every dbt test
+--   1. baseline.raw_311_requests.year_<YYYY>.row_count   -- bronze yearly
+--   2. baseline.<table>.all.row_count                    -- total per table
+--   3. dbt_test.<node_name>                              -- every dbt test
 
 with baselines_yearly as (
     -- Per-year row-count baselines. **Active baselines exclude the
     -- current calendar year** (Plan 14a, 2026-05-13): a current-year
-    -- baseline certified mid-year is structurally unstable — the row
+    -- baseline certified mid-year is structurally unstable -- the row
     -- count grows daily as new 311 requests are filed, and a 1%
     -- tolerance trips after a few days of normal ingestion. We still
     -- emit the current-year row (with `is_active = false`) so the dim

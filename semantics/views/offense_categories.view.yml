@@ -1,5 +1,5 @@
 name: offense_categories
-description: "NIBRS top-level offense category dimension (4 categories — Person, Property, Society, Other)."
+description: "NIBRS top-level offense category dimension (4 categories -- Person, Property, Society, Other)."
 table: main_gold.dim_offense_category
 datasource: somerville
 
@@ -18,7 +18,7 @@ dimensions:
   - name: severity_rank
     type: number
     expr: severity_rank
-    description: "Editorial ordinal — 1=Person, 2=Property, 3=Society, 4=Other. Used for consistent sort order in dashboards."
+    description: "Editorial ordinal -- 1=Person, 2=Property, 3=Society, 4=Other. Used for consistent sort order in dashboards."
 
 measures:
   - name: category_count

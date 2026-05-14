@@ -5,7 +5,7 @@ models:
     description: |
       Date dimension covering the full span of observed 311 requests plus
       a 30-day forward buffer (min(date_created) to max(date_created) + 30
-      days). Generated from a date spine — not sourced from the 311 feed.
+      days). Generated from a date spine -- not sourced from the 311 feed.
       Canonical date spine: every gold time dimension joins here.
     columns:
       - name: date_dt
@@ -16,23 +16,23 @@ models:
       - name: year
         description: 'Four-digit year (YYYY) extracted from date_dt.'
       - name: quarter
-        description: 'Calendar quarter 1–4.'
+        description: 'Calendar quarter 1-4.'
       - name: month
-        description: 'Month number 1–12.'
+        description: 'Month number 1-12.'
       - name: month_name
-        description: 'Full English month name (January, February, …).'
+        description: 'Full English month name (January, February, ...).'
       - name: day
-        description: 'Day of month 1–31.'
+        description: 'Day of month 1-31.'
       - name: day_of_week
         description: 'Day-of-week index. DuckDB extract(dow): 0=Sunday, 6=Saturday.'
       - name: day_name
-        description: 'Full English day name (Monday, Tuesday, …).'
+        description: 'Full English day name (Monday, Tuesday, ...).'
       - name: week_of_year
-        description: 'ISO week-of-year 1–53.'
+        description: 'ISO week-of-year 1-53.'
       - name: is_weekend
-        description: 'Boolean — TRUE for Saturday and Sunday.'
+        description: 'Boolean -- TRUE for Saturday and Sunday.'
       - name: fiscal_year
-        description: 'Fiscal year. Currently equals calendar year — Somerville fiscal calendar mapping TBD.'
+        description: 'Fiscal year. Currently equals calendar year -- Somerville fiscal calendar mapping TBD.'
 
   - name: dim_request_type
     description: |
@@ -42,7 +42,7 @@ models:
       stable joins across pipeline runs.
     columns:
       - name: request_type_id
-        description: 'Surrogate primary key — md5 hash of request_type.'
+        description: 'Surrogate primary key -- md5 hash of request_type.'
         data_tests:
           - not_null
           - unique
@@ -61,10 +61,10 @@ models:
     description: |
       Distinct statuses observed in raw_311_requests with derived `is_open`
       boolean. Mapping has no ambiguity in the four observed values:
-      Closed → FALSE; Open / In Progress / On Hold → TRUE.
+      Closed -> FALSE; Open / In Progress / On Hold -> TRUE.
     columns:
       - name: status_id
-        description: 'Surrogate primary key — md5 hash of status.'
+        description: 'Surrogate primary key -- md5 hash of status.'
         data_tests:
           - not_null
           - unique
@@ -76,7 +76,7 @@ models:
               arguments:
                 values: ['Open', 'Closed', 'In Progress', 'On Hold']
       - name: is_open
-        description: 'Boolean — FALSE for Closed; TRUE for Open / In Progress / On Hold.'
+        description: 'Boolean -- FALSE for Closed; TRUE for Open / In Progress / On Hold.'
       - name: first_seen_dt
         description: 'Earliest date_created among requests with this status.'
       - name: last_seen_dt
@@ -85,17 +85,17 @@ models:
   - name: fct_311_requests
     description: |
       One row per Somerville 311 request. Grain: one request.
-      Location denormalized at this layer — bronze carries only `ward`
+      Location denormalized at this layer -- bronze carries only `ward`
       and `block_code` (no neighborhood/lat/long/address). dim_location
       is deferred to MVP 3, where Silver will also redact PII.
       Survey columns (accuracy / courtesy / ease / overallexperience)
-      flow through but are sparse — see
+      flow through but are sparse -- see
       docs/limitations/2024-survey-columns-sparse.md.
       Department tag columns are cast from VARCHAR '0'/'1' to BOOLEAN via
       try_cast (NULL preserved when source is empty).
     columns:
       - name: id
-        description: 'Somerville 311 request ID — natural key sourced from bronze.id.'
+        description: 'Somerville 311 request ID -- natural key sourced from bronze.id.'
         data_tests:
           - not_null
           - unique
@@ -134,72 +134,72 @@ models:
       - name: most_recent_status_ts
         description: 'Full timestamp the most recent status was set.'
       - name: ward
-        description: 'Somerville ward 1–7 as VARCHAR. NULL when unknown.'
+        description: 'Somerville ward 1-7 as VARCHAR. NULL when unknown.'
       - name: block_code
-        description: 'Block identifier. Carried through from source — still padded with spaces when unknown; cleanup deferred to Silver. See docs/limitations/block-code-padded.md.'
+        description: 'Block identifier. Carried through from source -- still padded with spaces when unknown; cleanup deferred to Silver. See docs/limitations/block-code-padded.md.'
       - name: accuracy
-        description: 'Post-resolution survey field for accuracy. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+        description: 'Post-resolution survey field for accuracy. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: courtesy
-        description: 'Post-resolution survey field for courtesy. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+        description: 'Post-resolution survey field for courtesy. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: ease
-        description: 'Post-resolution survey field for ease. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+        description: 'Post-resolution survey field for ease. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: overallexperience
-        description: 'Post-resolution survey field for overall experience. Sparse — see docs/limitations/2024-survey-columns-sparse.md.'
+        description: 'Post-resolution survey field for overall experience. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: is_emergency_readiness_tag
-        description: 'Department tag — emergency readiness and response planning. Boolean. Sparse.'
+        description: 'Department tag -- emergency readiness and response planning. Boolean. Sparse.'
       - name: is_green_space_tag
-        description: 'Department tag — green space care and maintenance. Boolean. Sparse.'
+        description: 'Department tag -- green space care and maintenance. Boolean. Sparse.'
       - name: is_infrastructure_tag
-        description: 'Department tag — infrastructure maintenance and repairs. Boolean. Sparse.'
+        description: 'Department tag -- infrastructure maintenance and repairs. Boolean. Sparse.'
       - name: is_noise_tag
-        description: 'Department tag — noise and activity disturbances. Boolean. Sparse.'
+        description: 'Department tag -- noise and activity disturbances. Boolean. Sparse.'
       - name: is_reliable_service_tag
-        description: 'Department tag — reliable service delivery. Boolean. Sparse.'
+        description: 'Department tag -- reliable service delivery. Boolean. Sparse.'
       - name: is_city_services_tag
-        description: 'Department tag — navigating city services and policies. Boolean. Sparse.'
+        description: 'Department tag -- navigating city services and policies. Boolean. Sparse.'
       - name: is_public_space_tag
-        description: 'Department tag — public space cleanliness and environmental health. Boolean. Sparse.'
+        description: 'Department tag -- public space cleanliness and environmental health. Boolean. Sparse.'
       - name: is_voting_tag
-        description: 'Department tag — voting and election information. Boolean. Sparse.'
+        description: 'Department tag -- voting and election information. Boolean. Sparse.'
 
   - name: dim_ward
     description: |
       Gold dimension over Somerville's 7 administrative wards. Sourced
       from the Socrata `ym5n-phxd` shapefile (2020 Census redistricting).
-      Static reference data — drops + rebuilds on each
+      Static reference data -- drops + rebuilds on each
       `scripts/ingest_somerville_wards.py` run. Natural-key joins to
       `fct_311_requests` on `ward` (VARCHAR in both tables).
     columns:
       - name: ward_id
-        description: 'Surrogate key — md5(ward). Matches the SK pattern of the other gold dims.'
+        description: 'Surrogate key -- md5(ward). Matches the SK pattern of the other gold dims.'
         data_tests:
           - not_null
           - unique
       - name: ward
-        description: 'Ward number (1–7) as VARCHAR. Matches `fct_311_requests.ward` for natural-key joins.'
+        description: 'Ward number (1-7) as VARCHAR. Matches `fct_311_requests.ward` for natural-key joins.'
         data_tests:
           - not_null
           - unique
       - name: ward_name
-        description: 'Human-readable label, "Ward N". Derived (the source shapefile has no name column — just numbers).'
+        description: 'Human-readable label, "Ward N". Derived (the source shapefile has no name column -- just numbers).'
       - name: geometry_wkt_wgs84
         description: 'Polygon geometry as WKT in WGS84 (EPSG:4326). Lat/lng-friendly; use ST_GeomFromText to re-parse for spatial operations.'
       - name: area_sqm
         description: 'Polygon area in square meters, converted from the source projection (NAD83 / MA Mainland, US survey feet).'
       - name: area_sqkm
-        description: 'Polygon area in square kilometers. Wards are ~1.3–2.7 sq km.'
+        description: 'Polygon area in square kilometers. Wards are ~1.3-2.7 sq km.'
       - name: perimeter_m
         description: 'Polygon perimeter in meters, converted from US survey feet.'
       - name: _source_url
-        description: 'Lineage — canonical Socrata permalink for the source dataset.'
+        description: 'Lineage -- canonical Socrata permalink for the source dataset.'
       - name: _extracted_at
-        description: 'Lineage — UTC timestamp when the shapefile was last ingested.'
+        description: 'Lineage -- UTC timestamp when the shapefile was last ingested.'
 
   - name: fct_crime_incidents
     description: |
       Gold fact over Somerville Police incident reports (Socrata
       `aghs-hqvg`). One row per source case number. 22,325 rows
-      covering 2017–present. Surrogate PK with the source case_number
+      covering 2017-present. Surrogate PK with the source case_number
       preserved for analyst back-reference to the public police log.
       Three source-data realities handled in-model (sensitive incident
       redaction, multi-code offense groupings, ward coverage gaps);
@@ -209,7 +209,7 @@ models:
       the Plan 13 design.
     columns:
       - name: incident_id
-        description: 'Surrogate PK — md5(case_number). Matches the gold-dim pattern.'
+        description: 'Surrogate PK -- md5(case_number). Matches the gold-dim pattern.'
         data_tests:
           - not_null
           - unique
@@ -219,7 +219,7 @@ models:
           - not_null
           - unique
       - name: incident_dt
-        description: 'Date the incident was reported. NULL for ~12.5% of rows (sensitive incidents — day-and-month withheld at source). See docs/limitations/crime-sensitive-incidents-no-month.md.'
+        description: 'Date the incident was reported. NULL for ~12.5% of rows (sensitive incidents -- day-and-month withheld at source). See docs/limitations/crime-sensitive-incidents-no-month.md.'
       - name: incident_year
         description: 'Year the incident was reported. Populated for all rows.'
         data_tests:
@@ -250,17 +250,17 @@ models:
               arguments:
                 values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
       - name: ward
-        description: 'Somerville ward (TRIM applied; source pads to length 15). 7 valid ward strings (1–7), NULL for ~13% of rows, "CAM" for 2 cross-jurisdiction rows. See docs/limitations/crime-ward-coverage-gaps.md.'
+        description: 'Somerville ward (TRIM applied; source pads to length 15). 7 valid ward strings (1-7), NULL for ~13% of rows, "CAM" for 2 cross-jurisdiction rows. See docs/limitations/crime-ward-coverage-gaps.md.'
       - name: block_code
         description: '15-character census block code. NULL for sensitive incidents (same 2,798 rows as NULL incident_dt). Block-level analysis on the full dataset is therefore similarly bounded.'
       - name: _extracted_at
-        description: 'Lineage — UTC timestamp when the most recent pipeline run touched this row.'
+        description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
       - name: _extracted_run_id
-        description: 'Lineage — ULID of the pipeline run that touched this row.'
+        description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _first_seen_at
-        description: 'Lineage — UTC timestamp when this incident was first ingested. Preserved across re-extractions.'
+        description: 'Lineage -- UTC timestamp when this incident was first ingested. Preserved across re-extractions.'
       - name: _source_endpoint
-        description: 'Lineage — Socrata SODA URL the row came from.'
+        description: 'Lineage -- Socrata SODA URL the row came from.'
       - name: ward
         data_tests:
           - relationships:
@@ -287,7 +287,7 @@ models:
       One row per distinct offense_code value observed on
       fct_crime_incidents. 39 rows: 37 atomic NIBRS codes plus 2
       source-side multi-code grouping strings. Carries the NIBRS
-      offense hierarchy (offense → offense_type → offense_category)
+      offense hierarchy (offense -> offense_type -> offense_category)
       denormalized. is_multi_offense_grouping flags the 2 grouping-
       string rows.
     columns:
@@ -301,7 +301,7 @@ models:
         data_tests:
           - not_null
       - name: offense_type
-        description: 'NIBRS offense type — sub-category grouping.'
+        description: 'NIBRS offense type -- sub-category grouping.'
         data_tests:
           - not_null
       - name: offense_category
@@ -339,7 +339,7 @@ models:
               arguments:
                 values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
       - name: severity_rank
-        description: 'Editorial ordinal — 1=Person, 2=Property, 3=Society, 4=Other.'
+        description: 'Editorial ordinal -- 1=Person, 2=Property, 3=Society, 4=Other.'
         data_tests:
           - not_null
           - unique

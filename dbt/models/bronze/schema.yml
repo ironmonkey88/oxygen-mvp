@@ -45,7 +45,7 @@ models:
       Bronze view over the Somerville 311 SODA mirror. Passes the 22
       source columns through `main_bronze.raw_311_requests_raw` (dlt-owned)
       and carries the pipeline-metadata columns through to gold. Arrival
-      checks only — type casts, referential integrity, and PII redaction
+      checks only -- type casts, referential integrity, and PII redaction
       are deferred to silver/gold.
     columns:
       - name: id
@@ -75,19 +75,19 @@ models:
       - name: most_recent_status_date
         description: 'Timestamp the most recent status was last set. VARCHAR at bronze; cast in gold.'
       - name: block_code
-        description: 'Block identifier. Padded with spaces in source when unknown — see [docs/limitations/block-code-padded.md](../../../docs/limitations/block-code-padded.md). Cleanup deferred to Silver (MVP 3).'
+        description: 'Block identifier. Padded with spaces in source when unknown -- see [docs/limitations/block-code-padded.md](../../../docs/limitations/block-code-padded.md). Cleanup deferred to Silver (MVP 3).'
       - name: ward
-        description: 'Somerville ward 1–7 as VARCHAR. NULL when unknown.'
+        description: 'Somerville ward 1-7 as VARCHAR. NULL when unknown.'
       - name: accuracy
-        description: 'Post-resolution survey field for accuracy. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+        description: 'Post-resolution survey field for accuracy. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: courtesy
-        description: 'Post-resolution survey field for courtesy. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+        description: 'Post-resolution survey field for courtesy. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: ease
-        description: 'Post-resolution survey field for ease. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+        description: 'Post-resolution survey field for ease. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: overallexperience
-        description: 'Post-resolution survey field for overall experience. Sparse (<1% of rows) — see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
+        description: 'Post-resolution survey field for overall experience. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: emergency_readiness_and_response_planning
-        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_emergency_readiness_tag`). Sparse — only ~4,187 rows of 1.17M carry any dept tag."
+        description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_emergency_readiness_tag`). Sparse -- only ~4,187 rows of 1.17M carry any dept tag."
       - name: green_space_care_and_maintenance
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_green_space_tag`). Sparse."
       - name: infrastructure_maintenance_and_repairs
@@ -104,19 +104,19 @@ models:
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_voting_tag`). Sparse."
       - name: _extracted_at
         description: |
-          **PIPELINE METADATA — not for analysis.** UTC timestamp when this
+          **PIPELINE METADATA -- not for analysis.** UTC timestamp when this
           row was last extracted from the SODA endpoint. Advances on every
           run that touched the row. Use for run-traceability, not for
-          business questions about when an event occurred — use
+          business questions about when an event occurred -- use
           `date_created` (gold: `opened_dt`) for the latter.
       - name: _extracted_run_id
         description: |
-          **PIPELINE METADATA — not for analysis.** ULID of the pipeline
+          **PIPELINE METADATA -- not for analysis.** ULID of the pipeline
           run that produced this row's current state. Joins to
           `main_admin.fct_pipeline_run_raw.run_id` for run-level diagnostics.
       - name: _first_seen_at
         description: |
-          **PIPELINE METADATA — not for analysis.** UTC timestamp when this
+          **PIPELINE METADATA -- not for analysis.** UTC timestamp when this
           row was first ingested into our warehouse. Preserved across
           subsequent re-extractions. Distinguishes "when did the city
           create this case" (`date_created`) from "when did our pipeline
@@ -124,13 +124,13 @@ models:
           inside `dlt/somerville_311_pipeline.py`, not by dlt's payload.
       - name: _source_endpoint
         description: |
-          **PIPELINE METADATA — not for analysis.** SODA endpoint URL this
+          **PIPELINE METADATA -- not for analysis.** SODA endpoint URL this
           row was extracted from. Static for this project; present
           structurally to support multi-source extensions.
       - name: _dlt_load_id
-        description: 'dlt load identifier — retained at every layer for source-to-pipeline lineage.'
+        description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
-        description: 'dlt row identifier — retained at every layer for source-to-pipeline lineage.'
+        description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
 
   - name: raw_somerville_wards
     description: |
@@ -142,7 +142,7 @@ models:
       lat/lng). Use `geometry_wkt_wgs84` for analyst-facing work.
     columns:
       - name: ward_number
-        description: 'Ward number (1–7). Joins to `fct_311_requests.ward` (which stores ward as VARCHAR — cast at the join).'
+        description: 'Ward number (1-7). Joins to `fct_311_requests.ward` (which stores ward as VARCHAR -- cast at the join).'
         data_tests:
           - not_null
           - unique
@@ -177,14 +177,14 @@ models:
       docs/limitations/crime-data-pii-unredacted-in-bronze.md.
     columns:
       - name: incnum
-        description: 'Incident number — case identifier from SPD records management. Primary key from source; the dlt merge key.'
+        description: 'Incident number -- case identifier from SPD records management. Primary key from source; the dlt merge key.'
         data_tests:
           - not_null
           - unique
       - name: day_and_month
         description: 'Calendar day + month (e.g. "1/9"). NULL or blank for sensitive incidents stripped of time at source.'
       - name: year
-        description: 'Year the incident was reported (VARCHAR; source values "2017"–"2026" as of 2026-05-13).'
+        description: 'Year the incident was reported (VARCHAR; source values "2017"-"2026" as of 2026-05-13).'
       - name: police_shift
         description: 'Shift during which the incident was reported (e.g. "First Half (4PM - Midnight)").'
       - name: offensecode
@@ -198,9 +198,9 @@ models:
       - name: category
         description: 'Top-level NIBRS category. One of "Crimes against Property" / "Crimes against Person" / "Crimes against Society" / "Other".'
       - name: blockcode
-        description: 'Fixed-length 15-character census block code (state + county + tract + block + suffix). Geographic granularity floor — ~750 blocks across Somerville.'
+        description: 'Fixed-length 15-character census block code (state + county + tract + block + suffix). Geographic granularity floor -- ~750 blocks across Somerville.'
       - name: ward
-        description: 'Ward number (1–7) — **space-padded to length 15 in source** (e.g. "1              "). Trim at join to gold dim_ward.ward. NULL for ~13% of rows.'
+        description: 'Ward number (1-7) -- **space-padded to length 15 in source** (e.g. "1              "). Trim at join to gold dim_ward.ward. NULL for ~13% of rows.'
       - name: _extracted_at
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
@@ -210,6 +210,6 @@ models:
       - name: _source_endpoint
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id
-        description: 'dlt load identifier — retained at every layer for source-to-pipeline lineage.'
+        description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
-        description: 'dlt row identifier — retained at every layer for source-to-pipeline lineage.'
+        description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'

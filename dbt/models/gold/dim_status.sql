@@ -1,10 +1,10 @@
 {{ config(materialized='table', schema='gold') }}
 
 -- is_open mapping (no ambiguity in the four observed values):
---   'Closed'      → false
---   'Open'        → true
---   'In Progress' → true (still active)
---   'On Hold'     → true (paused but not closed)
+--   'Closed'      -> false
+--   'Open'        -> true
+--   'In Progress' -> true (still active)
+--   'On Hold'     -> true (paused but not closed)
 select
     md5(most_recent_status)                                          as status_id,
     most_recent_status                                               as status,

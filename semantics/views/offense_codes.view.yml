@@ -1,5 +1,5 @@
 name: offense_codes
-description: "NIBRS offense code dimension (39 distinct codes — 37 atomic NIBRS codes + 2 source-side multi-code grouping strings)."
+description: "NIBRS offense code dimension (39 distinct codes -- 37 atomic NIBRS codes + 2 source-side multi-code grouping strings)."
 table: main_gold.dim_offense_code
 datasource: somerville
 
@@ -24,7 +24,7 @@ dimensions:
   - name: offense_type
     type: string
     expr: offense_type
-    description: "NIBRS offense type — sub-category grouping similar offenses."
+    description: "NIBRS offense type -- sub-category grouping similar offenses."
   - name: offense_category
     type: string
     expr: offense_category

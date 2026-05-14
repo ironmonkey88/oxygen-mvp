@@ -4,7 +4,7 @@
     incremental_strategy='append'
 ) }}
 
--- Column-level profile snapshot. Append-only — every run adds a fresh
+-- Column-level profile snapshot. Append-only -- every run adds a fresh
 -- batch tagged with profiled_at. Query max(profiled_at) for current
 -- state, or trend over time for drift detection. Observational only;
 -- never generates rows in fct_test_run.
@@ -12,7 +12,7 @@
 -- Tables profiled: bronze.raw_311_requests + four gold tables.
 -- Columns introspected via information_schema.columns at compile time.
 -- All min/max values cast to varchar for uniform schema. _dlt_*
--- metadata columns are skipped — they describe the load, not the data.
+-- metadata columns are skipped -- they describe the load, not the data.
 
 {% set tables_to_profile = [
     {'schema': 'main_bronze', 'name': 'raw_311_requests'},
