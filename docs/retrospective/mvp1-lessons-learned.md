@@ -154,6 +154,47 @@ false-green is months of trust debt.
 That standard is now project-wide. Plan 1a + 1b both re-verified the bench
 against the new baseline as part of their close.
 
+### Verify the rendered surface, not the artifact one level removed
+
+The verification-gates standard above covers re-verification at sign-off.
+A second, narrower failure mode runs adjacent to it: at *initial*
+verification, drawing a conclusion about a user-facing surface from
+something one level removed — a stack trace, a generator's output, a
+deploy command's exit code — rather than from the surface as actually
+rendered or served. Three instances inside 48 hours, each costing
+recovery work:
+
+- **Session 41 — `atob` misdiagnosis.** A stack trace mentioned
+  `atob`; we reasoned to "UTF-8 issue somewhere" without inspecting
+  what `atob` was actually decoding. Real cause: base64-encoded URL
+  path parameters. Cost: two PRs (ASCII-fy of `.app.yml`, then a
+  wider ASCII-fy of the workspace) and a public retraction before
+  Session 42 read the actual decoder body and found the real bug.
+- **PR #14 — `/erd` false closure.** Reasoned from "the generator
+  emits Mermaid for 14 models, so it's current" to "`/erd` already
+  shipped, no rebuild needed" — and closed it as `[x]` in TASKS.md
+  / ARCHITECTURE.md. Never loaded the rendered page. The page was
+  in fact rendering its diagrams at unreadably-downscaled size
+  because of a Mermaid `useMaxWidth` default fighting the page's
+  intended `overflow-x: auto`. Cost: a full re-investigation
+  (Plan B-revisited) and PR #15 with the real one-line fix.
+- **PR #16 — nginx cache header.** A deploy "looked invisible"
+  because nginx sent no `Cache-Control` header, so the browser
+  served a stale page from heuristic freshness. Caught because
+  deploy-verify discipline actually loaded the served bytes rather
+  than trusting that "deploy command ran" meant "deploy is live."
+
+Standing rule: **a conclusion about a user-facing surface must be
+grounded in that surface as actually rendered or served — never
+inferred from a generator's output, an artifact's state, a stack
+trace, a status code, or a "the command ran" signal.** When the
+question is "is the page right?" the answer is "load the page in a
+real browser and look", not "the generator's output looks right."
+The PR #10 SVG-path-collision lesson said it once at the verb level
+("verify Content-Type, not just status"). These three instances
+generalize it: any layer between the conclusion and the rendered
+surface is a layer where this class of error hides.
+
 ### Plan-scoping in Chat, execution in Code
 
 Long-form planning, design tradeoffs, and architectural decisions happen in
