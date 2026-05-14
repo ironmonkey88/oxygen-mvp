@@ -19,7 +19,7 @@ import duckdb
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "somerville.duckdb"
-OUT_PATH = REPO_ROOT / "portal" / "assets" / "somerville-wards-background.svg"
+OUT_PATH = REPO_ROOT / "portal" / "somerville-wards-background.svg"
 
 SVG_WIDTH = 1600
 SVG_HEIGHT = 1000
