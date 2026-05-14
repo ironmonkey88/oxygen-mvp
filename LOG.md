@@ -26,7 +26,7 @@
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
 | 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | done | Phase 1 (inventory) Session 35; Phase 2 (wards) Session 36; Phase 3 (crime bronze) Session 37 |
 | 13 | Crime Gold Layer — fct_crime_incidents + dim_offense_* + public_safety topic | done | Session 38 (6 phases — pre-flight + fact + 2 dims + semantic + limitations + close) |
-| 11 | MVP 2 — First Data App (rat complaints by ward) | done | Session 39 — 9 phases. Session 41 — diagnosed `InvalidCharacterError: atob` on the rendered dashboard as the SPA failing on UTF-8 in `.app.yml`; ASCII-ified the 15 non-ASCII chars (10 em-dashes + 1 en-dash + 4 left-right arrows); operator visual-verified; PR #1 merged. |
+| 11 | MVP 2 — First Data App (rat complaints by ward) | done | Session 39 — 9 phases. Session 41 misdiagnosed the dashboard render error (PR #1 merged with ASCII-fy of `.app.yml`). Session 42 misdiagnosed it again (PR #3 widened ASCII-fy to 22 workspace files). Session 42 then root-caused it correctly: SPA `/apps/:pathb64` expects a base64-encoded path; portal link was sending the raw name. PR #4 merged the real fix and retracted the limitation entry. Operator confirmed render. |
 | 14 | Operational Hygiene — drift-fail re-anchor + portal-deploy ownership + LOG.md compression | done | Session 40 — 14a (year_2026 baseline deactivated, model updated, run.sh = success); 14b (deploy_html helper); 14c (104 rows archived, LOG.md 302→198 lines). PR #2 merged. |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
@@ -36,22 +36,31 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 closed. Plan 12 done; Plan 13 done; **Plan 11 done** (rat-complaints dashboard Session 39 + SPA render fix Session 41; PR #1 merged); **Plan 14 done** (drift-fail + portal-deploy + LOG compression; PR #2 merged; `./run.sh` lands `success`).
+**Phase:** MVP 1 closed. Plan 12 done; Plan 13 done; **Plan 11 done** (rat-complaints dashboard Session 39 + portal-link base64 fix Session 42; PRs #1 / #3 / #4 merged); **Plan 14 done** (drift-fail + portal-deploy + LOG compression; PR #2 merged; `./run.sh` lands `success`).
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-14 (Session 41 — Plan 11 dashboard SPA-render fix + both PRs merged)
+**Last Updated:** 2026-05-13 23:55 ET (Session 42 — real fix for /apps/* atob error: portal link bug, not workspace UTF-8)
 
 ---
 
 ## Recent Sessions
 
-### Session 41 — 2026-05-14 — plan-11-dashboard-render-fix
-[full narrative](docs/sessions/session-41-2026-05-14-plan-11-dashboard-render-fix.md)
+### Session 42 — 2026-05-13 23:00 ET — spa-route-base64-real-fix
+[full narrative](docs/sessions/session-42-2026-05-13-spa-route-base64-real-fix.md)
+
+- **Goal:** Operator reported the `atob` error recurring on click-through from `/dashboards`. Diagnose properly, fix properly.
+- **Shipped:** Two attempts in one session. First (PR [#3](https://github.com/ironmonkey88/oxygen-mvp/pull/3), `0fc956e`) widened the Session 41 ASCII-fy to 22 workspace files / 128 chars — wrong hypothesis; error persisted. Second (PR [#4](https://github.com/ironmonkey88/oxygen-mvp/pull/4), [`0d2458b`](https://github.com/ironmonkey88/oxygen-mvp/commit/0d2458b)) found the real bug: SPA `/apps/:pathb64` route expects a base64-encoded path; `portal/dashboards.html` was linking with the raw name `rat_complaints_by_ward`, whose underscores aren't valid base64. Confirmed by inspecting `assets/index-uGZkA66J.js` (`Ip` is a UTF-8-safe base64 URL-param decoder). Portal link fixed; limitation entry retracted with content rewritten to capture the real diagnosis + lesson. Operator confirmed render.
+- **Decisions:** 2 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Oxy customer-feedback bundle is now 2 findings (CLI token-budget hang + default trust-signal behavior gap); the SPA-UTF-8 "bug" is retracted.
+
+### Session 41 — 2026-05-13 22:28 ET — plan-11-dashboard-render-fix-first-attempt
+[full narrative](docs/sessions/session-41-2026-05-14-plan-11-dashboard-render-fix.md) (note: file's frontmatter date `2026-05-14` is off-by-one; git commit timestamp is 2026-05-13 22:33 EDT)
 
 - **Goal:** Diagnose + fix the `InvalidCharacterError: atob` blocking `/apps/rat_complaints_by_ward` render. Operator-reported on PR #1's visual-gate walkthrough.
-- **Shipped:** Phase 1 grep located 15 non-ASCII UTF-8 chars in `apps/rat_complaints_by_ward.app.yml` (10 em-dashes, 1 en-dash, 4 left-right arrows). ASCII-ified inline: `—` → `--`, `–` → `-`, `↔` → `+`. 45 non-ASCII bytes → 0; `oxy validate` green. New limitation `spa-render-atob-on-utf8-markdown` documents the Oxy SPA bug + ASCII workaround + pre-commit grep guard. Operator visual-verified; PR #1 merged + PR #2 merged.
+- **Shipped:** Phase 1 grep located 15 non-ASCII UTF-8 chars in `apps/rat_complaints_by_ward.app.yml`; ASCII-ified inline. Created limitation entry `spa-render-atob-on-utf8-markdown` documenting the (hypothesized) Oxy SPA bug + ASCII workaround + pre-commit grep guard. PR [#1](https://github.com/ironmonkey88/oxygen-mvp/pull/1) + PR [#2](https://github.com/ironmonkey88/oxygen-mvp/pull/2) merged.
 - **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Daily systemd timer at 06:00 EDT should land `success` (Plan 14a verified). Open: Builder Agent CLI bug bundle for Oxy customer-feedback (3 findings).
+- **Status:** complete (but root cause was misdiagnosed — see Session 42 for the real fix)
+- **Next:** Bundle Builder Agent CLI bug findings for Oxy customer-feedback.
 
 ### Session 40 — 2026-05-13 22:30 ET — plan-14-operational-hygiene
 [full narrative](docs/sessions/session-40-2026-05-13-plan-14-operational-hygiene.md)
@@ -98,28 +107,12 @@
 - **Status:** complete
 - **Next:** Plan 12 Phase 3 (crime data bronze) — Session 37.
 
-### Session 35 — 2026-05-13 00:46 ET — plan-12-phase-1-socrata-inventory
-[full narrative](docs/sessions/session-35-2026-05-13-plan-12-phase-1-socrata-inventory.md)
-
-- **Goal:** Execute Plan 12 Phase 1 — Socrata catalog inventory for `data.somervillema.gov`. Persist as append-only admin table; produce human-readable markdown summary with top-3-plus recommendation menu.
-- **Shipped:** [`scripts/build_socrata_inventory.py`](scripts/build_socrata_inventory.py) + [`scripts/generate_socrata_inventory_page.py`](scripts/generate_socrata_inventory_page.py); `main_admin.fct_socrata_catalog_raw` (49 rows, 1 snapshot — Python-owned `_raw` table per Plan 1a/1b convention); [`docs/socrata-inventory.md`](docs/socrata-inventory.md) (17.5KB, 49 datasets grouped by category, 29 tabular + 20 blob); [`docs/plans/plan-12-additional-data-sources-socrata-inventory-wards-crime.md`](docs/plans/plan-12-additional-data-sources-socrata-inventory-wards-crime.md). Key findings: wards is blob-only on Socrata (confirms Session 28); Crime Reports `aghs-hqvg` is the Phase 3 target (22K rows, ward + block_code geo, 2017–present, daily refresh, source-level PII redaction already applied).
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 12 Phase 2 (wards) — Session 36.
-
-### Session 34 — 2026-05-13 01:05 ET — plan-11-scoping
-[full narrative](docs/sessions/session-34-2026-05-13-plan-11-scoping.md)
-
-- **Goal:** Write Plan 11 (first MVP 2 Data App — rat complaints by ward via Builder Agent) as a scoping document only; execution pending Gordon's review.
-- **Shipped:** [docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md) — 9-phase plan covering Builder Agent pre-flight (7 gates G1–G7 + gate budget), data pre-flight, directional transcript, construction session, trust signal integration, portal `/dashboards` listing, honest limitations, light retro, sign-off; two carry-forward questions flagged inline (neighborhood scope before Phase 3; transcript-as-portal-artifact before Phase 5); inputs decided in Chat carried forward; risk register named. LOG.md Plans Registry row Plan 11 = `scoping`; Recent Sessions rotated; Active Decisions row.
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 11 execution waits on Gordon's review. No further Code work this session.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 35** — 2026-05-13 00:46 ET — plan-12-phase-1-socrata-inventory; [`scripts/build_socrata_inventory.py`](scripts/build_socrata_inventory.py) + [`scripts/generate_socrata_inventory_page.py`](scripts/generate_socrata_inventory_page.py); `main_admin.fct_socrata_catalog_raw` (49 rows, 1 snapshot); [`docs/socrata-inventory.md`](docs/socrata-inventory.md) (49 datasets grouped by category, 29 tabular + 20 blob); wards blob-only on Socrata; Crime Reports `aghs-hqvg` named as Phase 3 target. [full narrative](docs/sessions/session-35-2026-05-13-plan-12-phase-1-socrata-inventory.md)
+- **Session 34** — 2026-05-13 01:05 ET — plan-11-scoping; [docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md) — 9-phase plan written as scoping-only doc (Builder Agent pre-flight + data pre-flight + construction + portal listing + limitations + retro + sign-off), two carry-forward questions flagged, execution pending Gordon's review. [full narrative](docs/sessions/session-34-2026-05-13-plan-11-scoping.md)
 - **Session 33** — 2026-05-13 00:45 ET — plan-10-opportunistic-principle; [`docs/plans/plan-10-buildmd-7-opportunistic-principle.md`](docs/plans/plan-10-buildmd-7-opportunistic-principle.md); BUILD.md §7 gains "The opportunistic principle" subsection + Builder Agent subsection rewritten + §4 reconciled. [full narrative](docs/sessions/session-33-2026-05-13-plan-10-opportunistic-principle.md)
 - **Session 32** — 2026-05-13 00:30 ET — product-notes-creation; [`PRODUCT_NOTES.md`](PRODUCT_NOTES.md) at repo root with four exploratory entries (knowledge-graph expansion, component-graph expansion, self-extension, project as Oxy customer-feedback loop) + naming conventions; CLAUDE.md reading list gained an "Exploratory" subsection. [full narrative](docs/sessions/session-32-2026-05-13-product-notes-creation.md)
 - **Session 31** — 2026-05-12 17:41 ET — mvp1-retrospective-mvp2-prep; [docs/retrospective/mvp1-lessons-learned.md](docs/retrospective/mvp1-lessons-learned.md) written (2,144 words); LOG/TASKS rotated to MVP 2 plan-scoping framing; sessions 29/30 added to Recent (had been missed at commit time). [full narrative](docs/sessions/session-31-2026-05-12-mvp1-retrospective-mvp2-prep.md)
@@ -211,6 +204,8 @@
 | 2026-05-13 22:45 ET | **Plan 14 verified end-to-end: `./run.sh manual` lands `success`, exit 0** | First successful run since Session 31 when drift-fail started landing `partial`. 11/11 dbt run OK, 54/54 bronze+gold tests PASS, 3/3 admin run OK, **13/13 admin tests PASS** (was 12/13 ERROR). Portal deploy clean. All three Plan 14 sections (14a/b/c) verified. |
 | 2026-05-14 22:55 ET | **Plan 11 dashboard SPA-render bug — Oxygen SPA fails on UTF-8 in `.app.yml`** | Operator reported `InvalidCharacterError: atob` on `/apps/rat_complaints_by_ward`. The SPA's `atob()` in a `useMemo()` base64-decodes content derived from the app config; UTF-8 bytes break the encode/decode pair. Found 15 non-ASCII chars in the file (10 em-dashes, 1 en-dash, 4 left-right arrows). ASCII-ified inline; pre-commit grep guard documented. Third SPA-side bug from Plan 11 — bundles with the CLI token-budget hang + the default trust-signal behavior gap as one Oxy customer-feedback ticket. Limitation `spa-render-atob-on-utf8-markdown`. |
 | 2026-05-14 22:55 ET | **Plan 11 + Plan 14 PRs merged** | Operator visual-verified the rat-complaints dashboard renders cleanly post-ASCII-fix. PR #1 (Plan 11, including Session 41 fix) merged to main via gh pr merge --merge with LOG.md conflict resolution. PR #2 (Plan 14) merged earlier in the session. Both branches retained for archaeology. `./run.sh manual` re-verified `success` on main post-merge. |
+| 2026-05-13 23:55 ET | **Session 42: Session 41's atob diagnosis was wrong — the bug was in the portal, not in Oxygen** | The SPA's `/apps/:pathb64` route expects a base64-encoded path. `portal/dashboards.html`'s "Open in workspace" link sent the raw name `rat_complaints_by_ward`; underscores aren't valid base64, so `atob` threw `InvalidCharacterError`. Confirmed by inspecting `assets/index-uGZkA66J.js`: `Ip` is a UTF-8-safe base64 URL-param decoder, and callers always `Fp()` (btoa) paths before constructing the URL. Hypothesis test (loading `/apps/YXBwcy9yYXRfY29tcGxhaW50c19ieV93YXJkLmFwcC55bWw=` directly) rendered cleanly. PR [#4](https://github.com/ironmonkey88/oxygen-mvp/pull/4) fixes the portal link to use the encoded path and flips `spa-render-atob-on-utf8-markdown.md` to `status: resolved` with content rewritten to capture the real diagnosis. Lesson: read the function body, not just the function name — the minified bundle is not opaque. |
+| 2026-05-13 23:55 ET | **Session 41 + 42 workspace ASCII-fies not being reverted** | The 22 files / 128 non-ASCII chars changed in Sessions 41 (PR [#1](https://github.com/ironmonkey88/oxygen-mvp/pull/1)) and 42 first-attempt (PR [#3](https://github.com/ironmonkey88/oxygen-mvp/pull/3)) are semantically equivalent to the originals and harmless. Reverting would be churn for no functional gain. The retracted limitation entry explicitly names the underlying constraint as false; the suggested pre-commit grep guard for non-ASCII workspace bytes was never wired up and should not be. |
 
 ---
 
