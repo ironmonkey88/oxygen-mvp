@@ -16,6 +16,16 @@
 --   3. dbt_test.<node_name>                              — every dbt test
 
 with baselines_yearly as (
+    -- Per-year row-count baselines. **Active baselines exclude the
+    -- current calendar year** (Plan 14a, 2026-05-13): a current-year
+    -- baseline certified mid-year is structurally unstable — the row
+    -- count grows daily as new 311 requests are filed, and a 1%
+    -- tolerance trips after a few days of normal ingestion. We still
+    -- emit the current-year row (with `is_active = false`) so the dim
+    -- has coverage; once the year closes and a new current year rolls
+    -- in, a future run will baseline the now-stable previous year as
+    -- active. The existing `is_incremental()` filter further protects
+    -- already-frozen baselines from being re-emitted.
     select
         'baseline.raw_311_requests.year_' || year::varchar || '.row_count' as test_id,
         'baseline'                                                         as test_type,
@@ -25,7 +35,7 @@ with baselines_yearly as (
         'year=' || year::varchar                                           as grain,
         count(*)::varchar                                                  as expected_value,
         0.01                                                               as tolerance_pct,
-        true                                                               as is_active,
+        (year <> extract(year from current_date)::integer)                 as is_active,
         now()                                                              as certified_at,
         'system'                                                           as certified_by
     from (
