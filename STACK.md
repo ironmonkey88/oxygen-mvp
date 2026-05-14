@@ -285,12 +285,22 @@ code.
 `sql_file` (path). Optional `variables`, `cache`, `export`.
 
 **How they get run:**
-- From the SPA: open the workspace's app browser
-- From the CLI: `oxy run apps/<name>.app.yml`
-- From Builder Agent: `run_app` tool (the MVP 2 construction loop)
+- From the SPA: open the workspace's app browser at
+  `http://oxygen-mvp.taildee698.ts.net:3000/apps/<name>`
+- From Builder Agent (CLI or SPA): the agent reads the app file and
+  runs individual task SQL via `execute_sql`. In `oxy 0.5.47` there
+  is no dedicated `run_app` tool surface — Builder verifies app
+  execution by re-running each task's SQL. The MVP 2 "build → run →
+  refine" loop happens conversationally rather than via a single
+  tool call.
+- `oxy validate --file apps/<name>.app.yml` confirms YAML structure
+  but does not render. There is **no `oxy run` path for `.app.yml`**
+  in `oxy 0.5.47` — `oxy run` accepts only `.sql`, `.procedure.yml`,
+  `.workflow.yml`, `.automation.yml`, `.agent.yml`, and `.aw.yml`.
+  See `docs/limitations/dashboard-render-spa-only.md`.
 
 **Common gotcha:** `oxy build` (vector embeddings for routing) is NOT
-how you render Data Apps. Use `oxy run`.
+how you render Data Apps. Open the SPA's app browser instead.
 
 **Used in this project:** MVP 2 (first Data App), MVP 4 (full library).
 

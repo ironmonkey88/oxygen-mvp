@@ -33,6 +33,7 @@ Thumbs.db
 # Claude Code local files
 .claude/settings.local.json
 .claude/worktrees/
+.claude/scheduled_tasks.lock
 
 # Ad-hoc scripts (scp'd to EC2 for execution)
 scratch/

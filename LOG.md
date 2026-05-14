@@ -26,6 +26,7 @@
 | 11 | MVP 2 — First Data App (rat complaints by ward) | scoping | Session 34 (scoping); execution pending Gordon's review |
 | 12 | Additional Data Sources — Socrata Inventory + Wards + Crime | done | Phase 1 (inventory) Session 35; Phase 2 (wards) Session 36; Phase 3 (crime bronze) Session 37 |
 | 13 | Crime Gold Layer — fct_crime_incidents + dim_offense_* + public_safety topic | done | Session 38 (6 phases — pre-flight + fact + 2 dims + semantic + limitations + close) |
+| 11 | MVP 2 — First Data App (rat complaints by ward) | done (partial render gate) | Session 39 — 9 phases; Builder CLI used for SQL verification; .app.yml hand-written after CLI token-budget hang; SPA visual render deferred |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -34,13 +35,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 fully closed. Retrospective Session 31; PRODUCT_NOTES.md Session 32; Plan 10 Session 33; Plan 11 scoping Session 34; Plan 12 done Sessions 35–37; **Plan 13 done Session 38** (crime gold layer — fct_crime_incidents + dim_offense_code + dim_offense_category + public_safety topic + 1 renamed/3 new limitations). Plan 11 execution still pending Gordon's review.
+**Phase:** MVP 1 closed. Plan 12 done; Plan 13 done; **Plan 11 done Session 39** (rat-complaints-by-ward dashboard, hand-written .app.yml using Builder-verified SQL; SPA visual render gate deferred); Plan 14 (operational hygiene) next.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 (Session 38 — Plan 13 crime gold layer)
+**Last Updated:** 2026-05-13 (Session 39 — Plan 11 rat-complaints dashboard)
 
 ---
 
 ## Recent Sessions
+
+### Session 39 — 2026-05-13 17:50 ET — plan-11-rat-complaints-dashboard
+[full narrative](docs/sessions/session-39-2026-05-13-plan-11-rat-complaints-dashboard.md)
+
+- **Goal:** Plan 11 — rat-complaints-by-ward dashboard via Builder Agent. 9 phases per the scoping doc + Gordon's carry-forward decisions (ward-only; transcript repo-side).
+- **Shipped:** Phase 1 PASS via `oxy agentic run --domain builder builder` CLI (load-bearing discovery — design assumed SPA-only). Phase 2 refined the filter from `LIKE '%rat%'` (catches `consideration`, `regis**trat**ion` false positives) to an explicit 4-type IN-list + TRIM (handles `School Rodent Control ` trailing space). Phase 3 directional transcript. Phase 4 Builder verified all 4 SQL queries against live data (14,036 rows total, matched Phase 2 exactly); ran into CLI token-budget resume hang during file-write — hand-wrote `apps/rat_complaints_by_ward.app.yml` using Builder's verbatim SQL. Phase 5 trust signals integrated (last_refreshed + citations + limitations markdown); SPA visual render deferred. Phase 6 `portal/dashboards.html` + nginx `/dashboards` route + portal nav link live (curl 200). Phase 7 wrote 2 new limitations (CLI token-budget hang, dashboard-render-spa-only); fixed STACK.md §1.9 (`oxy run apps/X.app.yml` is not supported in 0.5.47). Phase 8 retro in transcript.
+- **Decisions:** 4 decisions — see Decisions Log
+- **Status:** complete (render-gate partial)
+- **Next:** Plan 14 (operational hygiene) — Session 40.
 
 ### Session 38 — 2026-05-13 12:18 ET — plan-13-crime-gold-layer
 [full narrative](docs/sessions/session-38-2026-05-13-plan-13-crime-gold-layer.md)
@@ -276,6 +286,10 @@
 | 2026-05-13 02:55 ET | **Plan 12 end-to-end `./run.sh manual` verified — `run_status=partial`, all 10 stages completed.** Final exit 1 from pre-existing drift-fail (Session 31 carry-forward); stages 0–10 ran clean including new stage 1b/10 dlt ingest crime. 27/27 bronze+gold tests PASS including the new wards (3) + crime (2) tests. dbt run 8/8 OK. Portal regen completed: /metrics (3 measures × 5 views), /trust (44 tests), /profile (112 cols), /erd (11 models, 5 views). Crime bronze fully integrated. | First end-to-end attempt failed at stage 9d due to a portal-file ownership regression (root-owned `/var/www/somerville/profile.html` blocked plain `cp`) — unrelated to Phase 3. Documented in `docs/limitations/portal-deploy-file-ownership.md`; today's daily run at 10:00 UTC also failed for the same reason. Manual `sudo chown ubuntu:ubuntu` on the affected files restored the path; durable fix is a follow-up plan (3 options named in the limitation entry). |
 | 2026-05-13 13:00 ET | **Plan 13 deviation: `offense_code` kept as raw source string, not NULLed for multi-code rows** | Pre-flight (Phase 1) found 2,875 multi-code rows, not 1 as the Chat design assumed. Two source-side groupings (`'991, 998, 999'` = Other Criminal MV Offenses 2,500 rows; `'11A - 11D, 36A, 36B'` = Sex Offenses 375 rows). Keeping `offense_code` populated + including both groupings in `dim_offense_code` (39 rows, with `is_multi_offense_grouping` flag) produces a cleaner analyst surface than 12.9% NULLs + relationships-test carve-out. `multi_offense_flag` retained for analyst filtering. Limitation `crime-multi-offense-rows` reframes "1 row" → "2,875 rows in 2 NIBRS source-side groupings" and records the deviation rationale. |
 | 2026-05-13 13:00 ET | **Plan 13 closed — crime gold layer landed cleanly** | `fct_crime_incidents` (22,325 rows) + `dim_offense_code` (39) + `dim_offense_category` (4); new `public_safety` topic separate from `service_requests` (shared `wards` + `dates`); 5 cross-view airlayer queries verified including auto-join through the multi-code groupings. Limitations: 1 rename (`crime-data-pii-unredacted-in-bronze` → `crime-bronze-restricted-from-analysis`) + 3 new (`crime-sensitive-incidents-no-month`, `crime-ward-coverage-gaps`, `crime-multi-offense-rows`). 17 active limitations total. dbt tests: 10/10 fact + 11/11 dim + 6 relationships = 27/27 PASS. The cross-topic "crime vs 311 by ward" pattern works as two side-by-side queries on the shared `wards` view, per the design's §6 trust-contract walk-through. |
+| 2026-05-13 22:15 ET | **Plan 11 Phase 1 — Builder Agent works via CLI** (`oxy agentic run --domain builder builder`) | Phase 1 plan assumed Builder Agent requires SPA Build mode. Probe showed Builder reachable end-to-end at the CLI: read_file, propose_change with HITL Accept/Reject via `oxy agentic answer`, execute_sql, multi-turn solving — all functional in `--local` mode. The opportunistic-principle test fires here: the load-bearing pre-flight assumption was wrong, but in a way that opens the path rather than closes it. STACK.md §1.8 already names the CLI domain; the surprise is that Plan 11's design didn't. |
+| 2026-05-13 22:15 ET | **Rat-complaint filter is an explicit 4-type IN-list + TRIM, not LIKE-pattern** | Phase 2 pre-flight found `LIKE '%rat%'` matches false positives: `Consideration request` (6,993 rows) and `Vaccine clinic registration` (5 rows) — `rat` appears as a substring inside `consideration` / `registration`. The clean filter is `request_type IN ('Rats', 'Rodent Assistance Program request', 'Rodent Assistance Program inquiry', 'School Rodent Control')`. `School Rodent Control` has a trailing space in source; `TRIM()` on both sides matches the existing `block-code-padded` family of source quirks. Total clean filter matches: 14,036 rows. |
+| 2026-05-13 22:15 ET | **Plan 11 `.app.yml` hand-written using Builder-verified SQL after token-budget hang** | Builder Agent ran all 4 verification queries against live data (matched Phase 2 exactly) but ran out of its 4096-token output budget while generating the propose_change for the `.app.yml` file. Submitted `oxy agentic answer --answer "Continue with double budget"` — the CLI accepted but the run never advanced. Cancelled, then hand-wrote `apps/rat_complaints_by_ward.app.yml` using Builder's exact SQL queries (extracted from the JSONL event log). Per Plan 11's explicit fallback path; customer-feedback finding logged in `docs/limitations/plan-11-builder-cli-token-budget-hang.md`. |
+| 2026-05-13 22:15 ET | **STACK.md §1.9 corrected — `oxy run apps/<name>.app.yml` is not supported in oxy 0.5.47** | Original stack reference said apps render via SPA OR `oxy run apps/X.app.yml` OR Builder's `run_app` tool. Empirical finding: `oxy run` only accepts `.sql`, `.procedure.yml`, `.workflow.yml`, `.automation.yml`, `.agent.yml`, and `.aw.yml`. `.app.yml` rendering is SPA-only. Builder doesn't use a dedicated `run_app` tool either — it runs each task's SQL via `execute_sql`. STACK.md §1.9 updated with the corrected behavior + a pointer to `docs/limitations/dashboard-render-spa-only.md`. |
 
 ---
 

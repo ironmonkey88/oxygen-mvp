@@ -1,0 +1,207 @@
+name: rat_complaints_by_ward
+description: |
+  Somerville rat complaints — frequency, resolution speed, volume trend,
+  and ward-level service equity. 14,036 complaints across 4
+  request_type values (`Rats`, `Rodent Assistance Program request`,
+  `Rodent Assistance Program inquiry`, `School Rodent Control`).
+
+  Built via Plan 11 (2026-05-13) on top of `main_gold.fct_311_requests`.
+  Trust signals: `last_refreshed` task reads from
+  `main_admin.fct_pipeline_run_raw`; ward-equity chart inherits the
+  `location-ward-block-only` limitation (167 of 14,036 rows have NULL
+  ward and are excluded from the by-ward view).
+
+tasks:
+  # 1 — Frequency: total rat complaints (single number).
+  - name: total_rat_complaints
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      )
+      SELECT COUNT(*) AS total_rat_complaints FROM rats
+
+  # 2 — Resolution speed: bucketed days-to-close for closed complaints.
+  #     Median ~4d, long tail to 365+ days. Source-derived buckets.
+  - name: resolution_buckets
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      ),
+      closed AS (
+        SELECT
+          r.*,
+          (r.most_recent_status_dt - r.date_created_dt) AS days_to_close
+        FROM rats r
+        JOIN main_gold.dim_status s USING (status_id)
+        WHERE r.most_recent_status_dt IS NOT NULL
+          AND s.status = 'Closed'
+      )
+      SELECT
+        CASE
+          WHEN days_to_close < 1   THEN '0 days'
+          WHEN days_to_close < 4   THEN '1-3 days'
+          WHEN days_to_close < 8   THEN '4-7 days'
+          WHEN days_to_close < 31  THEN '8-30 days'
+          WHEN days_to_close < 91  THEN '31-90 days'
+          WHEN days_to_close < 366 THEN '91-365 days'
+          ELSE '365+ days'
+        END AS bucket,
+        COUNT(*) AS complaints
+      FROM closed
+      GROUP BY 1
+      ORDER BY MIN(days_to_close)
+
+  # 3 — Volume trend: complaints by year, 2015–present.
+  - name: volume_by_year
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      )
+      SELECT d.year, COUNT(*) AS complaints
+      FROM rats r
+      JOIN main_gold.dim_date d ON r.date_created_dt = d.date_dt
+      WHERE d.year BETWEEN 2015 AND 2026
+      GROUP BY d.year
+      ORDER BY d.year
+
+  # 4 — Service equity: complaints by ward + density per sqkm.
+  #     Excludes the 167 NULL-ward rows (1.2% of complaints).
+  - name: complaints_by_ward
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      )
+      SELECT
+        w.ward_name,
+        w.area_sqkm,
+        COUNT(*) AS complaints,
+        ROUND(COUNT(*) / w.area_sqkm, 1) AS complaints_per_sqkm
+      FROM rats r
+      JOIN main_gold.dim_ward w ON r.ward = w.ward
+      WHERE r.ward IS NOT NULL
+      GROUP BY w.ward_name, w.area_sqkm
+      ORDER BY w.ward_name
+
+  # 5 — Trust signal: last successful pipeline refresh.
+  - name: last_refreshed
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      SELECT
+        MAX(run_completed_at)::VARCHAR AS last_refreshed_utc
+      FROM main_admin.fct_pipeline_run_raw
+      WHERE run_status IN ('success', 'partial')
+
+display:
+  - type: markdown
+    content: |
+      # Somerville rat complaints
+
+      14,036 rat-related 311 complaints across four request types
+      (`Rats`, `Rodent Assistance Program request`,
+      `Rodent Assistance Program inquiry`, `School Rodent Control`)
+      from 2015 to present. Source:
+      `main_gold.fct_311_requests` ↔ `main_gold.dim_request_type` ↔
+      `main_gold.dim_status` ↔ `main_gold.dim_ward` ↔
+      `main_gold.dim_date`.
+
+  - type: table
+    title: Pipeline freshness
+    data: last_refreshed
+
+  - type: table
+    title: Total rat complaints
+    data: total_rat_complaints
+
+  - type: bar_chart
+    title: Complaints by ward (excludes 167 rows with NULL ward — see limitation)
+    data: complaints_by_ward
+    x: ward_name
+    y: complaints
+
+  - type: bar_chart
+    title: Complaints density per sq km by ward
+    data: complaints_by_ward
+    x: ward_name
+    y: complaints_per_sqkm
+
+  - type: line_chart
+    title: Complaints by year (2026 partial)
+    data: volume_by_year
+    x: year
+    y: complaints
+
+  - type: bar_chart
+    title: Resolution-speed distribution (closed complaints only)
+    data: resolution_buckets
+    x: bucket
+    y: complaints
+
+  - type: markdown
+    content: |
+      ## Citations
+
+      - Fact: `main_gold.fct_311_requests` — bronze sourced from Socrata
+        `4pyi-uqq6` (Somerville 311 SODA API). 1,170,637 total 311 rows
+        as of last refresh.
+      - Dims: `main_gold.dim_request_type` (rat filter),
+        `main_gold.dim_status` (Closed filter on resolution speed),
+        `main_gold.dim_ward` (ward name + area), `main_gold.dim_date`
+        (year on the trend chart).
+      - Freshness: `main_admin.fct_pipeline_run_raw` — UTC timestamp of
+        the most recent successful or partial pipeline run.
+
+      ## Known limitations
+
+      - **`location-ward-block-only`** — Bronze ward field is the only
+        geo column populated for 311. The 167 rat complaints with
+        NULL ward (1.2% of the total) are excluded from the by-ward
+        chart. See `docs/limitations/location-ward-block-only.md`.
+      - **Resolution speed is one-sided.** Built from
+        `most_recent_status_dt - date_created_dt` and filtered to
+        `status = 'Closed'`. The 1,343 Open + In Progress rat
+        complaints (9.6%) are not in the resolution-speed chart.
+        Median closed-time is ~4 days; the 3,060 complaints in the
+        365+ days bucket include long-standing structural cases.
+      - **2026 is partial.** Through approximately the most recent
+        daily refresh; the chart's 2026 bar is not full-year.
