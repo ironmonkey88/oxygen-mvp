@@ -28,6 +28,11 @@
 | 13 | Crime Gold Layer — fct_crime_incidents + dim_offense_* + public_safety topic | done | Session 38 (6 phases — pre-flight + fact + 2 dims + semantic + limitations + close) |
 | 11 | MVP 2 — First Data App (rat complaints by ward) | done | Session 39 — 9 phases. Session 41 misdiagnosed the dashboard render error (PR #1 merged with ASCII-fy of `.app.yml`). Session 42 misdiagnosed it again (PR #3 widened ASCII-fy to 22 workspace files). Session 42 then root-caused it correctly: SPA `/apps/:pathb64` expects a base64-encoded path; portal link was sending the raw name. PR #4 merged the real fix and retracted the limitation entry. Operator confirmed render. |
 | 14 | Operational Hygiene — drift-fail re-anchor + portal-deploy ownership + LOG.md compression | done | Session 40 — 14a (year_2026 baseline deactivated, model updated, run.sh = success); 14b (deploy_html helper); 14c (104 rows archived, LOG.md 302→198 lines). PR #2 merged. |
+| 15 | MVP 2 polish — Home page dataset summary | done | Session 43 — generator (`scripts/generate_homepage_summary.py`) reads warehouse + limitations registry, refreshes marker-bounded stats grid + two topic cards in `portal/index.html`; new "What you can ask" + expanded "Platform surfaces" sections; nav badge MVP 1 → MVP 2 + roadmap updates; run.sh stage 8b/10. PR [#6](https://github.com/ironmonkey88/oxygen-mvp/pull/6) merged. |
+| 16 | MVP 2 polish — Welcome content + ward map | done | Session 44 — welcome section (intro + how-to-use + trust contract); "What's not yet possible" section with 6 honest gaps; `scripts/generate_wards_svg.py` reads `dim_ward.geometry_wkt_wgs84`, emits stylized SVG; `body::before` background. PR [#7](https://github.com/ironmonkey88/oxygen-mvp/pull/7) merged via stacked-merge in #8. |
+| 17 | MVP 2 polish — /dashboards auto-generator | done | Session 45 — metadata-comment-block contract on `apps/*.app.yml`; `scripts/generate_dashboards_listing.py` walks apps and rewrites marker-bounded listing; rat-complaints retrofit; run.sh stage 8c/10. PR [#8](https://github.com/ironmonkey88/oxygen-mvp/pull/8) merged. |
+| 18 | MVP 2 polish — 311 overall dashboard (Builder CLI) | deferred | Stopped at Session 45/46 boundary per honest-reporting discipline; Builder CLI sessions belong in a fresh Code thread. |
+| 19 | MVP 2 polish — Rat dashboard iteration (Builder CLI) | deferred | Same reason as Plan 18. |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -36,13 +41,40 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 closed. Plan 12 done; Plan 13 done; **Plan 11 done** (rat-complaints dashboard Session 39 + portal-link base64 fix Session 42; PRs #1 / #3 / #4 merged); **Plan 14 done** (drift-fail + portal-deploy + LOG compression; PR #2 merged; `./run.sh` lands `success`).
+**Phase:** MVP 1 closed. **Plans 15 + 16 + 17 done** (homepage dataset summary + welcome + ward map + /dashboards generator; PRs #6 + #7 (via #8 stacked-merge) + #8 merged 2026-05-14). Plans 18 + 19 (Builder CLI dashboards) deferred to a fresh Code thread. Plans 11 / 12 / 13 / 14 done in earlier sessions.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-13 23:55 ET (Session 42 — real fix for /apps/* atob error: portal link bug, not workspace UTF-8)
+**Last Updated:** 2026-05-14 07:30 ET (Sessions 43-45 — MVP 2 polish arc Phase 1 merged)
 
 ---
 
 ## Recent Sessions
+
+### Session 45 — 2026-05-14 06:00 ET — plan-17-dashboards-generator
+[full narrative](docs/sessions/session-45-2026-05-14-plan-17-dashboards-generator.md)
+
+- **Goal:** Generate `/dashboards` listing from `apps/*.app.yml` metadata on every pipeline run so future dashboards auto-surface.
+- **Shipped:** `# === DASHBOARD METADATA ===` comment-block contract on `apps/*.app.yml` (oxy validate 12/12 post-retrofit); `scripts/generate_dashboards_listing.py` parses block (falls back to `name:` + `description:`), computes base64-encoded URL (Session 42 fix), rewrites marker-bounded listing in `portal/dashboards.html`; rat-complaints retrofit; run.sh stage 8c/10. Bug fixed mid-development: double-escape on `&middot;`. PR [#8](https://github.com/ironmonkey88/oxygen-mvp/pull/8) merged (carried Plans 16+17 content due to stacked-PR base-ref gotcha).
+- **Decisions:** 2 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plans 18 + 19 (Builder CLI dashboards) deferred to fresh Code thread.
+
+### Session 44 — 2026-05-14 04:30 ET — plan-16-welcome-and-ward-map
+[full narrative](docs/sessions/session-44-2026-05-14-plan-16-welcome-and-ward-map.md)
+
+- **Goal:** Two coordinated homepage improvements: welcome content teaching a new analyst, and stylized ward map background visual identity.
+- **Shipped:** Welcome section (intro + How to use this + Trust contract) and "What's not yet possible" section (6 honest gaps with /trust links); `scripts/generate_wards_svg.py` reads `dim_ward.geometry_wkt_wgs84`, projects equirectangular with cosine-correction, emits stylized SVG (#e3e1dc fill / #c8c4ba stroke / opacity 0.55); CSS `body::before` background positioned top-right with opacity 0.45. Section reordering 1-7. PR [#7](https://github.com/ironmonkey88/oxygen-mvp/pull/7) merged via #8's stacked-merge.
+- **Decisions:** 3 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 17 — /dashboards auto-generator (Session 45).
+
+### Session 43 — 2026-05-14 03:00 ET — plan-15-homepage-dataset-summary
+[full narrative](docs/sessions/session-43-2026-05-14-plan-15-homepage-dataset-summary.md)
+
+- **Goal:** Refresh portal homepage so a new analyst lands and immediately understands what's in the dataset, what's freshest, what they can ask.
+- **Shipped:** New "What's in the data" section (2 topic cards), "What you can ask" section (6 example questions), Platform surfaces expanded 4 → 7 cards; nav badge MVP 1 → MVP 2; hero subtitle now mentions 311 + crime; roadmap MVP 1 dim + MVP 2 current; stack table "1.17M rows" → "311 + crime"; new `scripts/generate_homepage_summary.py` reads warehouse + limitations registry, rewrites marker-bounded stats + dataset cards; run.sh stage 8b/10. Initial values: 1.17M 311, 22.3K crime, 7 wards, 21 active limitations. PR [#6](https://github.com/ironmonkey88/oxygen-mvp/pull/6) merged.
+- **Decisions:** 2 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Plan 16 — welcome + ward map (Session 44).
 
 ### Session 42 — 2026-05-13 23:00 ET — spa-route-base64-real-fix
 [full narrative](docs/sessions/session-42-2026-05-13-spa-route-base64-real-fix.md)
@@ -80,37 +112,13 @@
 - **Status:** complete (render gate cleared in Session 41)
 - **Next:** Plan 14 — Session 40.
 
-### Session 38 — 2026-05-13 12:18 ET — plan-13-crime-gold-layer
-[full narrative](docs/sessions/session-38-2026-05-13-plan-13-crime-gold-layer.md)
-
-- **Goal:** Plan 13 — design + build the gold layer for crime data on top of Plan 12 Phase 3's bronze. Chat designed in the previous turn; Code executed the design with honest deviation handling.
-- **Shipped:** 6 phases / 6 commits — pre-flight (no commit), `fct_crime_incidents` ([fb51194](https://github.com/ironmonkey88/oxygen-mvp/commit/fb51194)), `dim_offense_code` + `dim_offense_category` ([7648917](https://github.com/ironmonkey88/oxygen-mvp/commit/7648917)), 3 new view files + `public_safety.topic.yml` ([eda1c5d](https://github.com/ironmonkey88/oxygen-mvp/commit/eda1c5d)), limitations registry 1-renamed-3-new ([28743fc](https://github.com/ironmonkey88/oxygen-mvp/commit/28743fc)), docs reconciliation. 22,325 incidents → gold; 39 offense codes + 4 categories; 5 cross-view airlayer queries verified. Pre-flight caught 3 design assumptions that needed update (multi-offense = 2,875 not 1; sensitive-incident sentinel format; blockcode-NULL parallel to day-NULL).
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 11 review still pending; LOG.md compression overdue; portal-deploy ownership durable fix queued.
-
-### Session 37 — 2026-05-13 02:00 ET — plan-12-phase-3-crime-bronze
-[full narrative](docs/sessions/session-37-2026-05-13-plan-12-phase-3-crime-bronze.md)
-
-- **Goal:** Plan 12 Phase 3 — ingest Somerville Police crime reports (Socrata `aghs-hqvg`) to bronze, parallel to 311. Bronze only; silver/gold/semantic deferred to MVP 3 alongside PII review.
-- **Shipped:** `dlt/somerville_crime_pipeline.py` (adapted from 311 — full pull + merge on `incnum`, 22,325 rows in 7.94s); `main_bronze.raw_somerville_crime_raw` (dlt-owned) + dbt bronze view `raw_somerville_crime` (1/1 OK + 2/2 PASS); bronze schema.yml extended with new source + per-column descriptions; `docs/limitations/crime-data-pii-unredacted-in-bronze.md` (honest audit: no names/addresses/phone/email/DOB; `incdesc` is generic NIBRS legal text; source-level redaction already strips time + location from sensitive incidents); limitations index regenerated → 13 entries; `docs/schema.sql` gains crime DDL; `run.sh` gains stage 1b/10 dlt ingest crime between 311 and dbt run. Portal: `/profile` 95→112 cols, `/erd` 10→11 models, `/trust` re-rendered to surface the new limitation.
-- **Decisions:** 4 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** None on this branch — Plan 12 closed; LOG.md flagged as 320+ lines (queued tech debt; not compressed overnight per brief).
-
-### Session 36 — 2026-05-13 01:15 ET — plan-12-phase-2-wards-ingestion
-[full narrative](docs/sessions/session-36-2026-05-13-plan-12-phase-2-wards-ingestion.md)
-
-- **Goal:** Plan 12 Phase 2 — ingest Somerville ward polygons as static reference data; pre-flight Socrata blob format; build bronze + gold + semantic-layer wiring; validate join.
-- **Shipped:** `scripts/ingest_somerville_wards.py` (DuckDB spatial extension reads Socrata `ym5n-phxd` ZIP-bundled shapefile, materializes `main_bronze.raw_somerville_wards_raw` with geom + WKT-source + WKT-WGS84 + audit cols); `dbt/models/bronze/raw_somerville_wards.sql` passthrough view; `dbt/models/gold/dim_ward.sql` with surrogate key + ward_name + sq-km area + sq-m perimeter; bronze + gold schema.yml extensions; `semantics/views/wards.view.yml` + foreign-entity addition to requests; topic updated. dbt 2/2 OK + 6/6 PASS; oxy validate 7/7; airlayer auto-join compiled to `LEFT JOIN dim_ward ... ON wards.ward = requests.ward`, returned 7 wards with 78K–121K requests each. `docs/limitations/location-ward-block-only.md` + `docs/schema.sql` updated; `/profile` + `/erd` regenerated (10 dbt models, 5 views, 95 cols profiled).
-- **Decisions:** 3 decisions — see Decisions Log
-- **Status:** complete
-- **Next:** Plan 12 Phase 3 (crime data bronze) — Session 37.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 38** — 2026-05-13 12:18 ET — plan-13-crime-gold-layer; `fct_crime_incidents` + `dim_offense_code` + `dim_offense_category` + `public_safety.topic.yml`; 22,325 incidents -> gold; pre-flight caught 3 design assumptions; 1 limitation renamed + 3 new. [full narrative](docs/sessions/session-38-2026-05-13-plan-13-crime-gold-layer.md)
+- **Session 37** — 2026-05-13 02:00 ET — plan-12-phase-3-crime-bronze; `dlt/somerville_crime_pipeline.py` (full pull + merge on `incnum`, 22,325 rows in 7.94s); `main_bronze.raw_somerville_crime_raw` + dbt view; new bronze schema.yml + `crime-data-pii-unredacted-in-bronze.md` limitation; run.sh stage 1b/10. [full narrative](docs/sessions/session-37-2026-05-13-plan-12-phase-3-crime-bronze.md)
+- **Session 36** — 2026-05-13 01:15 ET — plan-12-phase-2-wards-ingestion; DuckDB spatial extension reads Socrata `ym5n-phxd` ZIP-bundled shapefile; `dim_ward` with 7 polygons in WGS84; airlayer auto-join compiled; `location-ward-block-only` limitation written. [full narrative](docs/sessions/session-36-2026-05-13-plan-12-phase-2-wards-ingestion.md)
 - **Session 35** — 2026-05-13 00:46 ET — plan-12-phase-1-socrata-inventory; [`scripts/build_socrata_inventory.py`](scripts/build_socrata_inventory.py) + [`scripts/generate_socrata_inventory_page.py`](scripts/generate_socrata_inventory_page.py); `main_admin.fct_socrata_catalog_raw` (49 rows, 1 snapshot); [`docs/socrata-inventory.md`](docs/socrata-inventory.md) (49 datasets grouped by category, 29 tabular + 20 blob); wards blob-only on Socrata; Crime Reports `aghs-hqvg` named as Phase 3 target. [full narrative](docs/sessions/session-35-2026-05-13-plan-12-phase-1-socrata-inventory.md)
 - **Session 34** — 2026-05-13 01:05 ET — plan-11-scoping; [docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md) — 9-phase plan written as scoping-only doc (Builder Agent pre-flight + data pre-flight + construction + portal listing + limitations + retro + sign-off), two carry-forward questions flagged, execution pending Gordon's review. [full narrative](docs/sessions/session-34-2026-05-13-plan-11-scoping.md)
 - **Session 33** — 2026-05-13 00:45 ET — plan-10-opportunistic-principle; [`docs/plans/plan-10-buildmd-7-opportunistic-principle.md`](docs/plans/plan-10-buildmd-7-opportunistic-principle.md); BUILD.md §7 gains "The opportunistic principle" subsection + Builder Agent subsection rewritten + §4 reconciled. [full narrative](docs/sessions/session-33-2026-05-13-plan-10-opportunistic-principle.md)
@@ -206,6 +214,11 @@
 | 2026-05-14 22:55 ET | **Plan 11 + Plan 14 PRs merged** | Operator visual-verified the rat-complaints dashboard renders cleanly post-ASCII-fix. PR #1 (Plan 11, including Session 41 fix) merged to main via gh pr merge --merge with LOG.md conflict resolution. PR #2 (Plan 14) merged earlier in the session. Both branches retained for archaeology. `./run.sh manual` re-verified `success` on main post-merge. |
 | 2026-05-13 23:55 ET | **Session 42: Session 41's atob diagnosis was wrong — the bug was in the portal, not in Oxygen** | The SPA's `/apps/:pathb64` route expects a base64-encoded path. `portal/dashboards.html`'s "Open in workspace" link sent the raw name `rat_complaints_by_ward`; underscores aren't valid base64, so `atob` threw `InvalidCharacterError`. Confirmed by inspecting `assets/index-uGZkA66J.js`: `Ip` is a UTF-8-safe base64 URL-param decoder, and callers always `Fp()` (btoa) paths before constructing the URL. Hypothesis test (loading `/apps/YXBwcy9yYXRfY29tcGxhaW50c19ieV93YXJkLmFwcC55bWw=` directly) rendered cleanly. PR [#4](https://github.com/ironmonkey88/oxygen-mvp/pull/4) fixes the portal link to use the encoded path and flips `spa-render-atob-on-utf8-markdown.md` to `status: resolved` with content rewritten to capture the real diagnosis. Lesson: read the function body, not just the function name — the minified bundle is not opaque. |
 | 2026-05-13 23:55 ET | **Session 41 + 42 workspace ASCII-fies not being reverted** | The 22 files / 128 non-ASCII chars changed in Sessions 41 (PR [#1](https://github.com/ironmonkey88/oxygen-mvp/pull/1)) and 42 first-attempt (PR [#3](https://github.com/ironmonkey88/oxygen-mvp/pull/3)) are semantically equivalent to the originals and harmless. Reverting would be churn for no functional gain. The retracted limitation entry explicitly names the underlying constraint as false; the suggested pre-commit grep guard for non-ASCII workspace bytes was never wired up and should not be. |
+| 2026-05-14 03:30 ET | **Plan 15: marker-replacement pattern, not full-regen, for portal/index.html** | Generator only rewrites between `BEGIN_STATS`/`END_STATS` and `BEGIN_DATASET_CARDS`/`END_DATASET_CARDS` HTML comments. The rest of the homepage stays hand-editable. Avoids the duplicate-CSS pain of full-regen (`generate_trust_page.py` pattern) for a page with substantial hand-built CSS + structure. |
+| 2026-05-14 05:00 ET | **Plan 16: ward map SVG not wired into run.sh** | Wards rarely change (redistricting only). `scripts/generate_wards_svg.py` is a manual one-off generator; the output SVG is committed as a static asset. Saves ~150ms on every pipeline run for no benefit. If `dim_ward.geometry_wkt_wgs84` ever changes, regen manually. |
+| 2026-05-14 06:30 ET | **Plan 17: comment-block metadata contract for `.app.yml`, not top-level YAML keys** | `# === DASHBOARD METADATA === ... # === END DASHBOARD METADATA ===` block at top of each `apps/*.app.yml`, parsed as YAML after stripping `# ` prefix. Comment-block keeps metadata invisible to Oxygen -- `oxy validate` 12/12 confirmed no unknown-key rejection. Generator has graceful fallback to `name:` + first paragraph of `description:` for apps without the block. Future Builder Agent drafts surface on `/dashboards` even before metadata is added; a separate session can backfill. |
+| 2026-05-14 07:00 ET | **Plan 18 + 19 deferred to a fresh Code thread** | Sessions 46 (311 overview Builder CLI build) and 47 (rat dashboard iteration via Builder CLI) require interactive Builder CLI sessions with HITL Accept/Reject prompts + JSONL transcript capture + Chrome MCP visual verification -- qualitatively different from Sessions 43-45's mechanical generator work. After today's earlier work in this thread (Plans 11, 14, Sessions 41/42 -- 3 merged PRs) + Sessions 43-45 (3 PRs), accumulated state risks the kind of quality drop the Session 41 atob misdiagnosis modeled. Honest reporting > optimistic reporting: 3 verified PRs > 5 PRs where the last two might need retraction. Brief stop condition "Anything that contradicts a load-bearing assumption" applied. |
+| 2026-05-14 07:30 ET | **Stacked-PR base-ref gotcha during merge** | When merging stacked PRs in sequence, GitHub does NOT auto-update the base ref of dependent PRs after the parent merges. Merging PR #7 (base = #6's branch) AFTER #6 merged caused #7's content to land in the orphaned `claude/plan-15-homepage-dataset-summary` branch, NOT main. Recovery: retargeted PR #8 base to `main` directly; PR #8's branch (top of the stack) already contained #6 + #7 + #8 content, so merging #8 brought Plans 16 + 17 into main alongside the #6 content that was already there. Lesson: for stacked PRs, retarget each PR's base to `main` BEFORE merging, OR merge only the top of the stack after rebasing it onto main. |
 
 ---
 
