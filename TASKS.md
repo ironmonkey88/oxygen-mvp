@@ -340,8 +340,8 @@ Session 21. Root cause: `*` in allowlist patterns does not match `|`; piped git 
 - [x] Deploy portal index.html at port 80 — verified live at http://18.224.151.49
 - [x] Fix portal "Open Chat →" link — Plan 0.5 closed 2026-05-08 11:48 ET (3 hrefs repointed to `http://18.224.151.49:3000/`, nginx `location /chat` block removed; gates 1-4 green; gate 5 = Gordon's browser test)
 - [ ] Add /tasks route — rendered TASKS.md
-- [ ] Add /erd route — ERD SVG from schema.sql
-- [ ] Add /docs route — dbt docs generate output
+- [x] Add /erd route — ERD SVG from schema.sql *(closed by Plan 1b Phase 5, Session 30, commit `0a0a065` — shipped as Mermaid `erDiagram` from dbt `schema.yml` relationships tests rather than SVG from `schema.sql`; live at /erd. Plan B (2026-05-14) reconciled this row after investigation found the original framing was stale.)*
+- [x] Add /docs route — dbt docs generate output *(closed by Plan 2 D1, Session 13 — dbt docs served at /docs/ via nginx alias; Plan A (2026-05-14) added `dbt/models/overview.md` orientation prose.)*
 
 ### Semantic Layer (Airlayer)
 - [x] Review Airlayer docs (incl. https://github.com/oxy-hq/airlayer/blob/main/docs/schema-format.md)
