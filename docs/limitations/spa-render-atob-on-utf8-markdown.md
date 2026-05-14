@@ -1,34 +1,21 @@
 ---
-id: spa-render-atob-on-utf8-workspace
-title: Oxygen SPA fails to render when ANY workspace file contains non-ASCII (UTF-8) characters
-severity: warning
+id: spa-render-atob-on-utf8-markdown
+title: SPA atob InvalidCharacterError on /apps/* (resolved -- portal link bug, not an Oxygen limitation)
+severity: info
 affects:
-  - apps/*.app.yml
-  - agents/*.agent.yml
-  - semantics/views/*.view.yml
-  - semantics/topics/*.topic.yml
-  - dbt/models/**/*.sql
-  - dbt/models/**/schema.yml
-  - dbt/tests/**/*.sql
-  - docs/limitations/_index.yaml
+  - portal/dashboards.html
 since: 2026-05-14
-status: active
+status: resolved
+resolved: 2026-05-14
 ---
 
-# Oxygen SPA fails to render when ANY workspace file contains non-ASCII characters
+# SPA atob InvalidCharacterError on /apps/* -- resolved, was a portal-link bug
 
-The Oxygen SPA (`oxy 0.5.47`, web app served at port 3000) fails to
-render when **any** workspace file the SPA loads contains non-ASCII
-UTF-8 characters — not just `.app.yml` files. Originally surfaced
-as an `.app.yml`-only issue in Plan 11 Session 41; a follow-up
-recurrence (Session 42, on the same /apps/rat_complaints_by_ward
-click-through after the Session 41 fix) showed the SPA also chokes
-on em-dashes in semantic-layer view YAMLs, the answer-agent prompt,
-dbt model SQL comments, dbt `schema.yml` descriptions, dbt singular
-tests, and the limitations index. 128 non-ASCII chars across 22
-project files all had to be stripped.
+## What we thought it was
 
-The failure surfaces in browser console as:
+Session 41 (Plan 11 visual-gate fix) and Session 42 (broader workspace
+sweep) interpreted this `InvalidCharacterError` stack trace as an
+Oxygen SPA limitation around UTF-8 in workspace files:
 
 ```
 InvalidCharacterError: Failed to execute 'atob' on 'Window':
@@ -37,106 +24,89 @@ The string to be decoded is not correctly encoded.
     at ...assets/index-uGZkA66J.js:156:60512 (Object.useMemo)
 ```
 
-The `atob` (base64-decode) call site suggests the SPA is base64-
-decoding something derived from the app config server-side; the
-non-ASCII bytes appear to break the encode/decode pair somewhere in
-that chain.
+The reasoning was: `Ip` calls `atob`, `atob` chokes on non-base64
+input, non-ASCII bytes in workspace YAML/SQL break the encode/decode
+pair somewhere server-side. Hypothesis fix: ASCII-ify all workspace
+files the SPA might load. Session 41 did `apps/*.app.yml`; Session 42
+widened to agents, semantic views, dbt models, schema.yml, dbt
+tests, and the limitations index -- 22 files, 128 non-ASCII chars.
 
-## Minimal reproduction
+Neither fix made the error go away.
 
-Any workspace file the SPA loads — `.app.yml`, `.agent.yml`,
-`.view.yml`, `.topic.yml`, dbt model SQL, dbt `schema.yml`, dbt
-singular tests, `docs/limitations/_index.yaml` — containing any
-non-ASCII character (em-dash `—`, en-dash `–`, smart quotes, arrows
-like `↔` or `→`, bullets, section sign `§`, ellipsis `…`, etc.) in
-any field (prose, comments, descriptions, titles) appears to trigger
-the failure.
+## What it actually was
 
-**Plan 11 Session 41 (initial)** found 15 non-ASCII chars in
-`apps/rat_complaints_by_ward.app.yml` and stripped them — rendering
-returned for direct `.app.yml`-only loads, but the click-through
-from the portal's `/dashboards` listing to the SPA still failed
-because the SPA also loads the workspace context (semantic views,
-agent yaml, dbt models) when rendering an app.
+Session 42 follow-up inspection of `assets/index-uGZkA66J.js`
+revealed:
 
-**Session 42 (broader fix)** scanned all SPA-readable workspace files
-and found 128 non-ASCII chars across 22 files:
-
-| File family | Files | Non-ASCII chars |
-|---|---|---|
-| `apps/*.app.yml` | 1 | 15 (Session 41) |
-| `agents/*.agent.yml` | 1 | 8 |
-| `semantics/views/*.view.yml` | 6 | 11 |
-| `dbt/models/*/*.sql` | 9 | 17 |
-| `dbt/models/*/schema.yml` | 3 | 83 |
-| `dbt/tests/singular/*.sql` | 1 | 2 |
-| `docs/limitations/_index.yaml` | 1 | 5 |
-
-All swept to ASCII equivalents (`--`, `-`, `+`, `->`, `...`, `sect.`,
-straight quotes) via a single script. Rendering returned for the
-click-through path post-sweep.
-
-## Expected behavior
-
-`.app.yml` is YAML, which is UTF-8 by spec. Valid UTF-8 in any field
-(prose or otherwise) should render. The SPA should base64-encode
-UTF-8 bytes correctly (e.g., `btoa(unescape(encodeURIComponent(str)))`
-or equivalent) and decode the same on the consumer side.
-
-## Workaround
-
-ASCII-ify **all SPA-readable workspace files**, not just `.app.yml`:
-
-| Source character | Replacement |
-|---|---|
-| `—` (em dash, U+2014) | `--` |
-| `–` (en dash, U+2013) | `-` |
-| `"` `"` (smart double quotes, U+201C/U+201D) | `"` |
-| `'` `'` (smart single quotes, U+2018/U+2019) | `'` |
-| `•` (bullet, U+2022) | `*` or `-` |
-| `→` (right arrow, U+2192) | `->` |
-| `↔` (left-right arrow, U+2194) | `+` or `<->` |
-| `…` (ellipsis, U+2026) | `...` |
-| `§` (section sign, U+00A7) | `sect.` |
-| ...any other non-ASCII | ASCII equivalent |
-
-Pre-commit grep guard covering all SPA-readable surfaces:
-
-```bash
-grep -lnPr "[\x80-\xff]" \
-  apps/ \
-  agents/ \
-  semantics/ \
-  dbt/models/ \
-  dbt/tests/ \
-  docs/limitations/_index.yaml \
-  config.yml \
-  2>/dev/null
+```js
+function Ip(e){
+  return decodeURIComponent(
+    atob(e).split('').map(...)
+  )
+}
 ```
 
-Returns non-empty if any non-ASCII byte is present in any
-SPA-readable file. A pre-commit hook should fail the commit when
-this command produces output.
+`Ip` is the SPA's standard "decode a base64-encoded URL path
+parameter back to a UTF-8 path string" helper. The route definition
+is:
 
-## Customer-feedback for Oxy
+```js
+APP: e => `${workspaceRoot}/apps/${e}`
+```
 
-Third Oxygen SPA bug surfaced in this project's customer-shaped use,
-alongside:
+And callers build `e` with `Fp(t.path)` -- which `btoa`-encodes the
+full file path. So the route is **`/apps/<base64(path)>`**, not
+`/apps/<raw-name>`.
 
-- [`plan-11-builder-cli-token-budget-hang`](plan-11-builder-cli-token-budget-hang.md)
-  (CLI state-machine doesn't resume on "Continue with double budget"
-  answer)
-- The default trust-signal behavior gap (Builder Agent should
-  default-include trust signals on `.app.yml` proposals, not require
-  explicit prompting — see
-  [`docs/transcripts/plan-11-rat-complaints-builder-session.md`](../transcripts/plan-11-rat-complaints-builder-session.md))
+The portal's `/dashboards` page (`portal/dashboards.html`) was
+linking to:
 
-All three are bundled in the project's "customer-shaped use surfaces
-customer-shaped feedback" loop ([MVP 1 retrospective](../retrospective/mvp1-lessons-learned.md)),
-ready to file as a single Oxy-side ticket.
+```
+/apps/rat_complaints_by_ward
+```
 
-## Resolution path
+`rat_complaints_by_ward` contains underscores, which are not in the
+base64 alphabet (`A-Z`, `a-z`, `0-9`, `+`, `/`, `=`). The SPA
+extracted the segment as `pathb64`, passed it to `atob`, and threw.
 
-Oxy-side fix to the SPA's base64 encoding step. Until then, the
-ASCII-only workaround is documented + can be enforced via the
-pre-commit grep guard above. No project-side blocker.
+Hypothesis test: open
+`/apps/YXBwcy9yYXRfY29tcGxhaW50c19ieV93YXJkLmFwcC55bWw=`
+(base64 of `apps/rat_complaints_by_ward.app.yml`) directly in the
+browser. Dashboard rendered cleanly with all 4 charts + 2 tables +
+trust signals. Root cause confirmed.
+
+## Resolution
+
+[`portal/dashboards.html`](../../portal/dashboards.html) `Open in
+workspace` link was updated to use the base64-encoded path. This is
+the actual SPA contract for the `/apps/:pathb64` route; matching it
+is the fix.
+
+## Lessons
+
+- **The SPA route `/apps/:pathb64` expects a base64-encoded full
+  file path** (e.g., `apps/rat_complaints_by_ward.app.yml` ->
+  `YXBwcy9yYXRfY29tcGxhaW50c19ieV93YXJkLmFwcC55bWw=`). Future
+  portal pages that link into the SPA must encode paths with `btoa`
+  before constructing the URL. If/when the portal listing is
+  auto-generated from `apps/*.app.yml` metadata, the generator must
+  do this encoding step.
+
+- **Read the stack frame, not just the function name.** The
+  Session 41 diagnostic read `atob` -> "must be UTF-8". A two-minute
+  inspection of `Ip`'s body would have shown it's a URL-param
+  decoder, not a workspace-content decoder. The minified bundle is
+  not opaque -- `grep atob` plus 200 chars of context was enough.
+
+- **The Session 41 + 42 workspace ASCII-fies were unnecessary** but
+  not harmful. The changes (em-dash -> `--`, arrows -> `->`, etc.)
+  are semantically equivalent and didn't break anything, so they
+  are not being reverted. The Session 41 entry suggested a
+  `grep -nP "[\x80-\xff]" apps/*.app.yml` pre-commit guard; it was
+  never wired up as an actual hook, and shouldn't be -- the
+  underlying constraint was false.
+
+## What this is NOT
+
+This is NOT an Oxygen SPA limitation. The SPA is working as
+designed. The bug was in our portal HTML.
