@@ -35,6 +35,20 @@ cd "$REPO_ROOT"
 # shellcheck disable=SC1091
 source "$REPO_ROOT/.venv/bin/activate"
 
+# Portal deploy helper — Plan 14b (2026-05-13). The portal docroot
+# /var/www/somerville should be ubuntu-owned; if a stray `sudo cp`
+# elsewhere has flipped a target file to root, this self-heals before
+# the cp. Sudoers allows ubuntu to chown files under /var/www/somerville
+# without a password (configured Plan 14b).
+deploy_html() {
+    local src="$1"
+    local dst="$2"
+    if [ -e "$dst" ] && [ ! -w "$dst" ]; then
+        sudo chown ubuntu:ubuntu "$dst" 2>/dev/null || true
+    fi
+    cp "$src" "$dst"
+}
+
 RUN_TYPE="${1:-manual}"
 
 # Step 0: record run start, capture run_id
@@ -122,7 +136,7 @@ ERROR_STAGE="metrics_page"
 echo "==> 7/10 generate /metrics page"
 python scripts/generate_metrics_page.py
 if [ -d /var/www/somerville ]; then
-    cp portal/metrics.html /var/www/somerville/metrics.html
+    deploy_html portal/metrics.html /var/www/somerville/metrics.html
     echo "    deployed to /var/www/somerville/metrics.html"
 fi
 
@@ -131,13 +145,13 @@ ERROR_STAGE="trust_page"
 echo "==> 8/10 generate /trust page"
 python scripts/generate_trust_page.py
 if [ -d /var/www/somerville ] && [ -f portal/trust.html ]; then
-    cp portal/trust.html /var/www/somerville/trust.html
+    deploy_html portal/trust.html /var/www/somerville/trust.html
     echo "    deployed to /var/www/somerville/trust.html"
 fi
 
 # Sync the static portal index too — so nav changes land without a manual scp.
 if [ -d /var/www/somerville ] && [ -f portal/index.html ]; then
-    cp portal/index.html /var/www/somerville/index.html
+    deploy_html portal/index.html /var/www/somerville/index.html
     echo "    synced portal/index.html → /var/www/somerville/index.html"
 fi
 
@@ -166,7 +180,7 @@ ERROR_STAGE="profile_page"
 echo "==> 9d/10 regenerate /profile page"
 python scripts/generate_profile_page.py
 if [ -d /var/www/somerville ] && [ -f portal/profile.html ]; then
-    cp portal/profile.html /var/www/somerville/profile.html
+    deploy_html portal/profile.html /var/www/somerville/profile.html
 fi
 
 ERROR_STAGE="erd_diagrams"
@@ -175,7 +189,7 @@ python scripts/generate_warehouse_erd.py
 python scripts/generate_semantic_layer_diagram.py
 python scripts/generate_erd_page.py
 if [ -d /var/www/somerville ] && [ -f portal/erd.html ]; then
-    cp portal/erd.html /var/www/somerville/erd.html
+    deploy_html portal/erd.html /var/www/somerville/erd.html
 fi
 
 # Step 10: record run end (success or partial depending on test exits)
