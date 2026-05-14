@@ -33,7 +33,17 @@ HTML = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({{ startOnLoad: true, theme: 'neutral', flowchart: {{ useMaxWidth: true }} }});
+  // useMaxWidth: false on both er + flowchart so the SVG renders at its
+  // natural size and .mermaid's overflow-x:auto becomes the active scroll
+  // surface. The warehouse erDiagram is ~2365px wide -- with useMaxWidth
+  // true (Mermaid 10 default) it scaled down to fit container, making
+  // text microscopic at any viewport. See Plan B-revisited investigation.
+  mermaid.initialize({{
+    startOnLoad: true,
+    theme: 'neutral',
+    flowchart: {{ useMaxWidth: false }},
+    er:        {{ useMaxWidth: false }}
+  }});
 </script>
 <style>
   @font-face {{ font-family: 'DM Serif Display'; src: url('/fonts/DMSerifDisplay-Regular.woff2') format('woff2'); font-weight: 400; }}
