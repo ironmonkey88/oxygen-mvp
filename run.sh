@@ -149,6 +149,14 @@ if [ -d /var/www/somerville ] && [ -f portal/trust.html ]; then
     echo "    deployed to /var/www/somerville/trust.html"
 fi
 
+# Step 8b: refresh portal homepage dynamic content (Plan 15)
+# Patches marker-bounded sections in portal/index.html with current
+# row counts, date ranges, ward coverage, limitation count, and last
+# pipeline run. Cheap (~200ms).
+ERROR_STAGE="homepage_summary"
+echo "==> 8b/10 refresh portal homepage summary"
+python scripts/generate_homepage_summary.py
+
 # Sync the static portal index too — so nav changes land without a manual scp.
 if [ -d /var/www/somerville ] && [ -f portal/index.html ]; then
     deploy_html portal/index.html /var/www/somerville/index.html
