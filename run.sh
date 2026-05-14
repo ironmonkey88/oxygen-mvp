@@ -176,6 +176,13 @@ if [ -d /var/www/somerville ] && [ -f portal/dashboards.html ]; then
     echo "    synced portal/dashboards.html → /var/www/somerville/dashboards.html"
 fi
 
+# Deploy the ward-map background SVG (referenced by portal/index.html CSS).
+# Static asset, regenerated only when dim_ward geometry changes.
+if [ -d /var/www/somerville ] && [ -f portal/somerville-wards-background.svg ]; then
+    deploy_html portal/somerville-wards-background.svg /var/www/somerville/somerville-wards-background.svg
+    echo "    synced portal/somerville-wards-background.svg → /var/www/somerville/"
+fi
+
 # Step 9: build limitations index
 ERROR_STAGE="limitations_index"
 echo "==> 9/10 build limitations index"

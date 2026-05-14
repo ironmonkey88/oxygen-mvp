@@ -62,7 +62,9 @@
     }
 
     /* Ward-map background — subtle, anchored top-right of the upper page area.
-       Source: portal/assets/somerville-wards-background.svg (Plan 16).
+       Source: portal/somerville-wards-background.svg (Plan 16; path is top-
+       level on purpose -- nginx /assets is a proxy to the Oxygen SPA, so a
+       static SVG can't live there).
        Generator: scripts/generate_wards_svg.py reads dim_ward geometry. */
     body::before {
       content: '';
@@ -71,7 +73,7 @@
       right: -40px;
       width: min(55vw, 720px);
       height: 620px;
-      background-image: url('/assets/somerville-wards-background.svg');
+      background-image: url('/somerville-wards-background.svg');
       background-repeat: no-repeat;
       background-position: center;
       background-size: contain;
