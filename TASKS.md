@@ -340,7 +340,7 @@ Session 21. Root cause: `*` in allowlist patterns does not match `|`; piped git 
 - [x] Deploy portal index.html at port 80 — verified live at http://18.224.151.49
 - [x] Fix portal "Open Chat →" link — Plan 0.5 closed 2026-05-08 11:48 ET (3 hrefs repointed to `http://18.224.151.49:3000/`, nginx `location /chat` block removed; gates 1-4 green; gate 5 = Gordon's browser test)
 - [ ] Add /tasks route — rendered TASKS.md
-- [ ] Add /erd route — ERD SVG from schema.sql
+- [ ] Add /erd route — ERD SVG from schema.sql *(Plan B — in flight; investigation finds /erd already shipped via Plan 1b with Mermaid, not SVG — recommendation to close as `[x]` pending Gordon's review)*
 - [ ] Add /docs route — dbt docs generate output
 
 ### Semantic Layer (Airlayer)
