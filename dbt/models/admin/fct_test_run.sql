@@ -5,10 +5,10 @@
 ) }}
 
 -- One row per test per run. Two row sources:
---   (a) baseline comparisons — compare current row counts (yearly +
+--   (a) baseline comparisons -- compare current row counts (yearly +
 --       per-table totals) against the frozen expected_value in
 --       dim_data_quality_test, compute variance, set status.
---   (b) dbt test results — parsed from raw_dbt_results_raw for the
+--   (b) dbt test results -- parsed from raw_dbt_results_raw for the
 --       latest run_id; status mapped from dbt's status field.
 --
 -- Append-only with `is_incremental()` filter on run_id so we never

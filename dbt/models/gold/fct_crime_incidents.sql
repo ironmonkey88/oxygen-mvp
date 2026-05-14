@@ -1,6 +1,6 @@
 {{ config(materialized='table', schema='gold') }}
 
--- Gold: fct_crime_incidents — one row per Somerville Police incident.
+-- Gold: fct_crime_incidents -- one row per Somerville Police incident.
 -- Source: main_bronze.raw_somerville_crime (dlt-merged from Socrata
 -- `aghs-hqvg`). 22,325 rows as of 2026-05-13.
 --

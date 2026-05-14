@@ -1,5 +1,5 @@
 name: requests
-description: "Somerville 311 service requests — fact table, one row per request"
+description: "Somerville 311 service requests -- fact table, one row per request"
 table: main_gold.fct_311_requests
 datasource: somerville
 

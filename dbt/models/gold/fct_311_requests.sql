@@ -4,7 +4,7 @@
 -- Location denormalized: bronze only carries `ward` and `block_code` (no
 -- neighborhood/lat/long/address columns exist). dim_location deferred to MVP 3.
 -- PII redaction is MVP 3 scope and not applied here.
--- Dept tag columns: bronze stores '0'/'1'/NULL strings; try_cast → boolean preserves NULL.
+-- Dept tag columns: bronze stores '0'/'1'/NULL strings; try_cast -> boolean preserves NULL.
 select
     id,
     classification,

@@ -1,6 +1,6 @@
 {{ config(materialized='table', schema='gold') }}
 
--- Gold: dim_ward — one row per administrative ward.
+-- Gold: dim_ward -- one row per administrative ward.
 -- Source: Socrata `ym5n-phxd` (Wards), ingested by
 -- `scripts/ingest_somerville_wards.py`. Static reference data; the
 -- ward count won't change unless the city redistricts.

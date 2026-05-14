@@ -17,7 +17,7 @@ dimensions:
     type: string
     expr: ward
     primary_key: true
-    description: "Ward number 1–7 (VARCHAR). Natural-key match to requests.ward."
+    description: "Ward number 1-7 (VARCHAR). Natural-key match to requests.ward."
     samples: ["1", "2", "3", "4", "5", "6", "7"]
   - name: ward_name
     type: string

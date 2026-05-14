@@ -38,7 +38,7 @@ dimensions:
   - name: incident_dt
     type: date
     expr: incident_dt
-    description: "Date of the incident. NULL for ~12.5% of cases (sensitive incidents — day-and-month withheld at source). See crime-sensitive-incidents-no-month limitation."
+    description: "Date of the incident. NULL for ~12.5% of cases (sensitive incidents -- day-and-month withheld at source). See crime-sensitive-incidents-no-month limitation."
   - name: incident_year
     type: number
     expr: incident_year
@@ -76,7 +76,7 @@ dimensions:
   - name: ward
     type: string
     expr: ward
-    description: "Somerville ward 1–7. NULL for ~13% of rows; 'CAM' for 2 cross-jurisdiction rows. See crime-ward-coverage-gaps limitation."
+    description: "Somerville ward 1-7. NULL for ~13% of rows; 'CAM' for 2 cross-jurisdiction rows. See crime-ward-coverage-gaps limitation."
     samples: ["1", "2", "3", "4", "5", "6", "7"]
   - name: block_code
     type: string

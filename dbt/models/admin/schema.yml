@@ -4,8 +4,8 @@ models:
   - name: fct_data_profile
     description: |
       Column-level profile snapshots. One row per (table, column,
-      profiled_at). Materialized incremental (append) — every pipeline
-      run adds a fresh batch. Observational only — never generates rows
+      profiled_at). Materialized incremental (append) -- every pipeline
+      run adds a fresh batch. Observational only -- never generates rows
       in fct_test_run. Profiles bronze.raw_311_requests plus all four
       gold tables; columns introspected from information_schema at
       compile time. All min/max cast to varchar for uniform schema.
@@ -48,9 +48,9 @@ models:
       Test catalog. One row per defined test. Append-only with
       is_incremental() filter on test_id, so baselines are seeded once
       and remain frozen. Three test_id families:
-        - `baseline.raw_311_requests.year_<YYYY>.row_count` — yearly
-        - `baseline.<table>.all.row_count`                  — per-table totals
-        - `dbt_test.<node_name>`                            — every dbt test
+        - `baseline.raw_311_requests.year_<YYYY>.row_count` -- yearly
+        - `baseline.<table>.all.row_count`                  -- per-table totals
+        - `dbt_test.<node_name>`                            -- every dbt test
       Re-certifying a baseline requires a manual update (out of scope
       for MVP 1).
     columns:
@@ -90,9 +90,9 @@ models:
   - name: fct_test_run
     description: |
       One row per test per run. Two row sources unioned together:
-        (a) baseline comparisons — yearly + total row counts compared
+        (a) baseline comparisons -- yearly + total row counts compared
             to frozen expected_value in dim_data_quality_test
-        (b) dbt test results — parsed from raw_dbt_results_raw, scoped
+        (b) dbt test results -- parsed from raw_dbt_results_raw, scoped
             to the most recent run_id
       Append-only with is_incremental() filter on run_id so we never
       double-count a run.
@@ -102,7 +102,7 @@ models:
         data_tests:
           - not_null
       - name: test_id
-        description: 'FK to dim_data_quality_test.test_id (natural key — no surrogate).'
+        description: 'FK to dim_data_quality_test.test_id (natural key -- no surrogate).'
         data_tests:
           - not_null
       - name: run_at
@@ -114,7 +114,7 @@ models:
       - name: variance_pct
         description: 'Baselines only: (actual - expected) / expected. NULL for dbt tests.'
       - name: status
-        description: 'pass | fail | warn — outcome of the test.'
+        description: 'pass | fail | warn -- outcome of the test.'
         data_tests:
           - not_null
           - accepted_values:
