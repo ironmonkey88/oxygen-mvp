@@ -34,4 +34,4 @@ Generate `/dashboards` listing from `apps/*.app.yml` metadata on every pipeline 
 
 ## Next action
 
-End of MVP 2 polish arc Phase 1 (Sessions 43-45). Phase 2 (Sessions 46-47, Builder CLI dashboards) deferred to a fresh Code thread per the honest-reporting discipline -- the Builder CLI interactive sessions are qualitatively different from the mechanical generator work of 43-45 and risk quality drop in a context-heavy thread. See [handoff-2026-05-14-sessions-43-to-45.md](/Users/gordonwong/handoff-2026-05-14-sessions-43-to-45.md).
+End of MVP 2 polish arc Phase 1 (Sessions 43-45). Phase 2 (Sessions 46-47, Builder CLI dashboards) deferred to a fresh Code thread per the honest-reporting discipline -- the Builder CLI interactive sessions are qualitatively different from the mechanical generator work of 43-45 and risk quality drop in a context-heavy thread. See [handoff](../handoffs/2026-05-14-sessions-43-to-45.md).
