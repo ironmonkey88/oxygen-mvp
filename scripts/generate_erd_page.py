@@ -15,6 +15,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Local import: scripts/_nav.py is the shared nav source.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _nav import nav_html, NAV_CSS  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_PATH       = REPO_ROOT / "portal" / "erd.html"
 WAREHOUSE_MMD  = REPO_ROOT / "portal" / "erd-warehouse.mmd"
@@ -56,15 +60,7 @@ HTML = """<!doctype html>
   a {{ color: var(--text-mid); }}
   a:hover {{ color: var(--text); }}
 
-  .nav {{
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px; border-bottom: 1px solid var(--border);
-  }}
-  .nav-brand {{
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 18px; letter-spacing: 0.01em;
-  }}
-  .nav-links a {{ font-size: 14px; margin-left: 24px; text-decoration: none; }}
+{NAV_CSS}
 
   .hero {{ padding: 56px 40px 28px; max-width: 880px; }}
   .hero-label {{
@@ -109,17 +105,7 @@ HTML = """<!doctype html>
 </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-brand">Somerville 311</div>
-    <div class="nav-links">
-      <a href="/">Home</a>
-      <a href="/docs/">Docs</a>
-      <a href="/erd">Schema</a>
-      <a href="/metrics">Metrics</a>
-      <a href="/profile">Profiles</a>
-      <a href="/trust">Trust</a>
-    </div>
-  </nav>
+  {nav_block}
 
   <header class="hero">
     <span class="hero-label">Warehouse &amp; semantic layer</span>
@@ -181,6 +167,8 @@ def main() -> int:
         warehouse_mermaid=warehouse,
         semantic_mermaid=semantic,
         generated_at=generated,
+        NAV_CSS=NAV_CSS,
+        nav_block=nav_html(active="erd"),
     )
 
     OUT_PATH.write_text(html, encoding="utf-8")

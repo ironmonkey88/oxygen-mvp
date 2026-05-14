@@ -52,9 +52,10 @@
       color: var(--green); background: var(--green-pale);
       padding: 2px 8px; border-radius: 3px;
     }
-    .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--text-mid); }
-    .nav-links a { transition: color .15s; text-decoration: none; }
+    .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--text-mid); }
+    .nav-links a { transition: color .15s; text-decoration: none; color: inherit; }
     .nav-links a:hover { color: var(--text); }
+    .nav-current { color: var(--green); font-weight: 600; cursor: default; }
 
     main { max-width: 980px; margin: 56px auto 80px; padding: 0 40px; }
 
@@ -151,6 +152,7 @@
   </style>
 </head>
 <body>
+  <!-- BEGIN_NAV (rewritten by scripts/generate_dashboards_listing.py from scripts/_nav.py) -->
   <nav>
     <div class="nav-brand">
       Somerville Analytics
@@ -158,14 +160,15 @@
     </div>
     <div class="nav-links">
       <a href="/">Home</a>
-      <a href="/docs/">Data dictionary</a>
-      <a href="/erd">Schema</a>
+      <span class="nav-current" aria-current="page">Dashboards</span>
       <a href="/metrics">Metrics</a>
-      <a href="/profile">Profiles</a>
       <a href="/trust">Trust</a>
-      <a href="/dashboards">Dashboards</a>
+      <a href="/profile">Profiles</a>
+      <a href="/erd">Schema</a>
+      <a href="/docs/">Data dictionary</a>
     </div>
   </nav>
+  <!-- END_NAV -->
 
   <main>
     <h1>Dashboards</h1>
