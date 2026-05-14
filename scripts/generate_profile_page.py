@@ -27,6 +27,10 @@ from pathlib import Path
 import duckdb
 import yaml
 
+# Local import: scripts/_nav.py is the shared nav source.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _nav import nav_html, NAV_CSS  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DUCKDB_PATH = REPO_ROOT / "data" / "somerville.duckdb"
 SCHEMA_YML_FILES = [
@@ -219,6 +223,8 @@ def render(descs: dict, profiles: dict) -> str:
         profiled_label=profiled_label,
         total_cols=total_cols,
         table_count=table_count,
+        NAV_CSS=NAV_CSS,
+        nav_block=nav_html(active="profile"),
     )
 
 
@@ -261,15 +267,7 @@ HTML_TEMPLATE = """<!doctype html>
     padding: 1px 5px; border-radius: 3px; font-size: 12px;
   }}
 
-  .nav {{
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px; border-bottom: 1px solid var(--border);
-  }}
-  .nav-brand {{
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 18px; letter-spacing: 0.01em;
-  }}
-  .nav-links a {{ font-size: 14px; margin-left: 24px; text-decoration: none; }}
+{NAV_CSS}
 
   .hero {{ padding: 56px 40px 28px; max-width: 880px; }}
   .hero-label {{
@@ -344,17 +342,7 @@ HTML_TEMPLATE = """<!doctype html>
 </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-brand">Somerville 311</div>
-    <div class="nav-links">
-      <a href="/">Home</a>
-      <a href="/docs/">Docs</a>
-      <a href="/erd">Schema</a>
-      <a href="/metrics">Metrics</a>
-      <a href="/profile">Profiles</a>
-      <a href="/trust">Trust</a>
-    </div>
-  </nav>
+  {nav_block}
 
   <header class="hero">
     <span class="hero-label">Column profiles</span>

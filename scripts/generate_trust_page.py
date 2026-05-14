@@ -21,6 +21,10 @@ from pathlib import Path
 
 import duckdb
 
+# Local import: scripts/_nav.py is the shared nav source.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _nav import nav_html, NAV_CSS  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "somerville.duckdb"
 OUT_PATH = REPO_ROOT / "portal" / "trust.html"
@@ -278,16 +282,7 @@ def _wrap(body_inner: str) -> str:
   a:hover {{ color: var(--text); }}
   code {{ font-family: 'DM Mono', monospace; font-size: 0.92em; }}
 
-  .nav {{
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px; border-bottom: 1px solid var(--border);
-    background: #ffffff;
-  }}
-  .nav-brand {{
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 18px; letter-spacing: 0.01em;
-  }}
-  .nav-links a {{ font-size: 14px; margin-left: 24px; text-decoration: none; }}
+{NAV_CSS}
 
   .hero {{ padding: 48px 40px 24px; max-width: 960px; }}
   .hero-label {{
@@ -394,15 +389,7 @@ def _wrap(body_inner: str) -> str:
 </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-brand">Somerville 311</div>
-    <div class="nav-links">
-      <a href="/">Home</a>
-      <a href="/docs/">Data dictionary</a>
-      <a href="/metrics">Metrics</a>
-      <a href="/trust">Trust</a>
-    </div>
-  </nav>
+  {nav_html(active="trust")}
 
   {body_inner}
 </body>

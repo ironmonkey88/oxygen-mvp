@@ -25,6 +25,11 @@ from pathlib import Path
 
 import yaml
 
+# Local import: scripts/_nav.py is the shared nav source.
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _nav import nav_html  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 APPS_DIR = REPO_ROOT / "apps"
 HTML_PATH = REPO_ROOT / "portal" / "dashboards.html"
@@ -36,6 +41,10 @@ _META_RE = re.compile(
 )
 _LISTING_RE = re.compile(
     r"<!-- BEGIN_DASHBOARDS_LISTING.*?-->.*?<!-- END_DASHBOARDS_LISTING -->",
+    re.DOTALL,
+)
+_NAV_RE = re.compile(
+    r"<!-- BEGIN_NAV.*?-->.*?<!-- END_NAV -->",
     re.DOTALL,
 )
 
@@ -205,6 +214,13 @@ def main() -> None:
         "    <!-- END_DASHBOARDS_LISTING -->"
     )
 
+    nav_block = (
+        "<!-- BEGIN_NAV (rewritten by scripts/generate_dashboards_listing.py "
+        "from scripts/_nav.py) -->\n  "
+        + nav_html(active="dashboards")
+        + "\n  <!-- END_NAV -->"
+    )
+
     html = HTML_PATH.read_text()
     new_html, subs = _LISTING_RE.subn(listing_html, html)
     if subs != 1:
@@ -212,8 +228,13 @@ def main() -> None:
             f"Expected exactly 1 BEGIN_DASHBOARDS_LISTING block, found {subs}. "
             "Run with --init to add markers to portal/dashboards.html."
         )
+    new_html, nav_subs = _NAV_RE.subn(nav_block, new_html)
+    if nav_subs != 1:
+        raise SystemExit(
+            f"Expected exactly 1 BEGIN_NAV block, found {nav_subs}"
+        )
     HTML_PATH.write_text(new_html)
-    print(f"refreshed {HTML_PATH.relative_to(REPO_ROOT)} with {len(cards)} dashboards")
+    print(f"refreshed {HTML_PATH.relative_to(REPO_ROOT)} with {len(cards)} dashboards + nav")
 
 
 if __name__ == "__main__":

@@ -22,6 +22,11 @@ from pathlib import Path
 
 import duckdb
 
+# Local import: scripts/_nav.py is the shared nav source.
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _nav import nav_html  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "somerville.duckdb"
 HTML_PATH = REPO_ROOT / "portal" / "index.html"
@@ -245,6 +250,10 @@ _CARDS_RE = re.compile(
     r"<!-- BEGIN_DATASET_CARDS.*?-->.*?<!-- END_DATASET_CARDS -->",
     re.DOTALL,
 )
+_NAV_RE = re.compile(
+    r"<!-- BEGIN_NAV.*?-->.*?<!-- END_NAV -->",
+    re.DOTALL,
+)
 
 
 def main() -> None:
@@ -263,6 +272,12 @@ def main() -> None:
 
     stats_html = render_stats(stats, total_limits)
     cards_html = render_dataset_cards(stats, n311, n_crime)
+    nav_block = (
+        "<!-- BEGIN_NAV (rewritten by scripts/generate_homepage_summary.py "
+        "from scripts/_nav.py) -->\n  "
+        + nav_html(active="home")
+        + "\n  <!-- END_NAV -->"
+    )
 
     html = HTML_PATH.read_text()
 
@@ -276,6 +291,12 @@ def main() -> None:
     if cards_subs != 1:
         raise SystemExit(
             f"Expected exactly 1 BEGIN_DATASET_CARDS block, found {cards_subs}"
+        )
+
+    new_html, nav_subs = _NAV_RE.subn(nav_block, new_html)
+    if nav_subs != 1:
+        raise SystemExit(
+            f"Expected exactly 1 BEGIN_NAV block, found {nav_subs}"
         )
 
     HTML_PATH.write_text(new_html)

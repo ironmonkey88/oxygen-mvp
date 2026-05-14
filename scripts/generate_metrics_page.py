@@ -22,6 +22,10 @@ from html import escape
 
 import yaml
 
+# Local import: scripts/_nav.py is the shared nav source.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _nav import nav_html, NAV_CSS  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VIEWS_DIR = REPO_ROOT / "semantics" / "views"
 OUT_PATH = REPO_ROOT / "portal" / "metrics.html"
@@ -119,12 +123,14 @@ def render(views: list[dict]) -> str:
   :root {{
     --bg:         #f7f6f2;
     --bg-card:    #ffffff;
+    --white:      #ffffff;
     --text:       #1a1a1a;
     --text-mid:   #4a4a4a;
     --text-muted: #8a8a8a;
-    --green:      #2c5f2d;
+    --green:      #1e4d2b;
+    --green-mid:  #2d6a3f;
     --green-pale: #e8f0eb;
-    --border:     #e3e1dc;
+    --border:     #e2dfd8;
   }}
 
   * {{ box-sizing: border-box; }}
@@ -138,15 +144,7 @@ def render(views: list[dict]) -> str:
   a {{ color: var(--text-mid); }}
   a:hover {{ color: var(--text); }}
 
-  .nav {{
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px; border-bottom: 1px solid var(--border);
-  }}
-  .nav-brand {{
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 18px; letter-spacing: 0.01em;
-  }}
-  .nav-links a {{ font-size: 14px; margin-left: 24px; text-decoration: none; }}
+{NAV_CSS}
 
   .hero {{ padding: 56px 40px 28px; max-width: 720px; }}
   .hero-label {{
@@ -205,14 +203,7 @@ def render(views: list[dict]) -> str:
 </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-brand">Somerville 311</div>
-    <div class="nav-links">
-      <a href="/">Home</a>
-      <a href="/docs/">Data dictionary</a>
-      <a href="/metrics">Metrics</a>
-    </div>
-  </nav>
+  {nav_html(active="metrics")}
 
   <header class="hero">
     <span class="hero-label">Metrics catalog</span>
