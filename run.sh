@@ -157,10 +157,23 @@ ERROR_STAGE="homepage_summary"
 echo "==> 8b/10 refresh portal homepage summary"
 python scripts/generate_homepage_summary.py
 
+# Step 8c: refresh /dashboards listing from apps/*.app.yml metadata (Plan 17)
+# Reads each app's `# === DASHBOARD METADATA ===` comment block, builds
+# the listing HTML, patches portal/dashboards.html between markers.
+ERROR_STAGE="dashboards_listing"
+echo "==> 8c/10 refresh /dashboards listing"
+python scripts/generate_dashboards_listing.py
+
 # Sync the static portal index too — so nav changes land without a manual scp.
 if [ -d /var/www/somerville ] && [ -f portal/index.html ]; then
     deploy_html portal/index.html /var/www/somerville/index.html
     echo "    synced portal/index.html → /var/www/somerville/index.html"
+fi
+
+# Deploy the regenerated dashboards listing.
+if [ -d /var/www/somerville ] && [ -f portal/dashboards.html ]; then
+    deploy_html portal/dashboards.html /var/www/somerville/dashboards.html
+    echo "    synced portal/dashboards.html → /var/www/somerville/dashboards.html"
 fi
 
 # Step 9: build limitations index
