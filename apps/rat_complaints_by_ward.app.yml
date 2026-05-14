@@ -1,3 +1,22 @@
+# === DASHBOARD METADATA (Plan 17 / Session 45 contract) ===
+# title: Rat complaints by ward
+# topic: service_requests
+# short_desc: "Somerville rat complaints -- frequency, resolution speed, volume trend, and ward-level service equity."
+# row_caption: "14,036 complaints"
+# coverage: "2015-2026"
+# source_tables:
+#   - main_gold.fct_311_requests
+#   - main_gold.dim_ward
+#   - main_gold.dim_request_type
+#   - main_admin.fct_pipeline_run_raw
+# limitations:
+#   - location-ward-block-only
+# trust_signals:
+#   - last_refreshed
+#   - citations
+#   - limitations
+# === END DASHBOARD METADATA ===
+
 name: rat_complaints_by_ward
 description: |
   Somerville rat complaints -- frequency, resolution speed, volume trend,

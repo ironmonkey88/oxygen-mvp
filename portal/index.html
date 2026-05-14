@@ -57,7 +57,30 @@
       color: var(--text);
       font-size: 15px;
       line-height: 1.5;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    /* Ward-map background — subtle, anchored top-right of the upper page area.
+       Source: portal/assets/somerville-wards-background.svg (Plan 16).
+       Generator: scripts/generate_wards_svg.py reads dim_ward geometry. */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 52px;
+      right: -40px;
+      width: min(55vw, 720px);
+      height: 620px;
+      background-image: url('/assets/somerville-wards-background.svg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav, .hero, .stats, section, footer { position: relative; z-index: 1; }
 
     a { color: inherit; text-decoration: none; }
 
@@ -260,6 +283,77 @@
       text-underline-offset: 2px;
     }
     .dataset-card-limits a:hover { color: var(--green); }
+
+    /* ── WELCOME PROSE ── */
+    .welcome-prose {
+      max-width: 680px;
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.65;
+    }
+    .welcome-prose p { margin-bottom: 16px; }
+    .welcome-prose p:last-child { margin-bottom: 0; }
+    .welcome-subhead {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green-mid);
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+    .welcome-subhead:first-child { margin-top: 0; }
+    .welcome-prose code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.92em;
+      background: var(--green-pale);
+      color: var(--green);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .welcome-prose a {
+      color: var(--green-mid);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .welcome-prose a:hover { color: var(--green); }
+
+    /* ── NOT YET POSSIBLE ── */
+    .not-yet-list {
+      max-width: 760px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .not-yet-item {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: baseline;
+    }
+    .not-yet-item:first-child { border-top: 1px solid var(--border); }
+    .not-yet-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .not-yet-desc {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.55;
+    }
+    .not-yet-desc a {
+      color: var(--green-mid);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .not-yet-desc a:hover { color: var(--green); }
 
     /* ── COMMON QUESTIONS ── */
     .questions-list {
@@ -545,9 +639,26 @@
   </div>
   <!-- END_STATS -->
 
+  <!-- WELCOME -->
+  <section id="welcome">
+    <div class="section-num">01</div>
+    <div class="section-title">Welcome</div>
+    <div class="welcome-prose">
+      <p>This is the Somerville Analytics platform. Analysts use it to investigate service requests, public safety, and how the city operates &mdash; with every answer carrying its own receipts.</p>
+
+      <div class="welcome-subhead">How to use this</div>
+      <p>Start with the chat at <a href="/chat">/chat</a>. Ask a plain-language question; the Answer Agent picks the right semantic-layer view, writes the SQL, runs it on the warehouse, and replies with the answer plus the executed SQL, the row count, citations to the source tables, and any relevant entries from the limitations registry.</p>
+      <p>If a question recurs &mdash; or if you want a visual answer &mdash; check <a href="/dashboards">/dashboards</a>. Each dashboard is a versioned <code>apps/*.app.yml</code> file in the repo carrying the same trust contract as the chat agent. New dashboards are drafted with Builder Agent and reviewed before they ship.</p>
+      <p>For architecture and ground truth: <a href="/trust">/trust</a> shows the most recent pipeline-run test results, <a href="/metrics">/metrics</a> publishes every semantic-layer measure with its expanded SQL, <a href="/profile">/profile</a> surfaces per-column shape data, <a href="/erd">/erd</a> renders the warehouse + semantic-layer diagrams, and <a href="/docs/">/docs</a> is the dbt-generated data dictionary.</p>
+
+      <div class="welcome-subhead">The trust contract</div>
+      <p>Every chat reply and every dashboard panel ships with four receipts: the SQL that produced the number, the row count returned, citations to the source tables and Airlayer views, and any limitations from <a href="/trust">the registry</a> that apply to what was asked. The contract holds across surfaces &mdash; chat, dashboards, the homepage cards above, all of them. If a surface drops a receipt, that's the bug.</p>
+    </div>
+  </section>
+
   <!-- WHAT'S IN THE DATA -->
   <section id="data">
-    <div class="section-num">01</div>
+    <div class="section-num">02</div>
     <div class="section-title">What's in the data</div>
     <!-- BEGIN_DATASET_CARDS (generated by scripts/generate_homepage_summary.py) -->
     <div class="dataset-grid">
@@ -605,7 +716,7 @@
 
   <!-- COMMON QUESTIONS -->
   <section id="questions">
-    <div class="section-num">02</div>
+    <div class="section-num">03</div>
     <div class="section-title">What you can ask</div>
     <div class="questions-list">
       <a class="question-card" href="/chat">
@@ -637,7 +748,7 @@
 
   <!-- PLATFORM ASSETS -->
   <section id="assets">
-    <div class="section-num">03</div>
+    <div class="section-num">04</div>
     <div class="section-title">Platform surfaces</div>
     <div class="assets-grid">
       <a class="asset-card" href="/chat">
@@ -685,9 +796,41 @@
     </div>
   </section>
 
+  <!-- WHAT'S NOT YET POSSIBLE -->
+  <section id="not-yet">
+    <div class="section-num">05</div>
+    <div class="section-title">What's not yet possible</div>
+    <div class="not-yet-list">
+      <div class="not-yet-item">
+        <span class="not-yet-label">Sub-ward geography</span>
+        <span class="not-yet-desc">Today's gold layer surfaces ward and block code; the silver-layer <code>dim_location</code> (neighborhoods, intersections, parcels) is MVP 3 work. Until then, "by neighborhood" questions land "by ward" instead.</span>
+      </div>
+      <div class="not-yet-item">
+        <span class="not-yet-label">Demographic correlations</span>
+        <span class="not-yet-desc">No ACS or census data joined yet. "Are complaint rates higher in low-income wards?" can't be answered until MVP 3 brings in external reference data.</span>
+      </div>
+      <div class="not-yet-item">
+        <span class="not-yet-label">Survey signal</span>
+        <span class="not-yet-desc">Accuracy / courtesy / ease / overall-experience columns exist on 311 requests but are populated for &lt;1% of rows; not statistically meaningful yet. See the limitation entry on <a href="/trust">/trust</a>.</span>
+      </div>
+      <div class="not-yet-item">
+        <span class="not-yet-label">Sub-month crime resolution</span>
+        <span class="not-yet-desc">Sensitive crime incidents carry year-only dates (no month, day, or block); aggregate analysis by month or block isn't accurate for those rows. See <code>crime-sensitive-incidents-no-month</code> on <a href="/trust">/trust</a>.</span>
+      </div>
+      <div class="not-yet-item">
+        <span class="not-yet-label">Sharing surfaces</span>
+        <span class="not-yet-desc">Chat is Tailnet-only during private beta; Slack, MCP, A2A, and public access are MVP 4. Findings stay personal until then.</span>
+      </div>
+      <div class="not-yet-item">
+        <span class="not-yet-label">Verified queries</span>
+        <span class="not-yet-desc">Recurring questions don't yet have curated SQL fingerprints with sign-off; that's MVP 3. Today the agent re-writes SQL from scratch per question; usually identical, occasionally varies on phrasing.</span>
+      </div>
+    </div>
+  </section>
+
   <!-- HOW IT WORKS -->
   <section id="how">
-    <div class="section-num">04</div>
+    <div class="section-num">06</div>
     <div class="section-title">How it works</div>
     <div class="how-inner">
       <div class="how-text">
@@ -733,7 +876,7 @@
 
   <!-- ROADMAP -->
   <section id="roadmap">
-    <div class="section-num">05</div>
+    <div class="section-num">07</div>
     <div class="section-title">Roadmap</div>
     <div class="roadmap-list">
       <div class="roadmap-item">
