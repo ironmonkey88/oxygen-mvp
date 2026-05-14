@@ -193,6 +193,105 @@
     section { padding: 80px 40px; }
     section + section { border-top: 1px solid var(--border); }
 
+    /* ── DATASET CARDS ── */
+    .dataset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      max-width: 860px;
+    }
+    .dataset-card {
+      background: var(--white);
+      padding: 28px 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dataset-card-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .dataset-card-title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+    .dataset-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .dataset-card-row:last-of-type { border-bottom: none; }
+    .dataset-card-key {
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .dataset-card-val {
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+    }
+    .dataset-card-limits {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-mid);
+    }
+    .dataset-card-limits a {
+      color: var(--green-mid);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .dataset-card-limits a:hover { color: var(--green); }
+
+    /* ── COMMON QUESTIONS ── */
+    .questions-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      max-width: 860px;
+    }
+    .question-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color .15s;
+    }
+    .question-card:hover { border-color: var(--green-mid); }
+    .question-text {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .question-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--green-mid);
+      letter-spacing: 0.03em;
+    }
+    .question-link:hover { color: var(--green); }
+
     .section-num {
       font-size: 11px;
       font-weight: 700;
@@ -210,24 +309,30 @@
     /* ── ASSETS GRID ── */
     .assets-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 1px;
       background: var(--border);
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
-      max-width: 860px;
+      max-width: 1100px;
     }
     .asset-card {
       background: var(--white);
-      padding: 32px 28px;
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      transition: background .15s;
     }
+    .asset-card:hover { background: var(--bg-stat); }
     .asset-icon {
-      font-size: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--green-mid);
       margin-bottom: 4px;
+      letter-spacing: -0.5px;
     }
     .asset-title {
       font-size: 15px;
@@ -388,17 +493,16 @@
   <nav>
     <div class="nav-brand">
       Somerville Analytics
-      <span class="nav-badge">MVP 1</span>
+      <span class="nav-badge">MVP 2</span>
     </div>
     <div class="nav-links">
-      <a href="/docs/">Data dictionary</a>
-      <a href="/erd">Schema</a>
-      <a href="/metrics">Metrics</a>
-      <a href="/profile">Profiles</a>
-      <a href="/trust">Trust</a>
       <a href="/dashboards">Dashboards</a>
-      <a href="#assets">Assets</a>
-      <a href="#stack">Stack</a>
+      <a href="/metrics">Metrics</a>
+      <a href="/trust">Trust</a>
+      <a href="/profile">Profiles</a>
+      <a href="/erd">Schema</a>
+      <a href="/docs/">Data dictionary</a>
+      <a href="#how">How it works</a>
       <a href="#roadmap">Roadmap</a>
     </div>
   </nav>
@@ -406,80 +510,191 @@
   <!-- HERO -->
   <div class="hero">
     <div class="hero-label">Somerville, MA — Open Data Platform</div>
-    <h1>Somerville 311,<br><em>queryable in plain English.</em></h1>
-    <p>1.17 million service requests since 2015, asked through a chat interface that hands over the SQL, row count, and source citations on every answer. Built for city analysts; the conversation, charts, and resident-facing surfaces come in later MVPs.</p>
+    <h1>Somerville city data,<br><em>queryable in plain English.</em></h1>
+    <p>Service requests since 2015 and crime incidents since 2017, joined to wards and asked through a chat interface that hands over the SQL, row count, and source citations on every answer. Two curated dashboards layered on top; more coming.</p>
     <a href="/chat" class="hero-pill">Private beta — try the chat →</a>
   </div>
 
   <!-- STATS -->
+  <!-- BEGIN_STATS (generated by scripts/generate_homepage_summary.py) -->
   <div class="stats">
     <div class="stat">
       <div class="stat-value">1.17M</div>
       <div class="stat-label">311 requests loaded</div>
     </div>
     <div class="stat">
-      <div class="stat-value">2015–2026</div>
-      <div class="stat-label">Date range</div>
+      <div class="stat-value">22.3K</div>
+      <div class="stat-label">Crime incidents loaded</div>
     </div>
     <div class="stat">
-      <div class="stat-value">22</div>
-      <div class="stat-label">Source columns per request</div>
+      <div class="stat-value">7</div>
+      <div class="stat-label">Wards covered</div>
     </div>
     <div class="stat">
-      <div class="stat-value">10</div>
+      <div class="stat-value">21</div>
       <div class="stat-label">Documented limitations</div>
     </div>
     <div class="stat">
-      <div class="stat-value">2026-05-09</div>
-      <div class="stat-label">Last data point</div>
+      <div class="stat-value">2026-05-12</div>
+      <div class="stat-label">Latest data point (311)</div>
     </div>
     <div class="stat">
-      <div class="stat-value">2026-05-11</div>
+      <div class="stat-value">2026-05-14</div>
       <div class="stat-label">Last pipeline run</div>
     </div>
   </div>
+  <!-- END_STATS -->
+
+  <!-- WHAT'S IN THE DATA -->
+  <section id="data">
+    <div class="section-num">01</div>
+    <div class="section-title">What's in the data</div>
+    <!-- BEGIN_DATASET_CARDS (generated by scripts/generate_homepage_summary.py) -->
+    <div class="dataset-grid">
+      <div class="dataset-card">
+        <div class="dataset-card-eyebrow">Topic &middot; service_requests</div>
+        <div class="dataset-card-title">311 service requests</div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Rows</span>
+          <span class="dataset-card-val">1,171,107</span>
+        </div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Date range</span>
+          <span class="dataset-card-val">2015-07-01 to 2026-05-12</span>
+        </div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Request types</span>
+          <span class="dataset-card-val">342</span>
+        </div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Wards covered</span>
+          <span class="dataset-card-val">7 / 7</span>
+        </div>
+        <div class="dataset-card-limits">
+          3 active limitations affecting this dataset &mdash;
+          <a href="/trust">see /trust</a>
+        </div>
+      </div>
+      <div class="dataset-card">
+        <div class="dataset-card-eyebrow">Topic &middot; public_safety</div>
+        <div class="dataset-card-title">Crime incidents</div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Rows</span>
+          <span class="dataset-card-val">22,325</span>
+        </div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Date range</span>
+          <span class="dataset-card-val">2017-01-01 to 2026-03-27</span>
+        </div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Offense categories</span>
+          <span class="dataset-card-val">4</span>
+        </div>
+        <div class="dataset-card-row">
+          <span class="dataset-card-key">Wards covered</span>
+          <span class="dataset-card-val">8 / 7</span>
+        </div>
+        <div class="dataset-card-limits">
+          4 active limitations affecting this dataset &mdash;
+          <a href="/trust">see /trust</a>
+        </div>
+      </div>
+    </div>
+    <!-- END_DATASET_CARDS -->
+  </section>
+
+  <!-- COMMON QUESTIONS -->
+  <section id="questions">
+    <div class="section-num">02</div>
+    <div class="section-title">What you can ask</div>
+    <div class="questions-list">
+      <a class="question-card" href="/chat">
+        <span class="question-text">How many 311 requests came in last month, by ward?</span>
+        <span class="question-link">Ask the chat →</span>
+      </a>
+      <a class="question-card" href="/chat">
+        <span class="question-text">Which 311 categories take the longest to resolve?</span>
+        <span class="question-link">Ask the chat →</span>
+      </a>
+      <a class="question-card" href="/chat">
+        <span class="question-text">What kinds of crime are reported across Somerville?</span>
+        <span class="question-link">Ask the chat →</span>
+      </a>
+      <a class="question-card" href="/chat">
+        <span class="question-text">Which wards see the highest combined 311 + crime activity?</span>
+        <span class="question-link">Ask the chat →</span>
+      </a>
+      <a class="question-card" href="/dashboards">
+        <span class="question-text">Rat complaints by ward — frequency, resolution, equity</span>
+        <span class="question-link">Open dashboard →</span>
+      </a>
+      <a class="question-card" href="/dashboards">
+        <span class="question-text">Browse all curated dashboards</span>
+        <span class="question-link">/dashboards →</span>
+      </a>
+    </div>
+  </section>
 
   <!-- PLATFORM ASSETS -->
   <section id="assets">
-    <div class="section-num">01</div>
-    <div class="section-title">Platform assets</div>
+    <div class="section-num">03</div>
+    <div class="section-title">Platform surfaces</div>
     <div class="assets-grid">
-      <div class="asset-card">
-        <div class="asset-icon">💬</div>
+      <a class="asset-card" href="/chat">
+        <div class="asset-icon">>_</div>
         <div class="asset-title">Analytics chat</div>
-        <div class="asset-desc">Tailnet-only during private beta. Every reply includes the SQL the agent ran, the row count returned, and citations to the source tables, views, and any matching limitations.</div>
-      </div>
-      <div class="asset-card">
-        <div class="asset-icon">📋</div>
-        <div class="asset-title">Data dictionary</div>
-        <div class="asset-desc">Generated by dbt docs. Every model and column has a description; relationships, tests, and lineage are inspectable.</div>
-        <a href="/docs" class="asset-link">/docs → Browse models</a>
-      </div>
-      <div class="asset-card">
-        <div class="asset-icon">✓</div>
+        <div class="asset-desc">Every reply includes the SQL the agent ran, the row count returned, and citations to the source tables, views, and any matching limitations.</div>
+        <span class="asset-link">/chat -&gt; Ask a question</span>
+      </a>
+      <a class="asset-card" href="/dashboards">
+        <div class="asset-icon">::</div>
+        <div class="asset-title">Dashboards</div>
+        <div class="asset-desc">Curated visual answers to recurring questions. Each dashboard carries its own trust contract: source tables, last refreshed, relevant limitations.</div>
+        <span class="asset-link">/dashboards -&gt; Browse</span>
+      </a>
+      <a class="asset-card" href="/metrics">
+        <div class="asset-icon">[m]</div>
+        <div class="asset-title">Metrics catalog</div>
+        <div class="asset-desc">Auto-generated from the Airlayer semantic layer. Each measure is published with its expanded SQL and description -- no hand-written copy.</div>
+        <span class="asset-link">/metrics -&gt; Definitions</span>
+      </a>
+      <a class="asset-card" href="/trust">
+        <div class="asset-icon">[v]</div>
         <div class="asset-title">Trust page</div>
         <div class="asset-desc">Driven by the admin schema. Shows pass/fail counts and per-test results from the most recent pipeline run, plus drift-fail status against frozen baselines.</div>
-        <a href="/trust" class="asset-link">/trust → Latest run</a>
-      </div>
-      <div class="asset-card">
-        <div class="asset-icon">📐</div>
-        <div class="asset-title">Metrics catalog</div>
-        <div class="asset-desc">Auto-generated from the Airlayer semantic layer. Each measure is published with its expanded SQL and description — no hand-written copy.</div>
-        <a href="/metrics" class="asset-link">/metrics → Definitions</a>
-      </div>
+        <span class="asset-link">/trust -&gt; Latest run</span>
+      </a>
+      <a class="asset-card" href="/profile">
+        <div class="asset-icon">[p]</div>
+        <div class="asset-title">Column profiles</div>
+        <div class="asset-desc">Per-column shape data: distinct counts, null %, type-specific stats (numeric distributions, date ranges, text top-5). Refreshed when schema or row counts shift.</div>
+        <span class="asset-link">/profile -&gt; Browse columns</span>
+      </a>
+      <a class="asset-card" href="/erd">
+        <div class="asset-icon">[E]</div>
+        <div class="asset-title">Schema diagrams</div>
+        <div class="asset-desc">Mermaid ERD for the warehouse plus the semantic-layer view-and-topic graph. Generated from dbt relationships tests + Airlayer YAML.</div>
+        <span class="asset-link">/erd -&gt; Browse diagrams</span>
+      </a>
+      <a class="asset-card" href="/docs">
+        <div class="asset-icon">[d]</div>
+        <div class="asset-title">Data dictionary</div>
+        <div class="asset-desc">Generated by dbt docs. Every model and column has a description; relationships, tests, and lineage are inspectable.</div>
+        <span class="asset-link">/docs -&gt; Browse models</span>
+      </a>
     </div>
   </section>
 
   <!-- HOW IT WORKS -->
-  <section id="stack">
-    <div class="section-num">02</div>
+  <section id="how">
+    <div class="section-num">04</div>
     <div class="section-title">How it works</div>
     <div class="how-inner">
       <div class="how-text">
         <h3>Built on Oxygen</h3>
-        <p>Somerville's 311 SODA feed is ingested via dlt to Parquet, transformed through bronze and gold dbt layers in DuckDB, and surfaced through the Airlayer semantic layer. The chat interface is an Oxygen Answer Agent backed by Claude Opus 4.7.</p>
-        <p>The agent operates under a trust contract: every reply includes the executed SQL, the row count returned, citations to source tables and Airlayer views, and surfaced entries from the limitations registry when the query touches a flagged area. Methodology is always inspectable.</p>
-        <p>Out of scope for MVP 1: charts, exports, dashboards, follow-up suggestions, and resident-facing framing. Those land in MVP 2 and beyond.</p>
+        <p>Somerville's 311 and crime SODA feeds are ingested via dlt to DuckDB, transformed through bronze and gold dbt layers, and surfaced through the Airlayer semantic layer. The chat interface is an Oxygen Answer Agent backed by Claude Opus 4.7; dashboards are Oxygen Data Apps drafted by Builder Agent.</p>
+        <p>The platform operates under a trust contract: every chat reply and every dashboard panel includes the executed SQL, the row count returned, citations to source tables and Airlayer views, and surfaced entries from the limitations registry when the query touches a flagged area. Methodology is always inspectable.</p>
+        <p>MVP 2 adds visual data products on top of the MVP 1 substrate. MVP 3 will add full governance (Verified Queries, PII redaction, star schema); MVP 4 adds sharing surfaces (Slack, MCP, public access).</p>
       </div>
       <div class="stack-table">
         <div class="stack-row">
@@ -490,7 +705,7 @@
         <div class="stack-row">
           <span class="stack-layer">Warehouse</span>
           <span class="stack-tool">DuckDB</span>
-          <span class="stack-detail">1.17M rows</span>
+          <span class="stack-detail">311 + crime</span>
         </div>
         <div class="stack-row">
           <span class="stack-layer">Transform</span>
@@ -518,28 +733,28 @@
 
   <!-- ROADMAP -->
   <section id="roadmap">
-    <div class="section-num">03</div>
+    <div class="section-num">05</div>
     <div class="section-title">Roadmap</div>
     <div class="roadmap-list">
       <div class="roadmap-item">
-        <span class="mvp-badge">MVP 1</span>
+        <span class="mvp-badge dim">MVP 1</span>
         <span class="roadmap-name">Conversational analytics</span>
-        <span class="roadmap-desc">311 data → DuckDB → natural language chat</span>
+        <span class="roadmap-desc">Done -- 311 + crime -&gt; DuckDB -&gt; chat with trust contract</span>
       </div>
       <div class="roadmap-item">
-        <span class="mvp-badge dim">MVP 2</span>
+        <span class="mvp-badge">MVP 2</span>
         <span class="roadmap-name">Visual data products</span>
-        <span class="roadmap-desc">Charts and dashboards from the chat interface</span>
+        <span class="roadmap-desc">Active -- curated dashboards from /dashboards, Builder Agent for new apps</span>
       </div>
       <div class="roadmap-item">
         <span class="mvp-badge dim">MVP 3</span>
         <span class="roadmap-name">Governance layer</span>
-        <span class="roadmap-desc">Star schema, PII redaction, data quality guardrails</span>
+        <span class="roadmap-desc">Star schema, PII redaction, Verified Queries, data quality guardrails</span>
       </div>
       <div class="roadmap-item">
         <span class="mvp-badge dim">MVP 4</span>
-        <span class="roadmap-name">Rich semantics</span>
-        <span class="roadmap-desc">Full metric library, routing agent, public access</span>
+        <span class="roadmap-name">Rich semantics + sharing</span>
+        <span class="roadmap-desc">Full metric library, routing agent, Slack + MCP + public access</span>
       </div>
     </div>
   </section>
