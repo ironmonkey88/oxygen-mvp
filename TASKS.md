@@ -5,23 +5,22 @@
 
 ---
 
-## Next Focus — Plan 11 Execution (pending Gordon's review of scoping doc)
+## Next Focus — MVP 2 silver/gold curation + Builder-CLI dashboards (pending Gordon's call)
 
-Plan 10 closed Session 33 — BUILD.md §7 opportunistic principle landed. PRODUCT_NOTES.md created Session 32. Plan 11 scoping document drafted Session 34 at [`docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md`](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md); execution pending Gordon's review. Plan 12 closed Sessions 35–37 (Socrata inventory + wards spatial dim + crime bronze). **Plan 13 closed Session 38** (crime gold layer — fct_crime_incidents, dim_offense_code, dim_offense_category, public_safety topic, 4 limitations); two open Q's flagged for Gordon's review (case_number exposure + offense/offense_type denormalization).
+**Plan 21 closed 2026-05-14** — overnight batch landed 4 new bronze sources (Happiness Survey, Permits, Traffic Citations, Somerville at a Glance) plus the `/about` info page. Warehouse now carries 6 source datasets with bronze views auto-profiled at `/profile`. End-to-end `./run.sh manual` exits 0 in 946s with 92/92 tests passing. See [Session 46](docs/sessions/session-46-2026-05-14-prompts-09-10-11-overnight-batch.md) for the full batch narrative.
 
-The first MVP 2 deliverable is **one dashboard built through conversation with Builder Agent**. The dashboard demonstrates the analyst-outcome test from BUILD.md §5: "The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML."
+Two natural next-thread paths:
 
-Plan 11 commits to **rat complaints by ward** as the single anchor topic (analyst Question 1 — frequency, resolution speed, volume trend, service equity). Survey-by-ward extension and the broader equity dashboard queued as follow-on plans, not bundled in Plan 11.
+1. **Silver/gold curation for the new bronze sources** — type casts (`dtissued` -> TIMESTAMP, `vehiclemph` -> INTEGER, `lat`/`long` -> DOUBLE, `year` -> INTEGER); ward-trim on space-padded sources; spatial point-in-polygon ward join for permits + citations (no `ward` column at source); composite citation-grain derived view (strip violation suffix). MVP 3 work.
 
-### Scoping document
+2. **Plans 18 + 19 — Builder-CLI dashboards** — deferred Sessions 45/46. Now that 4 new bronze datasets are in scope, the analyst questions ("Are permit-rich wards seeing more 311 complaints?" / "Does the Happiness Survey's `feel_safe_somerville_num` track citations + crime by ward and year?") can be dashboard-built. Open in a fresh Code thread.
 
-All scope decisions, pre-flight gates, phases, and sign-off gates live in [`docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md`](docs/plans/plan-11-mvp2-first-data-app-rat-complaints-by-ward.md). Plan 11 is a scoping document only — execution waits on Gordon's review.
+### Carry-over queued items
 
-### Carry-over queued items (independent of MVP 2)
-
-- [ ] Auto-refresh portal stats dates from DuckDB on `run.sh` (currently hardcoded — Session 28 follow-up)
-- [ ] Somerville wards map as portal hero background (Socrata blob-only + OSM Overpass errored; pragmatic path is stylized SVG)
-- [ ] Investigate why recent `./run.sh daily` invocations are landing `run_status='partial'` (admin tests failing — likely drift-fail at the new baseline; Session 31 pre-flight observation)
+- [ ] Builder-CLI dashboard on "permits vs 311 complaints by ward" (Plan 18 redux with the new bronze data)
+- [ ] Silver layer: ward-trim, type casts, citation-grain derived view, spatial ward join for permits + citations
+- [ ] LOG.md Recent Sessions rotation — currently 6 entries (41-46); should be 5 max per the rule. Move 41 to Earlier Sessions in a follow-up commit.
+- [ ] Auto-refresh portal stats dates from DuckDB on `run.sh` (closed — homepage stats already auto-refresh via `generate_homepage_summary.py`, can be removed from this list)
 
 ---
 
