@@ -33,6 +33,8 @@
 | 17 | MVP 2 polish — /dashboards auto-generator | done | Session 45 — metadata-comment-block contract on `apps/*.app.yml`; `scripts/generate_dashboards_listing.py` walks apps and rewrites marker-bounded listing; rat-complaints retrofit; run.sh stage 8c/10. PR [#8](https://github.com/ironmonkey88/oxygen-mvp/pull/8) merged. |
 | 18 | MVP 2 polish — 311 overall dashboard (Builder CLI) | deferred | Stopped at Session 45/46 boundary per honest-reporting discipline; Builder CLI sessions belong in a fresh Code thread. |
 | 19 | MVP 2 polish — Rat dashboard iteration (Builder CLI) | deferred | Same reason as Plan 18. |
+| 20 | Portal polish + trust framing — Prompts 09 + 10 + Dashboards standard + Trust pipeline-history | done | 2026-05-14 — Prompt 09 (ward map + 7-cell stats + CTA clipboard + /trust pipeline reliability sparkline) PR #21; Prompt 10 (centered map + false-red fix + dbt by-design framing) PR #23; DASHBOARDS.md PR #22; /trust pipeline-history operational view PR (folded into Prompt 09 PR). |
+| 21 | Overnight batch — 4 bronze ingests + Somerville info page (Prompt 11) | done | 2026-05-14 — Phase A Happiness Survey (PR #24, 12,583 rows, biennial, 49.5% NULL ward); Phase B Permits (PR #25, 64,521 rows, static since 2023, 11 NULL types as honest finding); Phase C Traffic Citations (PR #26, 67,311 rows, daily-refresh in run.sh stage 1c, low PII); Phase D Somerville at a Glance (PR #27, 749 rows ACS KPIs); Phase E /about info page (PR #28, generator + nav + nginx + run.sh stage 8d). End-to-end ./run.sh manual exits 0 in 946s; 92 tests pass (21 new); all 4 bronze views auto-profiled at /profile. |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -41,13 +43,22 @@
 ## Current Status
 
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
-**Phase:** MVP 1 closed. **Plans 15 + 16 + 17 done** (homepage dataset summary + welcome + ward map + /dashboards generator; PRs #6 + #7 (via #8 stacked-merge) + #8 merged 2026-05-14). Plans 18 + 19 (Builder CLI dashboards) deferred to a fresh Code thread. Plans 11 / 12 / 13 / 14 done in earlier sessions.
+**Phase:** MVP 1 closed. **Plans 20 + 21 done 2026-05-14** (PR series #21-#28: portal polish + dashboards standard + 4 new bronze ingests + /about info page). Warehouse now carries 6 source datasets: 311, crime, wards, **happiness survey, permits, traffic citations, somerville-at-a-glance**. Portal has 8 routes (`/`, `/dashboards`, `/metrics`, `/trust`, `/profile`, `/erd`, `/docs/`, `/about`). Plans 11-17 closed in earlier sessions; Plans 18 + 19 (Builder CLI dashboards) deferred.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-14 07:30 ET (Sessions 43-45 — MVP 2 polish arc Phase 1 merged)
+**Last Updated:** 2026-05-14 23:44 ET (Prompt 11 overnight batch merged — 4 bronze ingests + /about info page; end-to-end run.sh manual exits 0 in 946s with 92/92 tests passing)
 
 ---
 
 ## Recent Sessions
+
+### Session 46 — 2026-05-14 18:30 ET — prompts-09-10-11-overnight-batch
+[full narrative](docs/sessions/session-46-2026-05-14-prompts-09-10-11-overnight-batch.md)
+
+- **Goal:** Three back-to-back briefs in one Code thread — portal feedback (Prompts 09 + 10), DASHBOARDS.md design standard, and the Prompt 11 four-dataset overnight ingestion batch.
+- **Shipped:** PRs #21-#28. Prompt 09 (ward map labels + 7th stats cell + clipboard CTA + /trust pipeline reliability + history). PR #22 DASHBOARDS.md added with CLAUDE.md pointer. Prompt 10 (centered map + false-red fix + dbt by-design framing). Phase A Happiness Survey (12,583 rows, biennial, 49.5% NULL ward + multi-year drift + self-selection); Phase B Permits (64,521 rows, static since 2023, 11-NULL-type honest finding); Phase C Traffic Citations (67,311 rows, daily-refresh in run.sh stage 1c, low PII); Phase D Somerville at a Glance (749 rows ACS KPIs); Phase E `/about` info page (generator + nav extension + nginx route + run.sh stage 8d). End-to-end `./run.sh manual` exits 0 in 946s; 92/92 tests pass; all 4 new bronze views auto-profiled at `/profile`.
+- **Decisions:** 6 decisions — see Decisions Log
+- **Status:** complete
+- **Next:** Open Code thread for Plans 18 + 19 (Builder CLI dashboards) or whatever Gordon points to.
 
 ### Session 45 — 2026-05-14 06:00 ET — plan-17-dashboards-generator
 [full narrative](docs/sessions/session-45-2026-05-14-plan-17-dashboards-generator.md)
