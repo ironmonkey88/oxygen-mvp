@@ -11,6 +11,7 @@
 #   0. record run start  — main_admin.fct_pipeline_run_raw, returns run_id
 #   1. dlt ingest 311    — Somerville 311 SODA API → raw_311_requests_raw (merge on `id`)
 #   1b. dlt ingest crime — Somerville crime SODA API → raw_somerville_crime_raw (merge on `incnum`)
+#   1c. dlt ingest citations — SPD traffic citations SODA API → raw_somerville_traffic_citations_raw (merge on `citationnum`)
 #   2. dbt run bronze gold
 #   3. dbt test bronze gold (capture exit; do NOT halt)
 #   4. dlt load_dbt_results — append run_results.json into raw_dbt_results_raw
@@ -90,6 +91,13 @@ python dlt/somerville_311_pipeline.py "$RUN_ID"
 ERROR_STAGE="dlt_ingest_crime"
 echo "==> 1b/10 dlt ingest somerville crime"
 python dlt/somerville_crime_pipeline.py "$RUN_ID"
+
+# Step 1c: dlt ingest traffic citations (full pull + merge on `citationnum`)
+# 67K rows. Source updates daily with 1-month delay, same cadence as
+# crime. Added Prompt 11 Phase C (2026-05-14).
+ERROR_STAGE="dlt_ingest_traffic_citations"
+echo "==> 1c/10 dlt ingest somerville traffic citations"
+python dlt/somerville_traffic_citations_pipeline.py "$RUN_ID"
 
 # Step 2: dbt run bronze + gold
 ERROR_STAGE="dbt_run_bronze_gold"

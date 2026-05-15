@@ -177,3 +177,11 @@
     - ease
     - overallexperience
   path: docs/limitations/survey-columns-on-fact.md
+- id: traffic-citations-location-and-violation-only
+  title: Traffic Citations are location + violation only -- low PII, but no driver-level breakdown
+  severity: low
+  affects:
+    - main_bronze.raw_somerville_traffic_citations_raw
+    - raw_somerville_traffic_citations
+    - traffic_citations
+  path: docs/limitations/traffic-citations-location-and-violation-only.md

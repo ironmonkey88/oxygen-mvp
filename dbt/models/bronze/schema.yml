@@ -38,6 +38,23 @@ sources:
           full breakdown. Audit columns: `_extracted_at`,
           `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`, plus
           dlt's `_dlt_load_id` / `_dlt_id`.
+      - name: raw_somerville_traffic_citations_raw
+        description: |
+          dlt merge target for the Somerville Police Department Traffic
+          Citations SODA API
+          (https://data.somervillema.gov/resource/3mqx-eye9.json). Full
+          pull each run; merge key is `citationnum` (carries a violation
+          suffix like "T2725339-1" so each row is unique on this key).
+          ~67K rows as of 2026-05-14; data goes back to 2017. Source
+          refreshes daily with a one-month publication delay; wired into
+          `run.sh` at stage 1c (parallel to crime at 1b). PII surface
+          is low -- intersection-level address, violation type, ward,
+          and (for non-warnings) speed -- no driver name / license /
+          vehicle data. See
+          docs/limitations/traffic-citations-location-and-violation-only.md.
+          Audit columns: `_extracted_at`, `_extracted_run_id`,
+          `_first_seen_at`, `_source_endpoint`, plus dlt's
+          `_dlt_load_id` / `_dlt_id`.
       - name: raw_somerville_permits_raw
         description: |
           dlt replace target for the Somerville Permits SODA API
@@ -236,6 +253,89 @@ models:
         description: 'Fixed-length 15-character census block code (state + county + tract + block + suffix). Geographic granularity floor -- ~750 blocks across Somerville.'
       - name: ward
         description: 'Ward number (1-7) -- **space-padded to length 15 in source** (e.g. "1              "). Trim at join to gold dim_ward.ward. NULL for ~13% of rows.'
+      - name: _extracted_at
+        description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
+      - name: _extracted_run_id
+        description: '**PIPELINE METADATA.** ULID of the pipeline run.'
+      - name: _first_seen_at
+        description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
+      - name: _source_endpoint
+        description: '**PIPELINE METADATA.** Source SODA URL.'
+      - name: _dlt_load_id
+        description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
+      - name: _dlt_id
+        description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
+
+  - name: raw_somerville_traffic_citations
+    description: |
+      Bronze view over the Somerville Traffic Citations mirror. Passes
+      14 source columns through
+      `main_bronze.raw_somerville_traffic_citations_raw` (dlt-owned,
+      merge mode) plus audit + dlt-lineage columns. One row per
+      (citation, violation); `citationnum` carries a violation suffix
+      (e.g. "T2725339-1") so each row is unique on that field. Active
+      daily-refresh dataset (run.sh stage 1c). ~67K rows. ~76% are
+      warnings (no fine); ~24% are paid citations.
+
+      Pairs naturally with crime, permits, and 311 via ward + date.
+      Ward NULL rate is low (~0.12%, 84 rows). Ward + date analyses
+      are reliable.
+
+      PII surface is low (see
+      docs/limitations/traffic-citations-location-and-violation-only.md):
+      no driver name, no license number, no vehicle make/model.
+      Address column carries street intersection ("RTE 28 & RTE 38");
+      `lat`/`long` are precise.
+
+      Arrival data only; type casts (dtissued -> TIMESTAMP, vehiclemph
+      -> INTEGER, lat/long -> DOUBLE), ward-trimming if space-padded
+      like the crime dataset, deduplication, and further redaction are
+      deferred to silver/gold (MVP 3 work).
+    columns:
+      - name: citationnum
+        description: 'Citation number + violation suffix (e.g. "T2725339-1"). Primary key from source; the dlt merge key. Each row is one violation; a citation with N violations has N rows with N distinct citationnum values.'
+        data_tests:
+          - not_null
+          - unique
+      - name: dtissued
+        description: 'Timestamp the citation was issued (text from source; cast to TIMESTAMP in silver).'
+        data_tests:
+          - not_null
+      - name: police_shift
+        description: 'Shift during which the citation was issued (e.g. "Day Shift (8AM - 4PM)").'
+      - name: address
+        description: 'Address of violation. Intersection-level text (e.g. "RTE 28 & RTE 38 Somerville, MA") -- not a street number. Use `lat`/`long` for precise location.'
+      - name: chgcode
+        description: 'Massachusetts General Laws violation code (e.g. "90/13B" = MGL Ch 90 Sec 13B = electronic device use while driving). Source value is space-padded.'
+      - name: chgdesc
+        description: 'Plain-language violation description.'
+      - name: chgcategory
+        description: 'Top-level violation category (109 distinct values; high-cardinality, no accepted_values test).'
+      - name: vehiclemph
+        description: 'Speed of vehicle in mph for speeding violations; NULL for non-speeding (most warnings).'
+      - name: mphzone
+        description: 'Posted speed limit at the violation location, for speeding violations.'
+      - name: lat
+        description: 'Geocoded latitude (text from source; cast to DOUBLE in silver). Precise enough for point-in-polygon ward joins independent of the `ward` column.'
+      - name: long
+        description: 'Geocoded longitude (text from source).'
+      - name: blockcode
+        description: 'Census block code at the violation location (matches the crime data convention).'
+      - name: ward
+        description: 'Ward 1-7 from source. NULL for ~0.12% of rows (84 of 67,311).'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['1', '2', '3', '4', '5', '6', '7']
+              config:
+                where: "ward is not null"
+      - name: warning
+        description: 'Y if the citation was issued as a written warning (no fine); N if it carries a monetary fine. ~76% warnings, ~24% fines.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Y', 'N']
       - name: _extracted_at
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
