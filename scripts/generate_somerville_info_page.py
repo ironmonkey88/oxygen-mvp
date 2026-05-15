@@ -265,7 +265,10 @@ def render(rows: list[tuple], last_refreshed: str) -> str:
       education, commute, income -- side by side with Massachusetts as
       a comparator -- drawn from the city's "Somerville at a Glance"
       publication. Source for the underlying numbers is US Census +
-      ACS via the city's open data portal.</p>
+      ACS via the city's open data portal. This page is part of an
+      independent resident project, <strong>not affiliated with the
+      City of Somerville</strong>; the numbers are the city's, the
+      framing is ours.</p>
     </header>
 
     <section class="headlines">
@@ -296,6 +299,10 @@ def render(rows: list[tuple], last_refreshed: str) -> str:
       (this is a pre-aggregated KPI summary, not microdata; not the
       authoritative source -- citations should go to Census/ACS for
       contested figures).</p>
+      <p style="margin-top: 16px;">Independent resident project &middot;
+      built on Somerville's public Open Data via
+      <a href="https://data.somervillema.gov" target="_blank" rel="noopener">data.somervillema.gov</a>
+      &middot; not affiliated with the City of Somerville.</p>
     </footer>
     """
     return _wrap(body_inner)
