@@ -65,11 +65,13 @@
       overflow-x: hidden;
     }
 
-    /* Ward-map background — centered behind the hero band only, sized to
-       sit above the stats bar so no map geometry crosses any text. Opacity
-       kept low so the map reads as a whisper, not a layer competing with
-       body copy or stats. Restraint at both levels (SVG fill + CSS opacity);
-       see generate_wards_svg.py for SVG-side styling.
+    /* Ward-map background — fills the hero band edge-to-edge so the page
+       reads as a map of Somerville rather than a discrete diagram next to
+       the hero text. `cover` crops the SVG to the box (some ward edges
+       run off the viewport at wider widths -- intentional). Bounded
+       vertically by the clamp so the map never bleeds into the stats bar.
+       Subtle green tint in the SVG itself (see generate_wards_svg.py);
+       opacity here is "tint", not "presence".
        Source: portal/somerville-wards-background.svg (Plan 16; path is top-
        level on purpose -- nginx /assets is a proxy to the Oxygen SPA, so a
        static SVG can't live there). */
@@ -79,13 +81,13 @@
       top: 52px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(95vw, 1100px);
-      height: clamp(380px, 48vh, 480px);
+      width: 100vw;
+      height: clamp(420px, 52vh, 500px);
       background-image: url('/somerville-wards-background.svg');
       background-repeat: no-repeat;
       background-position: center;
-      background-size: contain;
-      opacity: 0.32;
+      background-size: cover;
+      opacity: 0.55;
       pointer-events: none;
       z-index: 0;
     }
