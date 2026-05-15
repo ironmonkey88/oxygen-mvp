@@ -145,6 +145,13 @@
     - requests
     - pipeline.refresh
   path: docs/limitations/source-bulk-republish-no-per-row-modified.md
+- id: spa-no-deeplink-prepopulation
+  title: Oxygen SPA does not support URL-based question prepopulation
+  severity: low
+  affects:
+    - portal
+    - spa-chat
+  path: docs/limitations/spa-no-deeplink-prepopulation.md
 - id: survey-columns-on-fact
   title: Survey columns live on the fact table as sparse Likert strings
   severity: info

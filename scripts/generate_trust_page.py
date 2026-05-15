@@ -16,10 +16,16 @@ Design tokens match portal/index.html and portal/metrics.html.
 from __future__ import annotations
 
 import sys
+from datetime import timedelta
 from html import escape
 from pathlib import Path
 
 import duckdb
+
+# Eastern time offset for display in the run-history table. EDT (UTC-4)
+# used year-round; matches generate_homepage_summary.py.
+ET_OFFSET = timedelta(hours=-4)
+RUN_HISTORY_LIMIT = 30
 
 # Local import: scripts/_nav.py is the shared nav source.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -82,6 +88,29 @@ def fetch_run_tests(conn, run_id) -> list[tuple]:
     ).fetchall()
 
 
+def fetch_run_history(conn, limit: int = RUN_HISTORY_LIMIT) -> list[tuple]:
+    """Aggregate per-run test outcomes for the most recent `limit` runs.
+
+    Returns (run_id, run_at_utc, pass_count, fail_count, warn_count,
+    total_count), newest first.
+    """
+    return conn.execute(
+        f"""
+        SELECT
+            run_id,
+            MAX(run_at)                              AS run_at,
+            COUNT(*) FILTER (WHERE status = 'pass')  AS pass_count,
+            COUNT(*) FILTER (WHERE status = 'fail')  AS fail_count,
+            COUNT(*) FILTER (WHERE status = 'warn')  AS warn_count,
+            COUNT(*)                                 AS total_count
+        FROM main_admin.fct_test_run
+        GROUP BY run_id
+        ORDER BY run_at DESC
+        LIMIT {int(limit)}
+        """
+    ).fetchall()
+
+
 def fetch_data_freshness(conn) -> tuple:
     return conn.execute(
         """
@@ -98,6 +127,12 @@ def fmt_ts(ts) -> str:
     if ts is None:
         return "—"
     return ts.strftime("%Y-%m-%d %H:%M UTC")
+
+
+def fmt_ts_et(ts) -> str:
+    if ts is None:
+        return "—"
+    return (ts + ET_OFFSET).strftime("%Y-%m-%d %H:%M ET")
 
 
 def fmt_int(n) -> str:
@@ -155,7 +190,85 @@ def render_no_run() -> str:
     )
 
 
-def render(run_id, run_at, summary, tests, freshness) -> str:
+def render_history_section(history: list[tuple]) -> str:
+    """Render the "Pipeline reliability" section (history of last N runs)."""
+    if not history:
+        return ""
+
+    total_runs = len(history)
+    fully_passing = sum(1 for h in history if h[3] == 0)
+
+    # Sparkline: one tile per run, oldest-left to newest-right, so the
+    # eye reads "recent green streak" left-to-right like a calendar.
+    sparkline_cells = []
+    for run_id, run_at, p, f, w, total in reversed(history):
+        if f > 0:
+            cls, label = "spark-fail", "fail"
+        elif w > 0:
+            cls, label = "spark-warn", "warn"
+        else:
+            cls, label = "spark-pass", "pass"
+        sparkline_cells.append(
+            f'<span class="spark-cell {cls}" '
+            f'title="{escape(fmt_ts_et(run_at))} — {p}/{total} pass, '
+            f'{f} fail, {w} warn"></span>'
+        )
+
+    rows = []
+    for run_id, run_at, p, f, w, total in history:
+        if f > 0:
+            badge_cls = "badge-fail"
+            badge_text = f"{f} failed"
+        elif w > 0:
+            badge_cls = "badge-warn"
+            badge_text = f"{w} warn"
+        else:
+            badge_cls = "badge-pass"
+            badge_text = "all pass"
+        rows.append(
+            f"""
+            <tr>
+              <td class="mono">{escape(fmt_ts_et(run_at))}</td>
+              <td class="num">{total}</td>
+              <td class="num">{p}</td>
+              <td class="num">{f}</td>
+              <td class="num">{w}</td>
+              <td><span class="badge {badge_cls}">{escape(badge_text)}</span></td>
+            </tr>
+            """
+        )
+
+    return f"""
+    <section class="history">
+      <div class="section-num">03</div>
+      <div class="section-title">Pipeline reliability</div>
+      <p class="section-lede"><strong>{fully_passing} of the last
+      {total_runs} runs</strong> passed all tests. Each tile below is one
+      pipeline run, oldest on the left — green is all-pass, amber is
+      warn-only, red is any-fail.</p>
+      <div class="sparkline">{''.join(sparkline_cells)}</div>
+      <div class="table-wrap">
+        <table class="tests-table">
+          <thead>
+            <tr>
+              <th>Run completed</th>
+              <th>Tests</th>
+              <th>Pass</th>
+              <th>Fail</th>
+              <th>Warn</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {''.join(rows)}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    """
+
+
+def render(run_id, run_at, summary, tests, freshness, history) -> str:
     pass_count, fail_count, warn_count, total_count = summary
     max_opened_ts, max_updated_ts, total_rows = freshness
     overall_pass = fail_count == 0
@@ -237,6 +350,8 @@ def render(run_id, run_at, summary, tests, freshness) -> str:
         </table>
       </div>
     </section>
+
+    {render_history_section(history)}
     """
     return _wrap(body_inner)
 
@@ -386,6 +501,24 @@ def _wrap(body_inner: str) -> str:
   .badge-pass {{ color: var(--green); border-color: #b8d4c0; background: var(--green-pale); }}
   .badge-fail {{ color: var(--red);   border-color: #d4b8b8; background: var(--red-pale); }}
   .badge-warn {{ color: var(--amber); border-color: #d8c896; background: var(--amber-pale); }}
+
+  /* Run-history section (Item 5) */
+  .tests-table td.num {{
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    text-align: right; white-space: nowrap;
+  }}
+  .sparkline {{
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin: 8px 0 20px;
+  }}
+  .spark-cell {{
+    width: 18px; height: 18px; border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--bg-stat);
+  }}
+  .spark-cell.spark-pass {{ background: var(--green-pale); border-color: #b8d4c0; }}
+  .spark-cell.spark-warn {{ background: var(--amber-pale); border-color: #d8c896; }}
+  .spark-cell.spark-fail {{ background: var(--red-pale);   border-color: #d4b8b8; }}
 </style>
 </head>
 <body>
@@ -415,7 +548,8 @@ def main() -> int:
             summary = fetch_run_summary(conn, run_id)
             tests = fetch_run_tests(conn, run_id)
             freshness = fetch_data_freshness(conn)
-            html = render(run_id, run_at, summary, tests, freshness)
+            history = fetch_run_history(conn)
+            html = render(run_id, run_at, summary, tests, freshness, history)
             n = summary[3]
     finally:
         conn.close()
