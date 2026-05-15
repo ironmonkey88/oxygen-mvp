@@ -222,9 +222,21 @@ def render_test_row(t: tuple) -> str:
         "fail": "badge-fail",
         "warn": "badge-warn",
     }.get(status, "badge-warn")
+    # Prompt 10 Item 3b: inactive-baseline warns are by design (see the
+    # `drift-fail-current-year-baseline-unstable` limitation). Surface that
+    # framing inline so an analyst reads the row as accounted-for, not as
+    # a gap. The message content is the upstream signal -- match on the
+    # phrase emitted by fct_test_run.sql for inactive baselines.
+    badge_html = f'<span class="badge {status_class}">{escape(status)}</span>'
+    if status == "warn" and message and "intentionally inactive" in message:
+        badge_html += (
+            ' <span class="by-design-tag" '
+            'title="This warn is by design -- see the trust footer">'
+            'by design</span>'
+        )
     return f"""
     <tr class="row-{escape(status)}">
-      <td><span class="badge {status_class}">{escape(status)}</span></td>
+      <td>{badge_html}</td>
       <td class="mono test-id">{escape(test_id)}</td>
       <td class="mono">{render_table_target(table_name, column_name)}</td>
       <td class="mono">{escape(actual or "")}</td>
@@ -474,7 +486,13 @@ def render(run_id, run_at, summary, tests, freshness, history,
       <p class="section-lede">Every test recorded for the latest run, sorted
       failures-first. Two test families: <code>baseline.*</code> compares
       live row counts to a frozen expected value; <code>dbt_test.*</code>
-      surfaces every dbt test from <code>run_results.json</code>.</p>
+      surfaces every dbt test from <code>run_results.json</code>. Rows
+      tagged <span class="by-design-tag">by design</span> are
+      intentionally-inactive baselines (e.g. the current-year row count,
+      which grows daily and would trip the drift tolerance); they're
+      held as <code>warn</code>, not <code>fail</code>, so the pipeline
+      guardrail stays green. See <a href="/trust">limitation
+      <code>drift-fail-current-year-baseline-unstable</code></a>.</p>
       <div class="table-wrap">
         <table class="tests-table">
           <thead>
@@ -660,6 +678,25 @@ def _wrap(body_inner: str) -> str:
   .run-error-stage code {{
     background: var(--bg-stat); padding: 1px 5px; border-radius: 3px;
     font-size: 11px;
+  }}
+
+  /* By-design tag (Prompt 10 Item 3b): inline label next to a WARN badge
+     when the row is an intentionally-inactive baseline. Different from
+     .badge-warn -- the badge is the test outcome, the tag is the editor's
+     note that this outcome is expected. */
+  .by-design-tag {{
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-stat);
+    border: 1px dashed var(--border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: help;
   }}
   .sparkline {{
     display: flex; flex-wrap: wrap; gap: 4px;

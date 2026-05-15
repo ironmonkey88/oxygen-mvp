@@ -54,29 +54,44 @@ all_actuals as (
 ),
 
 baseline_runs as (
+    -- Prompt 10 Item 3: the join no longer filters on `is_active = true`
+    -- so we can distinguish three cases by the dim columns:
+    --   (a) dim row missing entirely     -> truly unregistered test -> warn
+    --   (b) dim row exists, is_active=F  -> intentionally inactive  -> warn
+    --   (c) dim row exists, is_active=T  -> active baseline         -> compare
+    -- The drift-fail guardrail (downstream dbt test) keys on status='fail',
+    -- so warns in both (a) and (b) stay silent to it.
     select
         lr.run_id                                                                                   as run_id,
         a.test_id                                                                                   as test_id,
         lr.run_at                                                                                   as run_at,
         a.actual_value                                                                              as actual_value,
-        d.expected_value                                                                            as expected_value,
         case
-            when d.expected_value is null then null
+            when d.is_active is distinct from true then null
+            else d.expected_value
+        end                                                                                         as expected_value,
+        case
+            when d.is_active is distinct from true then null
             when cast(d.expected_value as double) = 0 then null
             else (cast(a.actual_value as double) - cast(d.expected_value as double))
                  / cast(d.expected_value as double)
         end                                                                                         as variance_pct,
         case
-            when d.expected_value is null then 'warn'
+            when d.test_id is null                        then 'warn'
+            when d.is_active = false                      then 'warn'
             when cast(d.expected_value as double) = 0
-                 and cast(a.actual_value as double) = 0 then 'pass'
-            when cast(d.expected_value as double) = 0 then 'fail'
+                 and cast(a.actual_value as double) = 0   then 'pass'
+            when cast(d.expected_value as double) = 0     then 'fail'
             when abs( (cast(a.actual_value as double) - cast(d.expected_value as double))
-                       / nullif(cast(d.expected_value as double), 0) ) <= d.tolerance_pct then 'pass'
+                       / nullif(cast(d.expected_value as double), 0) ) <= d.tolerance_pct
+                 then 'pass'
             else 'fail'
         end                                                                                         as status,
         case
-            when d.expected_value is null then 'no baseline registered for this test_id'
+            when d.test_id is null
+                 then 'no baseline registered for this test_id'
+            when d.is_active = false
+                 then 'baseline intentionally inactive -- current-year row count is unstable by design (see drift-fail-current-year-baseline-unstable)'
             when cast(d.expected_value as double) = 0 and cast(a.actual_value as double) <> 0
                  then 'expected 0 rows, got ' || a.actual_value
             when abs( (cast(a.actual_value as double) - cast(d.expected_value as double))
@@ -90,7 +105,7 @@ baseline_runs as (
     from latest_run lr
     cross join all_actuals a
     left join {{ ref('dim_data_quality_test') }} d
-      on d.test_id = a.test_id and d.is_active = true
+      on d.test_id = a.test_id
 ),
 
 dbt_test_runs as (

@@ -65,24 +65,27 @@
       overflow-x: hidden;
     }
 
-    /* Ward-map background — anchored left, sits behind hero + welcome area
-       as a confident geographic backdrop with readable ward labels.
+    /* Ward-map background — centered behind the hero band only, sized to
+       sit above the stats bar so no map geometry crosses any text. Opacity
+       kept low so the map reads as a whisper, not a layer competing with
+       body copy or stats. Restraint at both levels (SVG fill + CSS opacity);
+       see generate_wards_svg.py for SVG-side styling.
        Source: portal/somerville-wards-background.svg (Plan 16; path is top-
        level on purpose -- nginx /assets is a proxy to the Oxygen SPA, so a
-       static SVG can't live there).
-       Generator: scripts/generate_wards_svg.py reads dim_ward geometry. */
+       static SVG can't live there). */
     body::before {
       content: '';
       position: absolute;
       top: 52px;
-      left: -60px;
-      width: min(75vw, 1000px);
-      height: 800px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(95vw, 1100px);
+      height: clamp(380px, 48vh, 480px);
       background-image: url('/somerville-wards-background.svg');
       background-repeat: no-repeat;
-      background-position: left center;
+      background-position: center;
       background-size: contain;
-      opacity: 0.6;
+      opacity: 0.32;
       pointer-events: none;
       z-index: 0;
     }
@@ -659,7 +662,7 @@
   <div class="hero">
     <div class="hero-label">Somerville, MA — Open Data Platform</div>
     <h1>Somerville city data,<br><em>queryable in plain English.</em></h1>
-    <p>Service requests since 2015 and crime incidents since 2017, joined to wards and asked through a chat interface that hands over the SQL, row count, and source citations on every answer. Two curated dashboards layered on top; more coming.</p>
+    <p>Service requests since 2015 and crime incidents since 2017, joined to wards and asked through a chat interface that hands over the SQL, row count, and source citations on every answer. A curated dashboard layered on top; more coming.</p>
     <a href="/chat" class="hero-pill">Private beta — try the chat →</a>
   </div>
 

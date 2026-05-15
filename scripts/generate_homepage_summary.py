@@ -104,9 +104,16 @@ def fetch_stats(conn) -> dict:
     # Test results summary for the most recent test run. Distinct from the
     # pipeline run above: test rows can predate the run-end marker if a
     # later stage halted.
+    #
+    # Item 2 fix (Prompt 10): pull fail_count + warn_count too so the cell
+    # can color on `fail`, not on "anything not pass". Warns are by-design
+    # (e.g. the year_2026 inactive-baseline row) and must not paint the cell
+    # red. See generate_trust_page.py for the matching three-counts query.
     row = conn.execute("""
         SELECT
             COUNT(*) FILTER (WHERE status = 'pass') AS pass_count,
+            COUNT(*) FILTER (WHERE status = 'fail') AS fail_count,
+            COUNT(*) FILTER (WHERE status = 'warn') AS warn_count,
             COUNT(*) AS total_count
         FROM main_admin.fct_test_run
         WHERE run_id = (
@@ -117,8 +124,10 @@ def fetch_stats(conn) -> dict:
             LIMIT 1
         )
     """).fetchone()
-    s["test_pass_count"] = row[0] if row else None
-    s["test_total_count"] = row[1] if row else None
+    s["test_pass_count"]  = row[0] if row else None
+    s["test_fail_count"]  = row[1] if row else None
+    s["test_warn_count"]  = row[2] if row else None
+    s["test_total_count"] = row[3] if row else None
 
     return s
 
@@ -196,11 +205,18 @@ def render_stats(s: dict, total_limitations: int) -> str:
     else:
         latest_311_html = "--"
 
-    pass_count = s.get("test_pass_count")
-    total_count = s.get("test_total_count")
+    # Item 2 fix (Prompt 10): red means a real test failure (status=fail).
+    # Warns alone -- e.g. the by-design year_2026 inactive baseline -- must
+    # not paint the cell red. The denominator becomes "not failing" so the
+    # number reads as a healthy count, not "anything not pass".
+    pass_count  = s.get("test_pass_count")  or 0
+    fail_count  = s.get("test_fail_count")  or 0
+    warn_count  = s.get("test_warn_count")  or 0
+    total_count = s.get("test_total_count") or 0
     if total_count:
-        tests_value = f"{pass_count} of {total_count}"
-        tests_color = "var(--green)" if pass_count == total_count else "var(--red)"
+        not_failing = total_count - fail_count
+        tests_value = f"{not_failing} of {total_count}"
+        tests_color = "var(--red)" if fail_count > 0 else "var(--green)"
         tests_style = f' style="color: {tests_color};"'
     else:
         tests_value = "--"
