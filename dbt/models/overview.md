@@ -2,9 +2,9 @@
 
 # Somerville Analytics — Data dictionary
 
-This is the data dictionary for the Somerville 311 + crime data warehouse. It documents every table and column the analytics platform makes available, with descriptions, relationships, tests, and lineage — so an analyst (or an answer agent) can see exactly what's in the warehouse before asking a question of it.
+<a href="/" style="display:inline-block;padding:8px 16px;margin:4px 0 20px;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px">&larr; Back to Somerville Analytics portal</a>
 
-**[← Back to portal home](/)**
+This is the data dictionary for an independent, resident-built data platform exploring Somerville's public Open Data. It documents every table and column the platform makes available, with descriptions, relationships, tests, and lineage — so an analyst (or an answer agent) can see exactly what's in the warehouse before asking a question of it. **Not affiliated with the City of Somerville**; the data is the city's public 311 + crime + open-data feeds, the warehouse and dictionary are this project's.
 
 ## What's in the warehouse
 
@@ -42,6 +42,6 @@ A few useful entry points:
 
 The data dictionary documents what *exists*. It doesn't describe everything the data *can't yet tell you* — for that, the [limitations registry](/trust) is the source of truth. Honest gaps include: sub-ward geography deferred to MVP 3 (`dim_location`); no demographic correlations (no ACS data joined yet); survey-signal columns populated for <1% of rows; sensitive crime incidents have year-only dates. Both the chat agent and each dashboard panel link to relevant entries in the registry when they touch a flagged area.
 
-**[← Back to portal home](/)**
+<a href="/" style="display:inline-block;padding:8px 16px;margin:8px 0;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px">&larr; Back to Somerville Analytics portal</a>
 
 {% enddocs %}
