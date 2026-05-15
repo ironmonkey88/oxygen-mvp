@@ -358,10 +358,26 @@ blocked gate -- `partial` is the honest state.
   asked.** A partial completion does not auto-merge -- Gordon decides
   whether the partial is worth landing or whether the branch waits for
   the rest.
-- **Multi-phase prompts merge per phase only if the prompt explicitly
-  says so.** Otherwise the PR for the prompt stays open until all
-  phases finish. The four-dataset overnight batch is the model: one
-  prompt, four phases, four commits, one PR.
+- **Multi-phase prompts have two valid merge shapes; the prompt picks
+  one.** Both are legitimate; the choice depends on whether the phases
+  are *independently valuable* or *jointly valuable*.
+  - **One PR carrying all phases** -- phases are jointly valuable. The
+    Outcome isn't served until all phases land. A halt mid-batch
+    leaves an incomplete PR for Gordon to decide on. Example: a
+    refactor that splits a model across three phases -- none of the
+    phases is useful on its own.
+  - **One PR per phase** -- phases are independently valuable. Each
+    phase merges to main as it lands, on the strength of its own
+    verification. A halt mid-batch leaves clean history of what
+    shipped on main and what didn't. Example: the four-dataset
+    overnight batch (Plans 24-27, PRs #24-#28) -- each dataset's
+    bronze ingestion was usable as soon as it landed; no reason to
+    block the others on the survey if the survey halted on its gate.
+  The prompt's **Commit shape** section names which it expects. If
+  the prompt doesn't say, Code asks before starting -- the question is
+  "does Phase A serve the Outcome on its own, or only in combination
+  with the other phases?" If on its own, per-phase PR. If only in
+  combination, one PR.
 - **Stacked PRs need their bases retargeted to main before merging.**
   Documented gotcha (LOG.md 2026-05-14 07:30 ET). When in doubt, merge
   only the top of the stack after rebasing.
