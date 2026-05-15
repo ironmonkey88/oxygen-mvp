@@ -193,6 +193,7 @@ Deferred to MVP 2+:
 |---|---|
 | Strategic positioning, audience, the four-MVP roadmap | [MVP.md](../MVP.md) |
 | Project instructions for Claude Code | [CLAUDE.md](../CLAUDE.md) |
+| How do prompts from Chat get shaped and processed? | [PROMPTS.md](../PROMPTS.md) |
 | Architecture decisions, component map, data flow, constraints | [ARCHITECTURE.md](../ARCHITECTURE.md) |
 | Environment setup, install commands, config files, systemd unit | [SETUP.md](../SETUP.md) |
 | "Done done" spec by layer + MVP 1 sign-off checklist | [STANDARDS.md](../STANDARDS.md) |

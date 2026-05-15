@@ -132,7 +132,9 @@ blast radius.
 
 How the work lands in git. Single commit vs commit-per-phase. Whether
 the commit message names a Plan number (per CLAUDE.md "Name every
-plan"). Whether artifacts get a PR or land directly.
+plan"). Whether artifacts get a PR or land directly. For multi-phase
+work, name whether phases ship as **one PR holding all phases**
+(jointly valuable) or **one PR per phase** (independently valuable).
 ```
 
 **Optional but encouraged**
