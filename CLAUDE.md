@@ -17,6 +17,7 @@ This file is instructions for Claude Code. The project has a hierarchy of docume
 - `CLAUDE.md` — operating instructions for Claude Code (this file)
 - `ARCHITECTURE.md` — stack decisions, component map, data flow, constraints
 - `STANDARDS.md` — "done done" gates by layer; MVP 1 sign-off checklist
+- `DASHBOARDS.md` — design standard for every `apps/*.app.yml`: purpose+audience step, three-tier base, recent-situation layer, mandatory trust signals, file contract. Read before building or reviewing a Data App.
 - `SETUP.md` — environment setup, install commands, config files
 - `LOG.md` — current status, decisions, blockers
 - `TASKS.md` — task tracker (the "Next Focus" section at the top is the active pointer)
