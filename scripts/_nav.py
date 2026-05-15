@@ -3,12 +3,13 @@
 One canonical source for the seven-link nav rendered across every static
 portal surface. Imported by:
 
-- scripts/generate_metrics_page.py     (active='metrics')
-- scripts/generate_trust_page.py       (active='trust')
-- scripts/generate_profile_page.py     (active='profile')
-- scripts/generate_erd_page.py         (active='erd')
-- scripts/generate_homepage_summary.py (active='home', rewrites portal/index.html)
-- scripts/generate_dashboards_listing.py (active='dashboards', rewrites portal/dashboards.html)
+- scripts/generate_metrics_page.py         (active='metrics')
+- scripts/generate_trust_page.py           (active='trust')
+- scripts/generate_profile_page.py         (active='profile')
+- scripts/generate_erd_page.py             (active='erd')
+- scripts/generate_homepage_summary.py     (active='home', rewrites portal/index.html)
+- scripts/generate_dashboards_listing.py   (active='dashboards', rewrites portal/dashboards.html)
+- scripts/generate_somerville_info_page.py (active='about')
 
 The hand-written pages (portal/index.html, portal/dashboards.html) carry
 BEGIN_NAV / END_NAV marker comments; the homepage + dashboards generators
@@ -32,6 +33,7 @@ NAV_ITEMS: tuple[tuple[str, str, str], ...] = (
     ("/profile", "Profiles", "profile"),
     ("/erd", "Schema", "erd"),
     ("/docs/", "Data dictionary", "docs"),
+    ("/about", "About", "about"),
 )
 
 

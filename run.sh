@@ -191,6 +191,19 @@ if [ -d /var/www/somerville ] && [ -f portal/somerville-wards-background.svg ]; 
     echo "    synced portal/somerville-wards-background.svg → /var/www/somerville/"
 fi
 
+# Step 8d: generate /about info page (Prompt 11 Phase E)
+# Reads main_bronze.raw_somerville_at_a_glance and emits a static info
+# page. Bronze view is replace-mode and updated only when manually
+# re-ingested; daily regen is cheap (~100ms) and keeps the page in sync
+# with any audit-column / timestamp updates.
+ERROR_STAGE="about_page"
+echo "==> 8d/10 generate /about info page"
+python scripts/generate_somerville_info_page.py
+if [ -d /var/www/somerville ] && [ -f portal/about.html ]; then
+    deploy_html portal/about.html /var/www/somerville/about.html
+    echo "    deployed to /var/www/somerville/about.html"
+fi
+
 # Step 9: build limitations index
 ERROR_STAGE="limitations_index"
 echo "==> 9/10 build limitations index"
