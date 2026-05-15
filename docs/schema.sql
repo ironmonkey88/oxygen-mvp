@@ -99,6 +99,39 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
     _dlt_id             VARCHAR
 );
 
+-- bronze.raw_somerville_traffic_citations_raw -- SPD traffic citations
+-- (Prompt 11 Phase C, 2026-05-14). Socrata `3mqx-eye9`. Merge mode on
+-- `citationnum`. ~67K rows / 14 columns; data 2017-present. Source refreshes
+-- daily with a one-month publication delay. Wired into run.sh as stage 1c.
+-- Grain: one row per (citation, violation); citationnum carries a violation
+-- suffix (e.g. "T2725339-1"). PII surface is low -- intersection-level
+-- address, violation type, ward, speed -- no driver name / license / vehicle.
+-- See docs/limitations/traffic-citations-location-and-violation-only.md.
+CREATE TABLE IF NOT EXISTS bronze.raw_somerville_traffic_citations_raw (
+    citationnum         VARCHAR,  -- PK incl. violation suffix; dlt merge key
+    dtissued            VARCHAR,  -- timestamp issued; cast to TIMESTAMP in silver
+    police_shift        VARCHAR,
+    address             VARCHAR,  -- intersection-level text
+    chgcode             VARCHAR,  -- MGL violation code; space-padded
+    chgdesc             VARCHAR,
+    chgcategory         VARCHAR,  -- 109 distinct values
+    vehiclemph          VARCHAR,  -- speed (text from source); NULL for non-speeding
+    mphzone             VARCHAR,  -- posted speed limit
+    lat                 VARCHAR,  -- geocoded latitude; precise to ~4 decimals
+    long                VARCHAR,  -- geocoded longitude
+    blockcode           VARCHAR,  -- 15-char census block code
+    ward                VARCHAR,  -- '1'-'7'; NULL for ~0.12% of rows
+    warning             VARCHAR,  -- 'Y' / 'N' (warning vs paid citation)
+
+    -- pipeline metadata (added by dlt/somerville_traffic_citations_pipeline.py)
+    _extracted_at       TIMESTAMP,
+    _extracted_run_id   VARCHAR,
+    _first_seen_at      TIMESTAMP,  -- post-merge UPDATE; preserved across re-extractions
+    _source_endpoint    VARCHAR,
+    _dlt_load_id        VARCHAR,
+    _dlt_id             VARCHAR
+);
+
 -- bronze.raw_somerville_permits_raw -- ISD permit applications (Prompt 11 Phase B,
 -- 2026-05-14). Socrata `vxgw-vmky`. Replace mode (not merge): 64,521 rows /
 -- 10 columns, source `rowsUpdatedAt = 2023-05-16` (nearly 3 years stale). One
