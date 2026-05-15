@@ -85,6 +85,48 @@ def project(lng: float, lat: float, bbox: tuple, ref_lat: float) -> tuple[float,
     return x, y
 
 
+def polygon_centroid(pts: list[tuple[float, float]]) -> tuple[float, float]:
+    """Area-weighted centroid of a simple polygon via the shoelace formula.
+
+    `pts` is a list of (x, y) tuples in any coordinate system. Polygon may
+    or may not be explicitly closed; either form works.
+    """
+    if not pts:
+        return 0.0, 0.0
+    if pts[0] != pts[-1]:
+        pts = pts + [pts[0]]
+    a2 = 0.0
+    cx = 0.0
+    cy = 0.0
+    for i in range(len(pts) - 1):
+        x0, y0 = pts[i]
+        x1, y1 = pts[i + 1]
+        cross = x0 * y1 - x1 * y0
+        a2 += cross
+        cx += (x0 + x1) * cross
+        cy += (y0 + y1) * cross
+    if a2 == 0:
+        # Degenerate -- fall back to mean of vertices
+        xs = [p[0] for p in pts[:-1]]
+        ys = [p[1] for p in pts[:-1]]
+        return sum(xs) / len(xs), sum(ys) / len(ys)
+    return cx / (3 * a2), cy / (3 * a2)
+
+
+def polygon_area(pts: list[tuple[float, float]]) -> float:
+    """Absolute area of a simple polygon."""
+    if len(pts) < 3:
+        return 0.0
+    if pts[0] != pts[-1]:
+        pts = pts + [pts[0]]
+    a2 = 0.0
+    for i in range(len(pts) - 1):
+        x0, y0 = pts[i]
+        x1, y1 = pts[i + 1]
+        a2 += x0 * y1 - x1 * y0
+    return abs(a2) / 2
+
+
 def main() -> None:
     if not DB_PATH.exists():
         raise SystemExit(f"DuckDB file missing: {DB_PATH}")
@@ -128,26 +170,48 @@ def main() -> None:
             max_lng + margin, max_lat + margin)
     ref_lat = (min_lat + max_lat) / 2
 
-    # Build SVG
+    # Build SVG: polygons inside an opacity-0.7 group; ward labels in a
+    # separate group at full opacity so they stay readable against the
+    # background.
     parts = [
-        f'<?xml version="1.0" encoding="UTF-8"?>',
+        '<?xml version="1.0" encoding="UTF-8"?>',
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}" preserveAspectRatio="xMidYMid meet" '
         f'aria-hidden="true">',
         '  <title>Somerville wards (background)</title>',
-        '  <g fill="#e3e1dc" stroke="#c8c4ba" stroke-width="1.5" '
-        'stroke-linejoin="round" opacity="0.55">',
+        '  <g fill="#d5d2cb" stroke="#b0ab9f" stroke-width="2.5" '
+        'stroke-linejoin="round" opacity="0.7">',
     ]
+    label_positions: list[tuple[float, float, str]] = []
     for ward, ward_name, rings in all_polys:
+        projected_rings: list[list[tuple[float, float]]] = []
         for ring in rings:
-            pts = []
+            pts: list[tuple[float, float]] = []
+            pts_str: list[str] = []
             for lng, lat in ring:
                 x, y = project(lng, lat, bbox, ref_lat)
-                pts.append(f"{x:.1f},{y:.1f}")
+                pts.append((x, y))
+                pts_str.append(f"{x:.1f},{y:.1f}")
             parts.append(
-                f'    <polygon points="{" ".join(pts)}" '
+                f'    <polygon points="{" ".join(pts_str)}" '
                 f'data-ward="{ward}" data-ward-name="{ward_name}" />'
             )
+            projected_rings.append(pts)
+        if projected_rings:
+            largest = max(projected_rings, key=polygon_area)
+            cx, cy = polygon_centroid(largest)
+            label_positions.append((cx, cy, ward))
+    parts.append('  </g>')
+    parts.append(
+        '  <g font-family="Instrument Sans, -apple-system, sans-serif" '
+        'font-size="22" font-weight="600" fill="#6a6a6a" '
+        'text-anchor="middle" dominant-baseline="central" '
+        'pointer-events="none">'
+    )
+    for cx, cy, ward in label_positions:
+        parts.append(
+            f'    <text x="{cx:.1f}" y="{cy:.1f}">Ward {ward}</text>'
+        )
     parts.append('  </g>')
     parts.append('</svg>')
     svg = "\n".join(parts) + "\n"

@@ -42,6 +42,10 @@
       --green:      #1e4d2b;
       --green-mid:  #2d6a3f;
       --green-pale: #e8f0eb;
+      --red:        #8b1f1f;
+      --red-pale:   #f4e5e5;
+      --amber:      #8a6a1a;
+      --amber-pale: #f5edd9;
       --bg:         #f7f6f2;
       --bg-stat:    #f0eeea;
       --border:     #e2dfd8;
@@ -61,7 +65,8 @@
       overflow-x: hidden;
     }
 
-    /* Ward-map background — subtle, anchored top-right of the upper page area.
+    /* Ward-map background — anchored left, sits behind hero + welcome area
+       as a confident geographic backdrop with readable ward labels.
        Source: portal/somerville-wards-background.svg (Plan 16; path is top-
        level on purpose -- nginx /assets is a proxy to the Oxygen SPA, so a
        static SVG can't live there).
@@ -70,14 +75,14 @@
       content: '';
       position: absolute;
       top: 52px;
-      right: -40px;
-      width: min(55vw, 720px);
-      height: 620px;
+      left: -60px;
+      width: min(75vw, 1000px);
+      height: 800px;
       background-image: url('/somerville-wards-background.svg');
       background-repeat: no-repeat;
-      background-position: center;
+      background-position: left center;
       background-size: contain;
-      opacity: 0.45;
+      opacity: 0.6;
       pointer-events: none;
       z-index: 0;
     }
@@ -204,20 +209,29 @@
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
     }
     .stat {
-      padding: 32px 40px;
+      padding: 26px 22px;
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
     .stat:last-child { border-right: none; }
     .stat-value {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 700;
-      letter-spacing: -1px;
-      line-height: 1;
+      letter-spacing: -0.5px;
+      line-height: 1.05;
       margin-bottom: 6px;
+    }
+    .stat-value.stat-value-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0;
+      line-height: 1.3;
+      margin-bottom: 8px;
+      white-space: nowrap;
     }
     .stat-label {
       font-size: 13px;
@@ -385,6 +399,7 @@
       transition: border-color .15s;
     }
     .question-card:hover { border-color: var(--green-mid); }
+    .question-card { cursor: pointer; }
     .question-text {
       font-size: 14px;
       color: var(--text);
@@ -397,6 +412,33 @@
       letter-spacing: 0.03em;
     }
     .question-link:hover { color: var(--green); }
+
+    /* ── COPY-TO-CHAT TOAST ──
+       Shown briefly after a question card is clicked. The SPA at /chat
+       does not parse URL query params for the message input (see
+       limitations/spa-no-deeplink-prepopulation.md), so the question
+       card copies the question text to the clipboard before navigating;
+       this toast tells the user to paste. */
+    #copy-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: var(--white);
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 1000;
+    }
+    #copy-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
 
     .section-num {
       font-size: 11px;
@@ -637,16 +679,20 @@
       <div class="stat-label">Wards covered</div>
     </div>
     <div class="stat">
-      <div class="stat-value">21</div>
+      <div class="stat-value">22</div>
       <div class="stat-label">Documented limitations</div>
     </div>
     <div class="stat">
-      <div class="stat-value">2026-05-12</div>
+      <div class="stat-value stat-value-time">2026-05-13</div>
       <div class="stat-label">Latest data point (311)</div>
     </div>
     <div class="stat">
-      <div class="stat-value">2026-05-14</div>
+      <div class="stat-value stat-value-time">2026-05-14<br>12:57 ET</div>
       <div class="stat-label">Last pipeline run</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color: var(--red);">70 of 71</div>
+      <div class="stat-label">Data quality tests passed</div>
     </div>
   </div>
   <!-- END_STATS -->
@@ -679,11 +725,11 @@
         <div class="dataset-card-title">311 service requests</div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Rows</span>
-          <span class="dataset-card-val">1,171,107</span>
+          <span class="dataset-card-val">1,171,546</span>
         </div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Date range</span>
-          <span class="dataset-card-val">2015-07-01 to 2026-05-12</span>
+          <span class="dataset-card-val">2015-07-01 to 2026-05-13</span>
         </div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Request types</span>
@@ -726,26 +772,26 @@
     <!-- END_DATASET_CARDS -->
   </section>
 
-  <!-- COMMON QUESTIONS -->
+  <!-- TRY A QUESTION -->
   <section id="questions">
     <div class="section-num">03</div>
-    <div class="section-title">What you can ask</div>
+    <div class="section-title">Try a question</div>
     <div class="questions-list">
-      <a class="question-card" href="/chat">
+      <a class="question-card" href="/chat" data-question="How many 311 requests came in last month, by ward?">
         <span class="question-text">How many 311 requests came in last month, by ward?</span>
-        <span class="question-link">Ask the chat →</span>
+        <span class="question-link">Copy &amp; ask →</span>
       </a>
-      <a class="question-card" href="/chat">
+      <a class="question-card" href="/chat" data-question="Which 311 categories take the longest to resolve?">
         <span class="question-text">Which 311 categories take the longest to resolve?</span>
-        <span class="question-link">Ask the chat →</span>
+        <span class="question-link">Copy &amp; ask →</span>
       </a>
-      <a class="question-card" href="/chat">
+      <a class="question-card" href="/chat" data-question="What kinds of crime are reported across Somerville?">
         <span class="question-text">What kinds of crime are reported across Somerville?</span>
-        <span class="question-link">Ask the chat →</span>
+        <span class="question-link">Copy &amp; ask →</span>
       </a>
-      <a class="question-card" href="/chat">
+      <a class="question-card" href="/chat" data-question="Which wards see the highest combined 311 + crime activity?">
         <span class="question-text">Which wards see the highest combined 311 + crime activity?</span>
-        <span class="question-link">Ask the chat →</span>
+        <span class="question-link">Copy &amp; ask →</span>
       </a>
       <a class="question-card" href="/dashboards">
         <span class="question-text">Rat complaints by ward — frequency, resolution, equity</span>
@@ -757,6 +803,43 @@
       </a>
     </div>
   </section>
+
+  <!-- Toast element + handler for the clipboard workaround. The SPA at
+       /chat does not parse URL query params for the input field; we copy
+       the question text to the clipboard so the user can paste once the
+       chat loads. See docs/limitations/spa-no-deeplink-prepopulation.md. -->
+  <div id="copy-toast" role="status" aria-live="polite">Question copied — paste it in the chat</div>
+  <script>
+    (function () {
+      var toast = document.getElementById('copy-toast');
+      var toastTimer = null;
+      function showToast() {
+        if (!toast) return;
+        toast.classList.add('visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toast.classList.remove('visible');
+        }, 1800);
+      }
+      document.querySelectorAll('.question-card[data-question]').forEach(function (card) {
+        card.addEventListener('click', function (ev) {
+          var q = card.getAttribute('data-question');
+          if (!q) return;
+          ev.preventDefault();
+          var href = card.getAttribute('href') || '/chat';
+          var navigate = function () { window.location.href = href; };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(q).then(function () {
+              showToast();
+              setTimeout(navigate, 350);
+            }, navigate);
+          } else {
+            navigate();
+          }
+        });
+      });
+    })();
+  </script>
 
   <!-- PLATFORM ASSETS -->
   <section id="assets">
