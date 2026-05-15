@@ -170,17 +170,21 @@ def main() -> None:
             max_lng + margin, max_lat + margin)
     ref_lat = (min_lat + max_lat) / 2
 
-    # Build SVG: polygons styled lightly (original Plan-16 palette) so the
-    # CSS body::before can keep its own opacity low without the combined
-    # result swamping body text. Ward labels live in a separate group --
-    # they're fine even at low composite opacity.
+    # Build SVG: polygons get a subtle green tint -- cream-green fill +
+    # muted-green stroke -- so the map reads as part of the portal palette
+    # (matching the --green / --green-pale family in portal/index.html's
+    # :root vars), not a neutral diagram dropped on cream. The tint is
+    # quiet by design; at composite opacity (CSS body::before * SVG group)
+    # the page should still read as cream-and-black-and-green, not "green
+    # page." Labels live in a separate group with a soft greenish-grey
+    # fill so they recede instead of asserting themselves.
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}" preserveAspectRatio="xMidYMid meet" '
         f'aria-hidden="true">',
         '  <title>Somerville wards (background)</title>',
-        '  <g fill="#e3e1dc" stroke="#c8c4ba" stroke-width="1.5" '
+        '  <g fill="#dde5d9" stroke="#a8b5a3" stroke-width="2" '
         'stroke-linejoin="round" opacity="0.55">',
     ]
     label_positions: list[tuple[float, float, str]] = []
@@ -205,7 +209,7 @@ def main() -> None:
     parts.append('  </g>')
     parts.append(
         '  <g font-family="Instrument Sans, -apple-system, sans-serif" '
-        'font-size="22" font-weight="600" fill="#6a6a6a" '
+        'font-size="22" font-weight="600" fill="#7a8077" '
         'text-anchor="middle" dominant-baseline="central" '
         'pointer-events="none">'
     )
