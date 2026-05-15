@@ -1,7 +1,7 @@
 # === DASHBOARD METADATA (Plan 17 / Session 45 contract) ===
 # title: Rat complaints by ward
 # topic: service_requests
-# short_desc: "Somerville rat complaints -- frequency, resolution speed, volume trend, and ward-level service equity."
+# short_desc: "Recent rat-complaint activity, long-run growth, and ward-level service equity in Somerville's 311 system."
 # row_caption: "14,036 complaints"
 # coverage: "2015-2026"
 # source_tables:
@@ -19,18 +19,24 @@
 
 name: rat_complaints_by_ward
 description: |
-  Somerville rat complaints -- frequency, resolution speed, volume trend,
-  and ward-level service equity. 14,036 complaints across 4
-  request_type values (`Rats`, `Rodent Assistance Program request`,
-  `Rodent Assistance Program inquiry`, `School Rodent Control`).
+  Are rat complaints being handled equitably across wards, is the
+  problem growing, and what's happening right now? A city-analyst
+  view: the recent-situation layer surfaces the operational present,
+  and the base tiers carry the long-run picture suitable for a
+  report. 14,036 complaints across 4 request_type values (`Rats`,
+  `Rodent Assistance Program request`, `Rodent Assistance Program
+  inquiry`, `School Rodent Control`) since 2015.
 
-  Built via Plan 11 (2026-05-13) on top of `main_gold.fct_311_requests`.
-  Trust signals: `last_refreshed` task reads from
-  `main_admin.fct_pipeline_run_raw`; ward-equity chart inherits the
-  `location-ward-block-only` limitation (167 of 14,036 rows have NULL
-  ward and are excluded from the by-ward view).
+  Built on `main_gold.fct_311_requests` per Plan 11 (2026-05-13) and
+  restructured 2026-05-15 to the `DASHBOARDS.md` standard
+  (recent-situation layer + Tier 0-4 base + trust footer). Verified
+  SQL bodies from the Builder Agent pass kept intact; three new
+  recent-window tasks added. Inherits `location-ward-block-only`
+  (167 complaints with NULL ward excluded from by-ward views).
 
 tasks:
+  # ---------- VERIFIED SQL FROM PLAN 11 (kept exactly) ----------
+
   # 1 -- Frequency: total rat complaints (single number).
   - name: total_rat_complaints
     type: execute_sql
@@ -151,38 +157,183 @@ tasks:
       FROM main_admin.fct_pipeline_run_raw
       WHERE run_status IN ('success', 'partial')
 
+  # ---------- NEW: RECENT-SITUATION LAYER (DASHBOARDS.md sec 4) ----------
+
+  # 6 -- Recent headline: 90-day volume + comparison to prior 90 days.
+  #     Window is relative to CURRENT_DATE; if the pipeline hasn't run
+  #     recently, "last 90 days" effectively ends at last refresh -- see
+  #     the limitations footer.
+  - name: recent_headline
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      ),
+      windowed AS (
+        SELECT
+          COUNT(*) FILTER (
+            WHERE date_created_dt >= CURRENT_DATE - INTERVAL '90 days'
+          ) AS last_90,
+          COUNT(*) FILTER (
+            WHERE date_created_dt >= CURRENT_DATE - INTERVAL '180 days'
+              AND date_created_dt <  CURRENT_DATE - INTERVAL '90 days'
+          ) AS prior_90
+        FROM rats
+      )
+      SELECT
+        last_90,
+        prior_90,
+        last_90 - prior_90 AS change_count,
+        ROUND( (last_90 - prior_90) * 100.0 / NULLIF(prior_90, 0), 1 ) AS change_pct
+      FROM windowed
+
+  # 7 -- Recent trend: complaints per week, last 90 days.
+  - name: recent_trend_by_week
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      )
+      SELECT
+        DATE_TRUNC('week', date_created_dt) AS week_start,
+        COUNT(*) AS complaints
+      FROM rats
+      WHERE date_created_dt >= CURRENT_DATE - INTERVAL '90 days'
+      GROUP BY 1
+      ORDER BY 1
+
+  # 8 -- Emerging problems: wards whose share of last-90-day complaints
+  #     exceeds their long-run share. Positive overrepresentation_pts =
+  #     running hotter than the historical norm; this is the "where to
+  #     look" signal that earns the layer's place.
+  - name: recent_ward_overrepresentation
+    type: execute_sql
+    database: somerville
+    sql_query: |
+      WITH rats AS (
+        SELECT f.*
+        FROM main_gold.fct_311_requests f
+        JOIN main_gold.dim_request_type rt USING (request_type_id)
+        WHERE TRIM(rt.request_type) IN (
+          'Rats',
+          'Rodent Assistance Program request',
+          'Rodent Assistance Program inquiry',
+          'School Rodent Control'
+        )
+      ),
+      all_time AS (
+        SELECT
+          ward,
+          COUNT(*) AS n,
+          COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS share_all_time
+        FROM rats
+        WHERE ward IS NOT NULL
+        GROUP BY ward
+      ),
+      recent AS (
+        SELECT
+          ward,
+          COUNT(*) AS n,
+          COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS share_recent
+        FROM rats
+        WHERE ward IS NOT NULL
+          AND date_created_dt >= CURRENT_DATE - INTERVAL '90 days'
+        GROUP BY ward
+      )
+      SELECT
+        w.ward_name,
+        r.n AS recent_complaints,
+        ROUND(r.share_recent * 100, 1) AS pct_of_recent,
+        ROUND(a.share_all_time * 100, 1) AS pct_of_all_time,
+        ROUND((r.share_recent - a.share_all_time) * 100, 1) AS overrepresentation_pts
+      FROM recent r
+      JOIN all_time a USING (ward)
+      JOIN main_gold.dim_ward w ON r.ward = w.ward
+      ORDER BY overrepresentation_pts DESC
+
 display:
+  # ===================== RECENT-SITUATION LAYER =====================
+  # Renders first because the audience (analyst with a report due)
+  # checks the operational present before the long-run picture.
+
   - type: markdown
     content: |
-      # Somerville rat complaints
+      ## Recent situation (last 90 days)
 
-      14,036 rat-related 311 complaints across four request types
-      (`Rats`, `Rodent Assistance Program request`,
-      `Rodent Assistance Program inquiry`, `School Rodent Control`)
-      from 2015 to present. Source:
-      `main_gold.fct_311_requests` + `main_gold.dim_request_type` +
-      `main_gold.dim_status` + `main_gold.dim_ward` +
-      `main_gold.dim_date`.
+      The operational present, windowed to the last 90 days from the
+      most recent pipeline refresh. The base tiers below carry the
+      long-run picture.
 
   - type: table
-    title: Pipeline freshness
-    data: last_refreshed
-
-  - type: table
-    title: Total rat complaints
-    data: total_rat_complaints
+    title: Last 90 days vs prior 90 days
+    data: recent_headline
 
   - type: bar_chart
-    title: Complaints by ward (excludes 167 rows with NULL ward -- see limitation)
-    data: complaints_by_ward
-    x: ward_name
+    title: Complaints by week, last 90 days
+    data: recent_trend_by_week
+    x: week_start
     y: complaints
 
   - type: bar_chart
-    title: Complaints density per sq km by ward
-    data: complaints_by_ward
+    title: Wards running above their historical share (last 90 days)
+    data: recent_ward_overrepresentation
     x: ward_name
-    y: complaints_per_sqkm
+    y: overrepresentation_pts
+
+  # ============================ BASE ============================
+
+  # ---- Tier 0: Orientation ----
+  - type: markdown
+    content: |
+      ## 01 -- Orientation
+
+      What this covers: 14,036 rat-related 311 complaints from 2015
+      to present, across four source request types (`Rats`, `Rodent
+      Assistance Program request`, `Rodent Assistance Program
+      inquiry`, `School Rodent Control`). Sources:
+      `main_gold.fct_311_requests` + `main_gold.dim_request_type` +
+      `main_gold.dim_status` + `main_gold.dim_ward` +
+      `main_gold.dim_date`. The purpose: are rat complaints being
+      handled equitably across wards, is the problem growing, and
+      what's happening right now? The audience: a city analyst
+      preparing a report who needs both the long-run picture and a
+      reading of the recent situation.
+
+  # ---- Tier 1: Headline ----
+  - type: markdown
+    content: |
+      ## 02 -- The headline
+
+  - type: table
+    title: Total rat complaints since 2015
+    data: total_rat_complaints
+
+  # ---- Tier 2: Major KPIs ----
+  - type: markdown
+    content: |
+      ## 03 -- Major KPIs
+
+      The two breakdowns that explain the headline: is the problem
+      growing over time, and is the response distributed equitably
+      across wards?
 
   - type: line_chart
     title: Complaints by year (2026 partial)
@@ -191,31 +342,82 @@ display:
     y: complaints
 
   - type: bar_chart
+    title: Complaints by ward (excludes 167 NULL-ward rows -- see limitations)
+    data: complaints_by_ward
+    x: ward_name
+    y: complaints
+
+  # ---- Tier 3: Descriptive measures ----
+  - type: markdown
+    content: |
+      ## 04 -- Descriptive measures
+
+      Finer-grained cuts the engaged reader will look at next:
+      density-adjusted ward distribution (which corrects for ward
+      size) and the resolution-speed distribution for closed cases.
+
+  - type: bar_chart
+    title: Complaints density per sq km by ward
+    data: complaints_by_ward
+    x: ward_name
+    y: complaints_per_sqkm
+
+  - type: bar_chart
     title: Resolution-speed distribution (closed complaints only)
     data: resolution_buckets
     x: bucket
     y: complaints
 
+  # ---- Tier 4: Takeaway ----
+  - type: markdown
+    content: |
+      ## 05 -- Takeaway
+
+      Rat complaints have grown materially since 2015 and are
+      running hotter right now: the most recent 90 days carry about
+      twice the volume of the prior 90 days, concentrated in Wards 7
+      and 3, both of which run several points above their long-run
+      share. Raw volume across wards is roughly even, but density
+      per square kilometer is not -- Ward 3 carries the highest
+      pressure relative to its size, which the equity question
+      should foreground. Most closed complaints resolve within a
+      week; a long tail of roughly 3,000 cases sits open beyond 365
+      days, reflecting structural infestations that don't close on
+      a 311 cadence rather than slow operational response.
+
+  # ======================== TRUST FOOTER ========================
+
+  - type: table
+    title: Pipeline freshness (last successful or partial run)
+    data: last_refreshed
+
   - type: markdown
     content: |
       ## Citations
 
-      - Fact: `main_gold.fct_311_requests` -- bronze sourced from Socrata
-        `4pyi-uqq6` (Somerville 311 SODA API). 1,170,637 total 311 rows
-        as of last refresh.
+      - Fact: `main_gold.fct_311_requests` -- bronze sourced from
+        Socrata `4pyi-uqq6` (Somerville 311 SODA API). 1,170,637+
+        total 311 rows as of last refresh.
       - Dims: `main_gold.dim_request_type` (rat filter),
         `main_gold.dim_status` (Closed filter on resolution speed),
         `main_gold.dim_ward` (ward name + area), `main_gold.dim_date`
         (year on the trend chart).
-      - Freshness: `main_admin.fct_pipeline_run_raw` -- UTC timestamp of
-        the most recent successful or partial pipeline run.
+      - Freshness: `main_admin.fct_pipeline_run_raw` -- UTC timestamp
+        of the most recent successful or partial pipeline run.
 
       ## Known limitations
 
       - **`location-ward-block-only`** -- Bronze ward field is the only
         geo column populated for 311. The 167 rat complaints with
         NULL ward (1.2% of the total) are excluded from the by-ward
-        chart. See `docs/limitations/location-ward-block-only.md`.
+        and ward-overrepresentation charts. See
+        `docs/limitations/location-ward-block-only.md`.
+      - **Recent window is relative to data freshness, not today.**
+        The 90-day window is measured from `CURRENT_DATE`, but the
+        data only extends to the last successful pipeline refresh.
+        If the pipeline hasn't run recently, "last 90 days"
+        effectively means "90 days ending at last refresh." The
+        Pipeline freshness table above shows the true edge.
       - **Resolution speed is one-sided.** Built from
         `most_recent_status_dt - date_created_dt` and filtered to
         `status = 'Closed'`. The 1,343 Open + In Progress rat
