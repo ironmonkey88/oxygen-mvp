@@ -35,6 +35,7 @@
 | 19 | MVP 2 polish — Rat dashboard iteration (Builder CLI) | deferred | Same reason as Plan 18. |
 | 20 | Portal polish + trust framing — Prompts 09 + 10 + Dashboards standard + Trust pipeline-history | done | 2026-05-14 — Prompt 09 (ward map + 7-cell stats + CTA clipboard + /trust pipeline reliability sparkline) PR #21; Prompt 10 (centered map + false-red fix + dbt by-design framing) PR #23; DASHBOARDS.md PR #22; /trust pipeline-history operational view PR (folded into Prompt 09 PR). |
 | 21 | Overnight batch — 4 bronze ingests + Somerville info page (Prompt 11) | done | 2026-05-14 — Phase A Happiness Survey (PR #24, 12,583 rows, biennial, 49.5% NULL ward); Phase B Permits (PR #25, 64,521 rows, static since 2023, 11 NULL types as honest finding); Phase C Traffic Citations (PR #26, 67,311 rows, daily-refresh in run.sh stage 1c, low PII); Phase D Somerville at a Glance (PR #27, 749 rows ACS KPIs); Phase E /about info page (PR #28, generator + nav + nginx + run.sh stage 8d). End-to-end ./run.sh manual exits 0 in 946s; 92 tests pass (21 new); all 4 bronze views auto-profiled at /profile. |
+| 22 | PROMPTS.md — Chat-to-Code prompt standard | done | 2026-05-15 — Session 47. PROMPTS.md content itself landed earlier in [PR #34](https://github.com/ironmonkey88/oxygen-mvp/pull/34) (Session 46 boundary); Plan 22 completes the wiring: CLAUDE.md "Receiving prompts from Chat" behavioral subsection + receipt-workflow rule + 3 internalized bullets; session-starter.md "How We Work Together" pointer; PROJECT_BRIEF §10 reference-map row; PROMPTS.md §3 commit-shape sentence (additive). Standard now binding on every future Code session. |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -45,11 +46,20 @@
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
 **Phase:** MVP 1 closed. **Plans 20 + 21 done 2026-05-14** (PR series #21-#28: portal polish + dashboards standard + 4 new bronze ingests + /about info page). Warehouse now carries 6 source datasets: 311, crime, wards, **happiness survey, permits, traffic citations, somerville-at-a-glance**. Portal has 8 routes (`/`, `/dashboards`, `/metrics`, `/trust`, `/profile`, `/erd`, `/docs/`, `/about`). Plans 11-17 closed in earlier sessions; Plans 18 + 19 (Builder CLI dashboards) deferred.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-14 23:44 ET (Prompt 11 overnight batch merged — 4 bronze ingests + /about info page; end-to-end run.sh manual exits 0 in 946s with 92/92 tests passing)
+**Last Updated:** 2026-05-15 14:30 ET (Plan 22 — PROMPTS.md wiring landed: receipt-workflow behavioral instruction in CLAUDE.md, pointers in session-starter.md + PROJECT_BRIEF §10, §3 commit-shape sentence; PROMPTS.md content itself merged earlier in [PR #34](https://github.com/ironmonkey88/oxygen-mvp/pull/34))
 
 ---
 
 ## Recent Sessions
+
+### Session 47 — 2026-05-15 13:30 ET — plan-22-prompts-md-wiring
+[full narrative](docs/sessions/session-47-2026-05-15-plan-22-prompts-md-wiring.md)
+
+- **Goal:** Wire the `PROMPTS.md` Chat-to-Code prompt standard (landed in PR #34) into the project's authority documents so the receipt workflow takes effect on Code's behavior by default.
+- **Shipped:** PROMPTS.md §3 commit-shape sentence (additive). CLAUDE.md "Receiving prompts from Chat" subsection with receipt-workflow rule + 3 internalized bullets (verification-gate, partial > fake-clean, report-back as last emission). session-starter.md "How We Work Together" pointer. PROJECT_BRIEF §10 reference-map row. LOG.md Plan 22 registry + decision + this entry.
+- **Decisions:** 2 — see Decisions Log.
+- **Status:** complete
+- **Next:** Open Plan 22 PR for Gordon's review. Branch carries `aae5a4a` (prior prompt's multi-phase merge clarification) + Plan 22 wiring commit — defensible to merge as one PR or split.
 
 ### Session 46 — 2026-05-14 18:30 ET — prompts-09-10-11-overnight-batch
 [full narrative](docs/sessions/session-46-2026-05-14-prompts-09-10-11-overnight-batch.md)
@@ -230,6 +240,7 @@
 | 2026-05-14 06:30 ET | **Plan 17: comment-block metadata contract for `.app.yml`, not top-level YAML keys** | `# === DASHBOARD METADATA === ... # === END DASHBOARD METADATA ===` block at top of each `apps/*.app.yml`, parsed as YAML after stripping `# ` prefix. Comment-block keeps metadata invisible to Oxygen -- `oxy validate` 12/12 confirmed no unknown-key rejection. Generator has graceful fallback to `name:` + first paragraph of `description:` for apps without the block. Future Builder Agent drafts surface on `/dashboards` even before metadata is added; a separate session can backfill. |
 | 2026-05-14 07:00 ET | **Plan 18 + 19 deferred to a fresh Code thread** | Sessions 46 (311 overview Builder CLI build) and 47 (rat dashboard iteration via Builder CLI) require interactive Builder CLI sessions with HITL Accept/Reject prompts + JSONL transcript capture + Chrome MCP visual verification -- qualitatively different from Sessions 43-45's mechanical generator work. After today's earlier work in this thread (Plans 11, 14, Sessions 41/42 -- 3 merged PRs) + Sessions 43-45 (3 PRs), accumulated state risks the kind of quality drop the Session 41 atob misdiagnosis modeled. Honest reporting > optimistic reporting: 3 verified PRs > 5 PRs where the last two might need retraction. Brief stop condition "Anything that contradicts a load-bearing assumption" applied. |
 | 2026-05-14 07:30 ET | **Stacked-PR base-ref gotcha during merge** | When merging stacked PRs in sequence, GitHub does NOT auto-update the base ref of dependent PRs after the parent merges. Merging PR #7 (base = #6's branch) AFTER #6 merged caused #7's content to land in the orphaned `claude/plan-15-homepage-dataset-summary` branch, NOT main. Recovery: retargeted PR #8 base to `main` directly; PR #8's branch (top of the stack) already contained #6 + #7 + #8 content, so merging #8 brought Plans 16 + 17 into main alongside the #6 content that was already there. Lesson: for stacked PRs, retarget each PR's base to `main` BEFORE merging, OR merge only the top of the stack after rebasing it onto main. |
+| 2026-05-15 14:30 ET | **Plan 22 — PROMPTS.md wired into project-authority docs** | PROMPTS.md merged in [PR #34](https://github.com/ironmonkey88/oxygen-mvp/pull/34) at the Session 46/47 boundary, but the wiring was never landed — Code reading CLAUDE.md alone wouldn't run the receipt workflow. Plan 22 closes the gap: behavioral instruction subsection in CLAUDE.md between Task Discipline and Rules (receipt-workflow rule + 3 internalized bullets); bullet in session-starter.md "How We Work Together" so Chat picks up the convention by default; reference-map row in PROJECT_BRIEF §10. Plus the §3 commit-shape sentence inside PROMPTS.md itself (additive — Chat's embedded source had the sentence; current file didn't). Reconciliation choice: additive-only against the embedded source — kept `aae5a4a`'s specific Plans-24-27 example wording in §5 Step 8 rather than reverting to generic. Receipt workflow now in force for every future Code session. |
 
 ---
 

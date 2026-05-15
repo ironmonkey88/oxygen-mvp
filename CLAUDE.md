@@ -138,6 +138,18 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 
 ---
 
+## Receiving prompts from Chat
+
+When receiving a prompt from Chat: follow the workflow defined in [PROMPTS.md](PROMPTS.md) §5. Read the header, verify state, branch on kind, and run the steps in order. Coding requests get the full 9-step flow; information requests skip to execution.
+
+Three rules worth internalizing:
+
+- **Code/config changes commit only after their verification gate passes.** Documentation changes (LOG.md, TASKS.md, session notes, handoffs, limitations, glossary edits) commit without a gate — the artifact existing in the committed state is the gate. See PROMPTS.md §5 Step 8.
+- **A partial completion with a documented finding outranks a fake-clean `complete`.** Status vocabulary: `complete`, `partial`, `blocked`, `deferred`. Pick the honest one.
+- **The report-back (PROMPTS.md §5 Step 9) is the last thing Code emits in the session.** No afterthoughts, no follow-up messages, no "one more thing." If something surfaces after the report, it goes into the next session's report.
+
+---
+
 ## Rules
 
 - **Oxygen-native first** — use YAML/SQL config before writing any code
