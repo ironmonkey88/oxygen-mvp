@@ -99,6 +99,35 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
     _dlt_id             VARCHAR
 );
 
+-- bronze.raw_somerville_permits_raw -- ISD permit applications (Prompt 11 Phase B,
+-- 2026-05-14). Socrata `vxgw-vmky`. Replace mode (not merge): 64,521 rows /
+-- 10 columns, source `rowsUpdatedAt = 2023-05-16` (nearly 3 years stale). One
+-- row per permit application; `id` is the source PK. Manual one-shot ingestion
+-- via dlt/somerville_permits_pipeline.py; not wired into run.sh (no point on a
+-- daily cadence when source is static). No ward column at source -- ward joins
+-- require spatial via lat/lng (silver work). See
+-- docs/limitations/permits-static-since-2023.md for staleness + status DQ.
+CREATE TABLE IF NOT EXISTS bronze.raw_somerville_permits_raw (
+    id                  VARCHAR,  -- PK; year-prefixed (e.g. B14-001277)
+    application_date    VARCHAR,  -- calendar_date from source
+    issue_date          VARCHAR,  -- calendar_date; NULL for non-issued applications
+    type                VARCHAR,  -- ~20 values; mostly Residential Building / Commercial Building
+    status              VARCHAR,  -- mostly "Issued"; known DQ issue: some rows carry dates
+    amount              DOUBLE,   -- permit fee USD
+    address             VARCHAR,  -- property address (public info, not applicant ID)
+    latitude            DOUBLE,   -- WGS84
+    longitude           DOUBLE,   -- WGS84
+    work                VARCHAR,  -- freeform job description
+
+    -- pipeline metadata (added by dlt/somerville_permits_pipeline.py)
+    _extracted_at       TIMESTAMP,
+    _extracted_run_id   VARCHAR,
+    _source_endpoint    VARCHAR,
+    _dlt_load_id        VARCHAR,
+    _dlt_id             VARCHAR
+    -- no _first_seen_at: replace mode wipes the table on each ingest
+);
+
 -- bronze.raw_somerville_happiness_survey_raw -- biennial city perception survey
 -- (Prompt 11 Phase A, 2026-05-14). Socrata `wmeh-zuz2`.
 -- Replace mode (not merge): 12,583 rows / 150 columns, static between waves
