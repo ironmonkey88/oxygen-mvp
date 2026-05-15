@@ -80,7 +80,11 @@
       position: absolute;
       top: 52px;
       left: 50%;
-      transform: translateX(-50%);
+      /* Slight rightward shift -- gives the hero text a small cream
+         apron on the left to breathe in, while the map's visible
+         center settles into the right half of the page. body
+         overflow-x: hidden clips the matching overflow on the right. */
+      transform: translateX(calc(-50% + 6vw));
       width: 100vw;
       height: clamp(420px, 52vh, 500px);
       background-image: url('/somerville-wards-background.svg');
@@ -656,6 +660,7 @@
       <a href="/profile">Profiles</a>
       <a href="/erd">Schema</a>
       <a href="/docs/">Data dictionary</a>
+      <a href="/about">About</a>
     </div>
   </nav>
   <!-- END_NAV -->
@@ -684,19 +689,19 @@
       <div class="stat-label">Wards covered</div>
     </div>
     <div class="stat">
-      <div class="stat-value">22</div>
+      <div class="stat-value">26</div>
       <div class="stat-label">Documented limitations</div>
     </div>
     <div class="stat">
-      <div class="stat-value stat-value-time">2026-05-13</div>
+      <div class="stat-value stat-value-time">2026-05-15</div>
       <div class="stat-label">Latest data point (311)</div>
     </div>
     <div class="stat">
-      <div class="stat-value stat-value-time">2026-05-14<br>12:57 ET</div>
+      <div class="stat-value stat-value-time">2026-05-15<br>06:15 ET</div>
       <div class="stat-label">Last pipeline run</div>
     </div>
     <div class="stat">
-      <div class="stat-value" style="color: var(--red);">70 of 71</div>
+      <div class="stat-value" style="color: var(--green);">92 of 92</div>
       <div class="stat-label">Data quality tests passed</div>
     </div>
   </div>
@@ -730,15 +735,15 @@
         <div class="dataset-card-title">311 service requests</div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Rows</span>
-          <span class="dataset-card-val">1,171,546</span>
+          <span class="dataset-card-val">1,172,054</span>
         </div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Date range</span>
-          <span class="dataset-card-val">2015-07-01 to 2026-05-13</span>
+          <span class="dataset-card-val">2015-07-01 to 2026-05-15</span>
         </div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Request types</span>
-          <span class="dataset-card-val">342</span>
+          <span class="dataset-card-val">343</span>
         </div>
         <div class="dataset-card-row">
           <span class="dataset-card-key">Wards covered</span>
