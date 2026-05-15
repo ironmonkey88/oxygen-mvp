@@ -99,6 +99,31 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
     _dlt_id             VARCHAR
 );
 
+-- bronze.raw_somerville_at_a_glance_raw -- demographic/housing/economic KPIs
+-- (Prompt 11 Phase D, 2026-05-14). Socrata `jnde-mi6j`. Replace mode: 749
+-- rows / 6 columns. Long/tidy format: one row per (topic, description, year,
+-- geography). 25 topics, 2 geographies (Somerville + Massachusetts), years
+-- 1850 (historical population) - 2024 (ACS). Source updates annually with
+-- ACS releases. Not wired into run.sh; re-run manually via
+-- dlt/somerville_at_a_glance_pipeline.py. Read directly by the /somerville
+-- info portal page (Prompt 11 Phase E).
+CREATE TABLE IF NOT EXISTS bronze.raw_somerville_at_a_glance_raw (
+    topic           VARCHAR,  -- top-level metric grouping (25 distinct values)
+    description     VARCHAR,  -- sub-label within topic
+    year            INTEGER,
+    value           DOUBLE,   -- in the unit named by `units`
+    units           VARCHAR,  -- "People" / "USD" / "Percent" / ...
+    geography       VARCHAR,  -- 'Somerville' or 'Massachusetts'
+
+    -- pipeline metadata (added by dlt/somerville_at_a_glance_pipeline.py)
+    _extracted_at       TIMESTAMP,
+    _extracted_run_id   VARCHAR,
+    _source_endpoint    VARCHAR,
+    _dlt_load_id        VARCHAR,
+    _dlt_id             VARCHAR
+    -- no _first_seen_at: replace mode wipes the table on each ingest
+);
+
 -- bronze.raw_somerville_traffic_citations_raw -- SPD traffic citations
 -- (Prompt 11 Phase C, 2026-05-14). Socrata `3mqx-eye9`. Merge mode on
 -- `citationnum`. ~67K rows / 14 columns; data 2017-present. Source refreshes
