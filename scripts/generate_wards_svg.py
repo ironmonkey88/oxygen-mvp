@@ -170,17 +170,18 @@ def main() -> None:
             max_lng + margin, max_lat + margin)
     ref_lat = (min_lat + max_lat) / 2
 
-    # Build SVG: polygons inside an opacity-0.7 group; ward labels in a
-    # separate group at full opacity so they stay readable against the
-    # background.
+    # Build SVG: polygons styled lightly (original Plan-16 palette) so the
+    # CSS body::before can keep its own opacity low without the combined
+    # result swamping body text. Ward labels live in a separate group --
+    # they're fine even at low composite opacity.
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}" preserveAspectRatio="xMidYMid meet" '
         f'aria-hidden="true">',
         '  <title>Somerville wards (background)</title>',
-        '  <g fill="#d5d2cb" stroke="#b0ab9f" stroke-width="2.5" '
-        'stroke-linejoin="round" opacity="0.7">',
+        '  <g fill="#e3e1dc" stroke="#c8c4ba" stroke-width="1.5" '
+        'stroke-linejoin="round" opacity="0.55">',
     ]
     label_positions: list[tuple[float, float, str]] = []
     for ward, ward_name, rings in all_polys:
