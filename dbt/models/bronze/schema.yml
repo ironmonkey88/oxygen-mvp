@@ -38,6 +38,24 @@ sources:
           full breakdown. Audit columns: `_extracted_at`,
           `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`, plus
           dlt's `_dlt_load_id` / `_dlt_id`.
+      - name: raw_somerville_at_a_glance_raw
+        description: |
+          dlt replace target for the Somerville at a Glance SODA API
+          (https://data.somervillema.gov/resource/jnde-mi6j.json).
+          Long/tidy KPI table: demographic + housing + economic metrics
+          for Somerville (and Massachusetts as a comparator) drawn
+          mostly from ACS 2010-2023, with some historical population
+          back to 1850. 749 rows / 6 columns. Grain is one row per
+          (topic, description, year, geography). 25 distinct topics
+          (Population, Median Rent Overtime, Educational Attainment,
+          Race & Ethnicity, etc.). Source updates annually with ACS
+          releases -- daily ingest doesn't make sense. **Not wired
+          into `run.sh`**; re-run manually via
+          `dlt/somerville_at_a_glance_pipeline.py` when a new ACS wave
+          publishes (typically once a year). Data source for the
+          /somerville info portal page (Prompt 11 Phase E). Audit
+          columns: `_extracted_at`, `_extracted_run_id`,
+          `_source_endpoint`. No `_first_seen_at` (replace wipes).
       - name: raw_somerville_traffic_citations_raw
         description: |
           dlt merge target for the Somerville Police Department Traffic
@@ -259,6 +277,69 @@ models:
         description: '**PIPELINE METADATA.** ULID of the pipeline run.'
       - name: _first_seen_at
         description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
+      - name: _source_endpoint
+        description: '**PIPELINE METADATA.** Source SODA URL.'
+      - name: _dlt_load_id
+        description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
+      - name: _dlt_id
+        description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
+
+  - name: raw_somerville_at_a_glance
+    description: |
+      Bronze view over the Somerville at a Glance mirror. Passes 6
+      source columns through `main_bronze.raw_somerville_at_a_glance_raw`
+      (dlt-owned, replace mode) plus audit + dlt-lineage columns.
+      Long/tidy KPI table designed for direct charting -- not a record-
+      grain transactional dataset. 749 rows. 25 topics (Population,
+      Median Rent, Median Home Value, Median Household Income,
+      Educational Attainment, Race & Ethnicity, Commute Mode,
+      Foreigner-Born Residents, etc.), 2 geographies (Somerville +
+      Massachusetts comparator), years ranging from 1850 (historical
+      population only) to 2024 (recent ACS).
+
+      Data source for the /somerville info portal page (Prompt 11
+      Phase E). Read directly by the generator script; no silver/gold
+      curation planned (source shape is already analytically
+      convenient).
+
+      Natural key is composite (topic, description, year, geography).
+      No single-column PK -- no `unique` test at column level; uniqueness
+      verified post-ingest via inline query if needed. See
+      docs/limitations/somerville-at-a-glance-acs-scope.md for the
+      caveats around using a 749-row KPI snapshot vs the underlying
+      ACS microdata.
+    columns:
+      - name: topic
+        description: 'Top-level metric grouping (e.g. "Population", "Median Rent Overtime", "Educational Attainment"). 25 distinct values.'
+        data_tests:
+          - not_null
+      - name: description
+        description: 'Sub-label within the topic identifying the exact metric variant (e.g. "Total Population", "30-Year Fixed Median Rent"). Use together with `topic` for human-readable axis labels.'
+        data_tests:
+          - not_null
+      - name: year
+        description: 'Calendar year for the metric value. 1850-2024 range; most topics 2010-2023 (ACS), Population goes back to 1850.'
+        data_tests:
+          - not_null
+      - name: value
+        description: 'Numeric metric value in the unit named by `units`. Population: people; rent / income: USD; percentages: 0-100.'
+        data_tests:
+          - not_null
+      - name: units
+        description: 'Unit of measure for `value` (e.g. "People", "USD", "Percent"). Source-provided; not a normalized vocabulary.'
+        data_tests:
+          - not_null
+      - name: geography
+        description: 'Comparison geography. "Somerville" for the city; "Massachusetts" for the state comparator.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Somerville', 'Massachusetts']
+      - name: _extracted_at
+        description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
+      - name: _extracted_run_id
+        description: '**PIPELINE METADATA.** ULID of the manual ingestion run.'
       - name: _source_endpoint
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id

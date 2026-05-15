@@ -154,6 +154,14 @@
     - profile.html
     - erd.html
   path: docs/limitations/portal-deploy-file-ownership.md
+- id: somerville-at-a-glance-acs-scope
+  title: Somerville at a Glance -- pre-aggregated KPI snapshot, not microdata
+  severity: low
+  affects:
+    - main_bronze.raw_somerville_at_a_glance_raw
+    - raw_somerville_at_a_glance
+    - somerville_at_a_glance
+  path: docs/limitations/somerville-at-a-glance-acs-scope.md
 - id: source-bulk-republish-no-per-row-modified
   title: Source publishes the dataset in bulk; there is no per-row modified field
   severity: info
