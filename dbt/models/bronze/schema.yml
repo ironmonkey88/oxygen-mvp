@@ -38,6 +38,24 @@ sources:
           full breakdown. Audit columns: `_extracted_at`,
           `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`, plus
           dlt's `_dlt_load_id` / `_dlt_id`.
+      - name: raw_somerville_permits_raw
+        description: |
+          dlt replace target for the Somerville Permits SODA API
+          (https://data.somervillema.gov/resource/vxgw-vmky.json).
+          Inspectional Services Department permit applications dating
+          back to 2014. 64,521 rows / 10 columns as of 2026-05-14.
+          **Source `rowsUpdatedAt` is 2023-05-16** -- nearly 3 years
+          stale; this dataset appears to have stopped refreshing in May
+          2023. Replace-mode ingestion: not wired into `run.sh` (no
+          point on a daily cadence when the source is static); re-run
+          manually via `dlt/somerville_permits_pipeline.py` if a new
+          wave publishes. No `ward` column at source -- ward-joined
+          analysis requires spatial join via `latitude`/`longitude` to
+          `dim_ward.geometry_wkt_wgs84` (silver work, MVP 3). See
+          docs/limitations/permits-static-since-2023.md for the
+          staleness caveat + status-column data quality issue. Audit
+          columns: `_extracted_at`, `_extracted_run_id`,
+          `_source_endpoint`. No `_first_seen_at` (replace wipes).
       - name: raw_somerville_happiness_survey_raw
         description: |
           dlt replace target for the Somerville Happiness Survey SODA
@@ -224,6 +242,70 @@ models:
         description: '**PIPELINE METADATA.** ULID of the pipeline run.'
       - name: _first_seen_at
         description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
+      - name: _source_endpoint
+        description: '**PIPELINE METADATA.** Source SODA URL.'
+      - name: _dlt_load_id
+        description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
+      - name: _dlt_id
+        description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
+
+  - name: raw_somerville_permits
+    description: |
+      Bronze view over the Somerville Permits mirror. Passes 10 source
+      columns through `main_bronze.raw_somerville_permits_raw`
+      (dlt-owned, replace mode) plus audit + dlt-lineage columns.
+      Inspectional Services Department permit applications 2014-2023.
+      64,521 rows. **Source is stale: `rowsUpdatedAt = 2023-05-16`** --
+      no new permits have been published in ~3 years. Treat this as a
+      historical dataset, not an ongoing feed; any analysis must
+      caveat that 2023-2026 permit activity is not represented.
+
+      Joins to operational data are ward-via-spatial: there is no
+      `ward` column at source. `latitude`+`longitude` are precise
+      enough for a point-in-polygon join against
+      `dim_ward.geometry_wkt_wgs84` (silver/gold work, MVP 3).
+
+      Status column has a data quality issue: some rows carry dates as
+      status values (e.g. "08/17/2022") rather than status labels.
+      Honest-test discipline: no `accepted_values` on `status` -- the
+      issue is documented in the limitations entry instead. Arrival
+      data only; cleanup is silver's job.
+
+      PII surface is modest: `address` is the property address (public
+      information for permits) and `work` is a freeform job
+      description that occasionally references street numbers but does
+      not carry applicant names. See
+      docs/limitations/permits-static-since-2023.md.
+    columns:
+      - name: id
+        description: 'Permit ID, year-prefixed (e.g. "B14-001277" = Building 2014 #001277). Primary key from source.'
+        data_tests:
+          - not_null
+          - unique
+      - name: application_date
+        description: 'Date the permit application was submitted (calendar_date from source).'
+        data_tests:
+          - not_null
+      - name: issue_date
+        description: 'Date the permit was issued. May be NULL for non-issued applications (Withdrawn, Denied, Under Review).'
+      - name: type
+        description: 'Permit type. 20+ values observed; mostly "Residential Building" (~73%) and "Commercial Building" (~15%). No `accepted_values` test -- long tail acceptable. **11 rows have NULL type** (data quality issue at source); no `not_null` test for this reason -- see limitations entry.'
+      - name: status
+        description: 'Permit status. Mostly "Issued" (~97%). Known data quality issue: some rows carry dates as status values (e.g. "08/17/2022"). 21 rows have NULL status. See limitations entry.'
+      - name: amount
+        description: 'Permit fee amount in USD. Numeric.'
+      - name: address
+        description: 'Property address (public information for permits). Not an applicant identifier.'
+      - name: latitude
+        description: 'Geocoded latitude (WGS84). Precise enough for point-in-polygon spatial join to dim_ward.'
+      - name: longitude
+        description: 'Geocoded longitude (WGS84).'
+      - name: work
+        description: 'Freeform description of permitted work (e.g. "Remove and replace 1500 sf of roofing"). Occasionally includes street numbers in the text; no applicant names observed.'
+      - name: _extracted_at
+        description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
+      - name: _extracted_run_id
+        description: '**PIPELINE METADATA.** ULID of the manual ingestion run.'
       - name: _source_endpoint
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id

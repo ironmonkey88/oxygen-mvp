@@ -132,6 +132,14 @@
   affects:
     - deploy.oxy_build
   path: docs/limitations/oxy-build-postgres-dependency.md
+- id: permits-static-since-2023
+  title: Permits dataset has not refreshed since 2023-05-16 (~3 years stale)
+  severity: high
+  affects:
+    - main_bronze.raw_somerville_permits_raw
+    - raw_somerville_permits
+    - permits
+  path: docs/limitations/permits-static-since-2023.md
 - id: plan-11-builder-cli-token-budget-hang
   title: "Builder Agent CLI hangs after answering \"Continue with double budget\""
   severity: info
