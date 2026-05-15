@@ -99,6 +99,58 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
     _dlt_id             VARCHAR
 );
 
+-- bronze.raw_somerville_happiness_survey_raw -- biennial city perception survey
+-- (Prompt 11 Phase A, 2026-05-14). Socrata `wmeh-zuz2`.
+-- Replace mode (not merge): 12,583 rows / 150 columns, static between waves
+-- (next ~2027). One row per (respondent, survey_year); `id` is the source PK.
+-- Manual one-shot ingestion via dlt/somerville_happiness_survey_pipeline.py;
+-- not wired into run.sh. The DDL below documents only the analyst-relevant
+-- columns -- dlt manages the actual schema and infers the long tail of ~120
+-- {topic}_num / {topic}_label Likert pairs as VARCHAR / DOUBLE per source.
+-- See dbt/models/bronze/schema.yml's raw_somerville_happiness_survey model
+-- for per-column docs, and
+-- docs/limitations/happiness-survey-self-selection-and-coverage.md for the
+-- caveat list.
+CREATE TABLE IF NOT EXISTS bronze.raw_somerville_happiness_survey_raw (
+    id                                VARCHAR,  -- PK from source; year-prefixed integer
+    year                              INTEGER,  -- survey wave: 2011, 2013, ..., 2025
+    survey_method                     VARCHAR,
+    survey_language                   VARCHAR,
+    ward                              VARCHAR,  -- '1'-'7'; NULL for ~50% of rows (all 2011)
+    tract                             VARCHAR,
+    gender                            VARCHAR,
+    age                               VARCHAR,  -- bucketed (e.g. "35 to 44")
+    race_ethnicity                    VARCHAR,
+    housing_status                    VARCHAR,  -- Renter / Owner / Other
+    highest_level_education           VARCHAR,
+    tenure                            VARCHAR,
+    household_income                  VARCHAR,  -- bucketed
+    likely_low_income                 INTEGER,  -- derived 0/1 flag
+    likely_cost_burdened              INTEGER,  -- derived 0/1 flag
+    language_spoken                   VARCHAR,
+    -- + ~120 paired {topic}_num INTEGER + {topic}_label VARCHAR columns for
+    --   ~40 satisfaction / concern topics (happiness, life satisfaction,
+    --   somerville satisfaction, neighbors, safety, civic participation,
+    --   parks, public spaces, streets, social events, housing options,
+    --   grocery, health services, transportation, schools, childcare,
+    --   city services, emergency response, etc.)
+    -- + identity yes/no flags (children_yn, lgbtqia_yn, immigrant_yn,
+    --   disability_yn, neurodivergent_yn, student_yn, veteran_yn,
+    --   cultural_religious_minority_yn, etc.)
+    -- + transportation_*_yn flags (bicycle, car, public_transit, walk, etc.)
+    -- + difficulty_paying_*_yn flags
+    -- + ACS context (census_year, acs_somerville_median_income,
+    --   acs_somerville_avg_household, inflation_adjustment)
+
+    -- pipeline metadata (added by dlt/somerville_happiness_survey_pipeline.py)
+    _extracted_at       TIMESTAMP,
+    _extracted_run_id   VARCHAR,
+    _source_endpoint    VARCHAR,
+    _dlt_load_id        VARCHAR,
+    _dlt_id             VARCHAR
+    -- no _first_seen_at: replace mode wipes the table on each ingest
+);
+
 -- Raw load of dbt run_results.json after each pipeline run.
 -- Loaded by dlt/load_dbt_results.py. Parsed by admin models.
 CREATE TABLE IF NOT EXISTS bronze.raw_dbt_results (

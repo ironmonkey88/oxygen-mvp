@@ -38,6 +38,23 @@ sources:
           full breakdown. Audit columns: `_extracted_at`,
           `_extracted_run_id`, `_first_seen_at`, `_source_endpoint`, plus
           dlt's `_dlt_load_id` / `_dlt_id`.
+      - name: raw_somerville_happiness_survey_raw
+        description: |
+          dlt replace target for the Somerville Happiness Survey SODA
+          API (https://data.somervillema.gov/resource/wmeh-zuz2.json).
+          Biennial city-wide survey, 2011-2025 (8 waves). 12,583 rows /
+          150 columns as of 2026-05-14. One row per respondent-response;
+          `id` is the source PK. Replace-mode ingestion (not merge):
+          static between biennial updates, re-ingest fresh each manual
+          run. **Not wired into `run.sh`** -- re-run manually when a new
+          wave publishes (`dlt/somerville_happiness_survey_pipeline.py`).
+          150 columns reflect cumulative survey shape across waves;
+          column-level NULL patterns vary by year (waves don't ask the
+          same questions). Self-selection bias is real -- respondents
+          are not a random sample; any analytical pairing with
+          operational data carries that caveat. Audit columns:
+          `_extracted_at`, `_extracted_run_id`, `_source_endpoint`. No
+          `_first_seen_at` (replace mode wipes the table each ingest).
 
 models:
   - name: raw_311_requests
@@ -207,6 +224,117 @@ models:
         description: '**PIPELINE METADATA.** ULID of the pipeline run.'
       - name: _first_seen_at
         description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
+      - name: _source_endpoint
+        description: '**PIPELINE METADATA.** Source SODA URL.'
+      - name: _dlt_load_id
+        description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
+      - name: _dlt_id
+        description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
+
+  - name: raw_somerville_happiness_survey
+    description: |
+      Bronze view over the Somerville Happiness Survey mirror. Passes
+      150 source columns through `main_bronze.raw_somerville_happiness_survey_raw`
+      (dlt-owned, replace-mode) plus audit + dlt-lineage columns.
+      Biennial city-wide perception survey, 2011-2025 (8 waves), 12,583
+      rows. One row per (respondent, survey_year); `id` is the source
+      PK. Designed to pair with the operational data already in the
+      warehouse -- ward + year are the join keys -- but: ward is NULL
+      for ~50% of rows (all of 2011 + a few elsewhere), and respondents
+      are self-selected. See
+      docs/limitations/happiness-survey-self-selection-and-coverage.md
+      for the full caveat list.
+
+      Per-column documentation is partial by design: ~30 columns of
+      analyst-direct value (id, year, ward, demographics, key
+      satisfaction Likerts, ACS context) are documented individually
+      below. The remaining ~120 columns are paired `{topic}_num` (1-5
+      Likert score) + `{topic}_label` (Strongly Agree, Neutral, etc.)
+      for ~40 satisfaction / concern topics (housing, parks,
+      transportation, civic participation, city services, schools,
+      etc.) and yes/no demographic flags. The naming is mechanical:
+      `<topic>_num` is the score, `<topic>_label` is the bucketed
+      label. Treat the long tail as a documented uniform shape rather
+      than 120 individually-described columns. Arrival data only;
+      type casts, year-aware filtering for column drift across waves,
+      and quasi-identifier handling are deferred to silver/gold
+      (MVP 3 work).
+    columns:
+      - name: id
+        description: 'Respondent-response ID. Primary key from source; year-prefixed integer (sample: 1100001 = 2011 respondent #00001).'
+        data_tests:
+          - not_null
+          - unique
+      - name: year
+        description: 'Survey wave year. Biennial: 2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025]
+      - name: ward
+        description: 'Ward 1-7 (text type from source). NULL for ~50% of rows (all 2011 + a few elsewhere -- the 2011 wave did not collect ward). Required join key to gold dim_ward when not NULL.'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['1', '2', '3', '4', '5', '6', '7']
+                quote: true
+              config:
+                where: "ward is not null"
+      - name: survey_method
+        description: 'Paper, Online, Phone, etc. -- channel through which the response was collected.'
+      - name: survey_language
+        description: 'Language the respondent took the survey in (English, Spanish, Portuguese, Haitian Creole observed in recent waves).'
+      - name: tract
+        description: 'Census tract identifier. Geographic granularity below ward when populated; sparse across waves.'
+      - name: gender
+        description: 'Self-reported gender. Open-ended values bucketed at source (Man / Woman / Non-binary / Prefer not to answer / etc.).'
+      - name: age
+        description: 'Self-reported age bucket (e.g. "35 to 44"). Bucketed at source to reduce quasi-identifier risk.'
+      - name: race_ethnicity
+        description: 'Self-reported race / ethnicity. Open-ended.'
+      - name: housing_status
+        description: 'Renter / Owner / Other. Demographic anchor for housing-affordability questions.'
+      - name: highest_level_education
+        description: 'Highest education level attained.'
+      - name: tenure
+        description: 'Length of Somerville residency, bucketed.'
+      - name: household_income
+        description: 'Household income bucket. Bucketed at source.'
+      - name: likely_low_income
+        description: 'Derived 0/1 flag: respondent is likely below the local low-income threshold based on income + household size.'
+      - name: likely_cost_burdened
+        description: 'Derived 0/1 flag: respondent likely spends >30% of income on housing.'
+      - name: language_spoken
+        description: 'Primary language spoken at home (separate from `survey_language` -- some respondents take an English survey but speak another language at home).'
+      - name: happiness_num
+        description: 'Headline happiness score, 1-5 Likert (1 = very unhappy, 5 = very happy).'
+      - name: happiness_label
+        description: 'Headline happiness label paired with `happiness_num`.'
+      - name: life_satisfaction_num
+        description: 'Life-satisfaction score, 1-5 Likert.'
+      - name: somerville_satisfaction_num
+        description: 'Satisfaction with Somerville as a place to live, 1-5 Likert.'
+      - name: feel_safe_somerville_num
+        description: 'Sense of safety in Somerville, 1-5 Likert. Pairs with crime + traffic-citations data once joined.'
+      - name: rats_mice_concern_num
+        description: 'Concern about rats / mice, 1-5 Likert. Pairs directly with the rat-complaints data app and 311 rodent requests.'
+      - name: heard_by_city_num
+        description: 'Feels heard by the city, 1-5 Likert. Pairs with 311 responsiveness measures.'
+      - name: emergency_response_quality_satisfaction_num
+        description: 'Satisfaction with emergency response, 1-5 Likert.'
+      - name: census_year
+        description: 'ACS reference year for the per-respondent ACS-context columns below.'
+      - name: acs_somerville_median_income
+        description: "ACS Somerville median household income for the respondent's census tract / `census_year`."
+      - name: acs_somerville_avg_household
+        description: "ACS Somerville average household size for the respondent's tract / `census_year`."
+      - name: inflation_adjustment
+        description: "Multiplier to convert this row's income figures to a common reference year (typically the latest wave)."
+      - name: _extracted_at
+        description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
+      - name: _extracted_run_id
+        description: '**PIPELINE METADATA.** ULID of the manual ingestion run.'
       - name: _source_endpoint
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id

@@ -99,6 +99,14 @@
     - main_admin.fct_test_run
     - dq_drift_fail_guardrail
   path: docs/limitations/drift-fail-current-year-baseline-unstable.md
+- id: happiness-survey-self-selection-and-coverage
+  title: Happiness Survey -- self-selection bias, multi-year column drift, ward coverage gap
+  severity: high
+  affects:
+    - main_bronze.raw_somerville_happiness_survey_raw
+    - raw_somerville_happiness_survey
+    - happiness_survey
+  path: docs/limitations/happiness-survey-self-selection-and-coverage.md
 - id: location-ward-block-only
   title: Gold location dimensions are ward and block_code only
   severity: warning
