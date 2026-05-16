@@ -5,7 +5,9 @@
 
 ---
 
-## Next Focus — Plans 18/19 Builder-CLI dashboards + MVP 3 silver curation
+## Next Focus — Plan 24 MVP 3 survey curation + Plans 18/19 Builder-CLI dashboards
+
+**Plan 25 done 2026-05-16** — per-tier column-level erDiagrams now live on `/erd` below the tier flowchart (Bronze 7 / Silver placeholder / Gold 12 with 9 FK arrows / Admin 3). The Silver placeholder will auto-populate when Plan 24's first silver model lands — no further ERD work needed. See [Session 51](docs/sessions/session-51-2026-05-16-plan-25-per-tier-erdiagrams.md).
 
 **Plan 23 fully resolved 2026-05-15.** All four phases done:
 - Phase A (Permits) PR [#36](https://github.com/ironmonkey88/oxygen-mvp/pull/36) merged `d269aab`. Spatial ward 96.62%; new `built_environment` topic.
