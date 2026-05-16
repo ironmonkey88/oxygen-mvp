@@ -148,6 +148,24 @@ Three rules worth internalizing:
 - **A partial completion with a documented finding outranks a fake-clean `complete`.** Status vocabulary: `complete`, `partial`, `blocked`, `deferred`. Pick the honest one.
 - **The report-back (PROMPTS.md §5 Step 9) is the last thing Code emits in the session.** No afterthoughts, no follow-up messages, no "one more thing." If something surfaces after the report, it goes into the next session's report.
 
+### Autonomous PR-merge policy
+
+<!-- POLICY:autonomous_pr_merge — established Session 47 (2026-05-15); landed in this committed location Session 50 (2026-05-15) -->
+
+**Behavior:** after a piece of work has passed its verification gates and been committed, run `git push` → `gh pr create` → `gh pr merge --merge` in one autonomous flow on this repo. Don't pause to ask "want me to merge?". This is Gordon's standing instruction; landed here so memory drops or fresh-machine sessions inherit it.
+
+**Pause and surface (do NOT auto-merge) when:**
+- Status is `partial` or `blocked`
+- A live-functional verification gate couldn't be cleared in-session
+- A prompt's Halt conditions fired
+- PR checks failed
+- The PR targets a repo other than this one
+- The user has explicitly asked you to pause before merge
+
+**Scope:** this repo's PRs only. Cross-repo PRs, force-merges over failed checks, sending messages (Slack/email/PR comments), and any deploys to systems other than this project's EC2 still require explicit instruction.
+
+**Source of truth:** this section. The per-machine memory file (`feedback_autonomous_execution.md`) is a pointer back here.
+
 ---
 
 ## Rules
