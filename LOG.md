@@ -40,6 +40,7 @@
 | 24 | MVP 3 — Happiness Survey silver/gold curation | reserved | Queued in Chat-side prompt (Session 49 boundary). Plan 23 Phase D halted on the cross-wave-presence gate; Plan 24 picks it up as a dedicated MVP 3 silver/gold plan covering wave-key harmonization, k-anonymity gates on demographics, and weighting strategy for joined aggregates. Slot reserved here so Plan 25 (per-tier ERD detail) doesn't claim it. |
 | 25 | Per-tier column-level erDiagrams on /erd | done | 2026-05-16 — Session 51. Four `erDiagram` blocks below the existing tier flowchart (Bronze 7 / Silver placeholder / Gold 12 / Admin 3). New `scripts/generate_per_tier_erd.py` reads bronze/silver/gold/admin schema.yml and emits `portal/erd-tier-{bronze,gold,admin}.mmd`; `scripts/generate_erd_page.py` extended with tier-detail divider + per-tier sections (heading + tier-colored badge + caption + diagram). Silver renders as an HTML placeholder until Plan 24's first silver model lands. Pre-flight confirmed 0 cross-tier FKs — per-tier split loses no relationship information. Audit (`_*`) columns omitted from the diagrams (in `/docs/` + flagged by audit-columns-non-analytics). Honest-finding mid-flight: column-de-dup logic in the first generator draft accidentally dropped 6 of 9 gold FK arrows because the schema.yml docs pattern lists relationships-only entries as a second `- name: <col>` block; fix preserves dedup on column-body output but always scans for FK tests. Wired into `run.sh` stage 9e. PR [#45](https://github.com/ironmonkey88/oxygen-mvp/pull/45). |
 | 26 | Housekeeping: LOG rotation + df-interchange limitation + Oxy customer-feedback bundle prep | done | 2026-05-16 — Session 52. LOG.md Recent Sessions rotated 13 → 5 entries (Sessions 39-46 moved to Earlier Sessions as one-liners). New `docs/limitations/oxy-df-interchange-empty-result-panic.md` (was queued as a follow-up in Session 50 but never created; closes the loop). Autonomous-merge policy item from the housekeeping prompt skipped as already-done: per Session 50 the policy moved from per-machine memory to committed CLAUDE.md (settings.json schema rejected the custom `policies` key). Customer-feedback doc `[VERIFY]` markers filled and the polished text delivered inline. |
+| 27 | fct_311_requests ward FK test + Session 52 narrative | done | 2026-05-16 — Session 53. Two follow-ups from Plan 25's gate table: (a) missing `fct_311_requests.ward → dim_ward` relationships test added to `dbt/models/gold/schema.yml` — `/erd` gold tier now reads 10 FK arrows instead of 9, `dbt test --select fct_311_requests` 5/5 → 6/6 PASS on EC2 with no orphan ward rows surfaced (halt condition didn't fire); (b) `docs/sessions/session-52-2026-05-16-plan-26-housekeeping.md` written from the LOG row + PR #46 commit message + limitations-entry diff (honest note that it was reconstructed after the fact). Schema-side commit `e549a93`. |
 
 **Session counter:** contiguous 1–N, tracked by Code; all session files present at [`docs/sessions/`](docs/sessions/). Chat-side planning notes have their own threading and may diverge — Code's counter is authoritative for the project record.
 
@@ -50,11 +51,29 @@
 **Active MVP:** MVP 2 — Visual Knowledge Products (the analyst describes a dashboard in chat; Builder Agent assembles it)
 **Phase:** MVP 1 closed. **Plans 20 + 21 done 2026-05-14** (PR series #21-#28: portal polish + dashboards standard + 4 new bronze ingests + /about info page). Warehouse now carries 6 source datasets: 311, crime, wards, **happiness survey, permits, traffic citations, somerville-at-a-glance**. Portal has 8 routes (`/`, `/dashboards`, `/metrics`, `/trust`, `/profile`, `/erd`, `/docs/`, `/about`). Plans 11-17 closed in earlier sessions; Plans 18 + 19 (Builder CLI dashboards) deferred.
 **Open security gap:** None. Closed in Plan 1.
-**Last Updated:** 2026-05-16 (Session 52 housekeeping — LOG.md Recent Sessions rotated to the 5-entry cap; new `oxy-df-interchange-empty-result-panic` limitations entry created; Oxy customer-feedback `[VERIFY]` markers filled. Autonomous-merge policy item skipped as already-landed.)
+**Last Updated:** 2026-05-16 (Session 53 closed two Plan 25 follow-ups: `fct_311_requests.ward → dim_ward` relationships test added to gold schema.yml so `/erd` reads 10 FK arrows; Session 52 narrative reconstructed and filed at `docs/sessions/session-52-2026-05-16-plan-26-housekeeping.md`. dbt test --select fct_311_requests 5/5 → 6/6 PASS on EC2.)
 
 ---
 
 ## Recent Sessions
+
+### Session 53 — 2026-05-16 15:30 ET — plan-27-ward-fk-and-narrative
+[full narrative](docs/sessions/session-53-2026-05-16-plan-27-ward-fk-and-narrative.md)
+
+- **Goal:** Close two Plan 25 gate-table follow-ups: add the missing `fct_311_requests.ward → dim_ward` relationships test so `/erd`'s gold tier reads 10 FK arrows instead of 9, and write the Session 52 narrative that shipped without one.
+- **Shipped:** New `data_tests: relationships` block on `fct_311_requests.ward` in `dbt/models/gold/schema.yml` (matches fct_permits / fct_citations pattern with `where: "ward IS NOT NULL"`); verified on EC2 — `dbt test --select fct_311_requests` 5/5 → 6/6 PASS, new test surfaces as `relationships_fct_311_requests_ward__ward__ref_dim_ward_`, no orphan ward rows. `docs/sessions/session-52-2026-05-16-plan-26-housekeeping.md` reconstructed from Plan 26 commit + LOG.md row + limitations diff. LOG.md Plans Registry + Recent Sessions + Last Updated; TASKS.md Plan 27 row.
+- **Decisions:** 0 — straightforward execution against the prompt's two named items.
+- **Status:** complete
+- **Next:** Plan 24 (MVP 3 survey curation), Plans 18 + 19 (Builder-CLI dashboards), and Oxy customer-feedback bundle remain queued.
+
+### Session 52 — 2026-05-16 14:30 ET — plan-26-housekeeping
+[full narrative](docs/sessions/session-52-2026-05-16-plan-26-housekeeping.md)
+
+- **Goal:** Three housekeeping items in one pass: LOG.md Recent Sessions rotation back to the 5-entry cap; deferred `oxy-df-interchange-empty-result-panic` limitations entry from Session 50; Oxy customer-feedback bundle `[VERIFY]` markers filled inline for Gordon to send.
+- **Shipped:** LOG.md Recent Sessions rotated 13 → 5 entries (Sessions 39-46 moved to Earlier Sessions as one-liners). New active limitations entry `docs/limitations/oxy-df-interchange-empty-result-panic.md` with Oxy version 0.5.47, panic stack `df-interchange-0.3.3/src/from_arrow.rs:71`, and the Session 50 Q2 self-recovery transcript. Customer-feedback doc `[VERIFY]` markers filled and polished text delivered inline (Chat-side deliverable, not committed). Autonomous-merge policy item from the original prompt skipped — already moved to committed CLAUDE.md in Session 50. PR [#46](https://github.com/ironmonkey88/oxygen-mvp/pull/46), commit `97f32d6`.
+- **Decisions:** 1 — autonomous-merge policy stays in CLAUDE.md, not settings.json (custom top-level keys rejected by the JSONSchema).
+- **Status:** complete
+- **Next:** Plan 24 (MVP 3 survey curation) and Plans 18 + 19 (Builder-CLI dashboards) queued; ward-FK + this-narrative follow-up offered to Gordon in the report-back. Session 53 (Plan 27) executed both.
 
 ### Session 51 — 2026-05-16 12:30 ET — plan-25-per-tier-erdiagrams
 [full narrative](docs/sessions/session-51-2026-05-16-plan-25-per-tier-erdiagrams.md)
@@ -83,28 +102,12 @@
 - **Status:** complete (all phases resolved — B+C merged, D halted-with-finding).
 - **Next:** End-of-batch cumulative `./run.sh manual` + chat agent verification questions. Then Plans 18 + 19 (Builder-CLI dashboards) become buildable.
 
-### Session 48 — 2026-05-15 14:30 ET — plan-23-phase-a-permits-gold
-[full narrative](docs/sessions/session-48-2026-05-15-plan-23-phase-a-permits-gold.md)
-
-- **Goal:** Execute Plan 23 — gold + semantic for the 4 Plan-21 bronze datasets (permits, citations, Somerville-at-a-Glance, Happiness Survey). One PR per phase per the prompt's independent-value model.
-- **Shipped:** Phase A only. `main_gold.fct_permits` with DuckDB-spatial ward derivation (96.62% match rate); permits.view.yml (5 measures, 14 dimensions); built_environment.topic.yml; permits-spatial-ward-derivation.md limitation entry; docs/schema.sql fct_permits DDL block. Pre-flight + dbt run + 6/6 tests + oxy validate all clean. Landed via [PR #36](https://github.com/ironmonkey88/oxygen-mvp/pull/36), merge `d269aab`. Plus housekeeping: LOG.md Plan 23 registry row + Active Decisions row + this entry; TASKS.md Next Focus updated; this session note.
-- **Decisions:** 2 — see Decisions Log.
-- **Status:** partial (Phase A complete; Phases B/C/D deferred).
-- **Next:** Fresh threads for Phase B (Citations — mirror of A with spatial ward join into `public_safety` topic), Phase C (Somerville-at-a-Glance — long-tidy KPI fact + dim_kpi_topic + `city_context` topic), Phase D (Happiness Survey — column-selection halt risk, hardest by design). Each is independently valuable. Phase D's halt risk should not block A/B/C.
-
-### Session 47 — 2026-05-15 13:30 ET — plan-22-prompts-md-wiring
-[full narrative](docs/sessions/session-47-2026-05-15-plan-22-prompts-md-wiring.md)
-
-- **Goal:** Wire the `PROMPTS.md` Chat-to-Code prompt standard (landed in PR #34) into the project's authority documents so the receipt workflow takes effect on Code's behavior by default.
-- **Shipped:** PROMPTS.md §3 commit-shape sentence (additive). CLAUDE.md "Receiving prompts from Chat" subsection with receipt-workflow rule + 3 internalized bullets (verification-gate, partial > fake-clean, report-back as last emission). session-starter.md "How We Work Together" pointer. PROJECT_BRIEF §10 reference-map row. LOG.md Plan 22 registry + decision + this entry.
-- **Decisions:** 2 — see Decisions Log.
-- **Status:** complete
-- **Next:** Open Plan 22 PR for Gordon's review. Branch carries `aae5a4a` (prior prompt's multi-phase merge clarification) + Plan 22 wiring commit — defensible to merge as one PR or split.
-
 ---
 
 ## Earlier Sessions
 
+- **Session 48** — 2026-05-15 14:30 ET — plan-23-phase-a-permits-gold; `main_gold.fct_permits` with DuckDB-spatial ward derivation (96.62% match rate); permits.view.yml + built_environment topic; pre-flight + dbt run + 6/6 tests + oxy validate clean; PR [#36](https://github.com/ironmonkey88/oxygen-mvp/pull/36) merge `d269aab`. Phases B/C/D deferred to fresh threads. [full narrative](docs/sessions/session-48-2026-05-15-plan-23-phase-a-permits-gold.md)
+- **Session 47** — 2026-05-15 13:30 ET — plan-22-prompts-md-wiring; CLAUDE.md "Receiving prompts from Chat" subsection (receipt workflow + 3 internalized bullets); session-starter.md pointer; PROJECT_BRIEF §10 row; PROMPTS.md §3 commit-shape sentence (additive); PR [#35](https://github.com/ironmonkey88/oxygen-mvp/pull/35). [full narrative](docs/sessions/session-47-2026-05-15-plan-22-prompts-md-wiring.md)
 - **Session 46** — 2026-05-14 18:30 ET — prompts-09-10-11-overnight-batch; three back-to-back briefs in one Code thread (Prompts 09 + 10 portal-feedback + DASHBOARDS.md standard + Prompt 11 four-dataset overnight ingestion batch); PRs #21-#28; end-to-end `./run.sh manual` exits 0 in 946s with 92/92 tests passing. [full narrative](docs/sessions/session-46-2026-05-14-prompts-09-10-11-overnight-batch.md)
 - **Session 45** — 2026-05-14 06:00 ET — plan-17-dashboards-generator; `# === DASHBOARD METADATA ===` comment-block contract on `apps/*.app.yml` + `scripts/generate_dashboards_listing.py` (run.sh stage 8c/10) + rat-complaints retrofit; PR [#8](https://github.com/ironmonkey88/oxygen-mvp/pull/8) merged via stacked-merge carrying Plans 16+17 content. [full narrative](docs/sessions/session-45-2026-05-14-plan-17-dashboards-generator.md)
 - **Session 44** — 2026-05-14 04:30 ET — plan-16-welcome-and-ward-map; welcome section + "What's not yet possible" (6 honest gaps); `scripts/generate_wards_svg.py` reads `dim_ward.geometry_wkt_wgs84` and emits stylized SVG; CSS `body::before` background; PR [#7](https://github.com/ironmonkey88/oxygen-mvp/pull/7) via #8 stacked-merge. [full narrative](docs/sessions/session-44-2026-05-14-plan-16-welcome-and-ward-map.md)
