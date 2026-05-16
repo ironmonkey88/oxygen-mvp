@@ -191,6 +191,15 @@ if [ -d /var/www/somerville ] && [ -f portal/somerville-wards-background.svg ]; 
     echo "    synced portal/somerville-wards-background.svg → /var/www/somerville/"
 fi
 
+# Deploy the /chat auth-gated redirect page (Session 50). Static asset
+# served by nginx `location = /chat` after Basic Auth; meta-refresh
+# kicks the browser to /home so the SPA lands on its Home view
+# instead of the SPA-root blank page.
+if [ -d /var/www/somerville ] && [ -f portal/chat-redirect.html ]; then
+    deploy_html portal/chat-redirect.html /var/www/somerville/chat-redirect.html
+    echo "    synced portal/chat-redirect.html → /var/www/somerville/"
+fi
+
 # Step 8d: generate /about info page (Prompt 11 Phase E)
 # Reads main_bronze.raw_somerville_at_a_glance and emits a static info
 # page. Bronze view is replace-mode and updated only when manually
