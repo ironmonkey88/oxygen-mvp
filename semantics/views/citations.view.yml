@@ -34,7 +34,7 @@ dimensions:
     expr: citation_number
     description: 'Source citation number with numeric suffix (e.g. "T123-1" / "T123-2" for a 2-violation ticket). Multi-violation citations become multiple rows; 67,311 rows = 61,603 distinct root citations (suffix-stripped) + 5,708 supplementary-violation rows.'
   - name: citation_ts
-    type: timestamp
+    type: datetime
     expr: citation_ts
     description: "Full timestamp the citation was issued (source dtissued, TIMESTAMP WITH TIME ZONE)."
   - name: citation_date
