@@ -99,7 +99,7 @@ measures:
     description: "Sum of permit_amount across issued permits, in USD."
     expr: case when is_issued then permit_amount end
   - name: avg_issued_permit_value
-    type: avg
+    type: average
     description: "Average permit_amount across issued permits, in USD."
     expr: case when is_issued then permit_amount end
   - name: distinct_address_count
