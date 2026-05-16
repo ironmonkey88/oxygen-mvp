@@ -1,0 +1,123 @@
+name: citations
+description: |
+  Somerville Police traffic citations 2017-2026 from the city's open-
+  data feed (Socrata `3mqx-eye9`). One row per (citation, violation)
+  -- multi-violation tickets become multiple rows with the same
+  `citation_number` root + numeric suffix. Daily refresh.
+
+  Source publishes ward directly (0.12% NULL); no spatial join
+  required. vehicle_mph is recorded only on speed-related violations
+  (~17.5% of rows). Joins to wards + dates dimensions via shared dim
+  views; sits alongside crime in the public_safety topic.
+table: main_gold.fct_citations
+datasource: somerville
+
+entities:
+  - name: citation
+    type: primary
+    key: citation_id
+  - name: ward
+    type: foreign
+    key: ward
+  - name: date
+    type: foreign
+    key: citation_date
+
+dimensions:
+  - name: citation_id
+    type: string
+    expr: citation_id
+    primary_key: true
+    description: "Surrogate primary key (md5 of citation_number)."
+  - name: citation_number
+    type: string
+    expr: citation_number
+    description: 'Source citation number with numeric suffix (e.g. "T123-1" / "T123-2" for a 2-violation ticket). Multi-violation citations become multiple rows; 67,311 rows = 61,603 distinct root citations (suffix-stripped) + 5,708 supplementary-violation rows.'
+  - name: citation_ts
+    type: datetime
+    expr: citation_ts
+    description: "Full timestamp the citation was issued (source dtissued, TIMESTAMP WITH TIME ZONE)."
+  - name: citation_date
+    type: date
+    expr: citation_date
+    description: "Date of citation issuance, derived from citation_ts."
+  - name: citation_year
+    type: number
+    expr: citation_year
+    description: "Year of citation issuance (SMALLINT)."
+  - name: police_shift
+    type: string
+    expr: police_shift
+    description: "Police shift during which the citation was issued. Same vocabulary as crime."
+    samples: ["Day Shift (8AM - 4PM)", "First Half (4PM - Midnight)", "Last Half (Midnight - 8AM)"]
+  - name: charge_code
+    type: string
+    expr: charge_code
+    description: "MGL chapter/section reference for the violation (source chgcode)."
+  - name: charge_description
+    type: string
+    expr: charge_description
+    description: "Source-side description of the violation (chgdesc)."
+  - name: charge_category
+    type: string
+    expr: charge_category
+    description: "Broader category for the violation (source chgcategory). 109 distinct values per the traffic-citations-location-and-violation-only limitation."
+  - name: vehicle_mph
+    type: number
+    expr: vehicle_mph
+    description: "Vehicle speed in MPH at time of citation (TRY_CAST from VARCHAR). NULL for ~82.5% of rows (recorded only on speed-related violations). 4 rows have implausible values >100 -- data-entry errors at source, passed through honestly."
+  - name: posted_mph_zone
+    type: number
+    expr: posted_mph_zone
+    description: "Posted speed limit at the citation location (TRY_CAST from VARCHAR)."
+  - name: latitude
+    type: number
+    expr: latitude
+    description: "Geocoded latitude (WGS84). 0% NULL on this dataset."
+  - name: longitude
+    type: number
+    expr: longitude
+    description: "Geocoded longitude (WGS84). 0% NULL on this dataset."
+  - name: ward
+    type: string
+    expr: ward
+    description: "Somerville ward 1-7. Source-published (not spatially derived). 84 rows NULL (~0.12%)."
+    samples: ["1", "2", "3", "4", "5", "6", "7"]
+  - name: block_code
+    type: string
+    expr: block_code
+    description: "15-character census block code where the citation was issued."
+  - name: address
+    type: string
+    expr: address
+    description: "Intersection or street address where the citation was issued (e.g. 'RTE 28 & RTE 38 Somerville, MA'). Public location data; not a driver identifier."
+  - name: warning_flag
+    type: string
+    expr: warning_flag
+    description: "Source 'Y' / 'N' indicator -- 'Y' = warning (no fine), 'N' = fine. 51,422 Y / 15,889 N (76% warnings)."
+    samples: ["Y", "N"]
+  - name: is_warning
+    type: boolean
+    expr: is_warning
+    description: "TRUE when warning_flag = 'Y'. Filter on this for 'enforcement intensity' analyses focused on fines."
+
+measures:
+  - name: citation_count
+    type: count
+    description: "Total count of citation rows (citation, violation grain). Multi-violation tickets count as multiple rows."
+  - name: count_by_day_shift
+    type: count
+    description: "Citations issued during the day shift (8AM-4PM)."
+    expr: case when police_shift = 'Day Shift (8AM - 4PM)' then citation_id end
+  - name: count_by_night_shift
+    type: count
+    description: "Citations issued during night shifts (4PM-midnight + midnight-8AM)."
+    expr: case when police_shift IN ('First Half (4PM - Midnight)', 'Last Half (Midnight - 8AM)') then citation_id end
+  - name: average_vehicle_speed_on_speed_violations
+    type: average
+    description: "Average vehicle_mph across rows in the Speeding charge category. Excludes rows with NULL vehicle_mph (82.5% of total) -- those aren't speed-related."
+    expr: case when charge_category like 'Speeding%' then vehicle_mph end
+  - name: count_distinct_violation_types
+    type: count_distinct
+    description: "Number of distinct charge_category values observed."
+    expr: charge_category

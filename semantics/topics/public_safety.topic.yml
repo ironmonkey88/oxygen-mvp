@@ -9,5 +9,6 @@ views:
   - crime
   - offense_codes
   - offense_categories
+  - citations
   - wards
   - dates

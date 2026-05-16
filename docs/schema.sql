@@ -406,6 +406,38 @@ CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
 );
 
 
+-- One row per (Somerville traffic citation, violation) (Socrata `3mqx-eye9`).
+-- 67,311 rows covering 2017-01-01 to 2026-03-27; daily refresh.
+-- Source publishes ward with 0.12% NULL — spatial join not used.
+-- See limitations: traffic-citations-location-and-violation-only,
+-- citations-composite-grain-violation-suffix.
+CREATE TABLE IF NOT EXISTS gold.fct_citations (
+    citation_id                 VARCHAR PRIMARY KEY,                  -- md5(citation_number)
+    citation_number             VARCHAR NOT NULL UNIQUE,              -- NK: source `citationnum`, includes suffix
+    citation_ts                 TIMESTAMPTZ NOT NULL,                 -- source `dtissued`
+    citation_date               DATE,                                 -- DATE(citation_ts)
+    citation_year               SMALLINT,
+    police_shift                VARCHAR,                              -- same vocabulary as crime
+    charge_code                 VARCHAR,                              -- source `chgcode` (MGL reference)
+    charge_description          VARCHAR,
+    charge_category             VARCHAR,                              -- source `chgcategory` (109 distinct)
+    vehicle_mph                 INTEGER,                              -- 82.5% NULL; speed-violation only
+    posted_mph_zone             INTEGER,
+    latitude                    DOUBLE,
+    longitude                   DOUBLE,
+    ward                        VARCHAR,                              -- 1-7 (FK to dim_ward); 84 rows NULL
+    block_code                  VARCHAR,
+    address                     VARCHAR,
+    warning_flag                VARCHAR,                              -- 'Y' or 'N'
+    is_warning                  BOOLEAN,                              -- derived: warning_flag = 'Y'
+
+    -- audit columns (passthrough from bronze)
+    _extracted_at               TIMESTAMP,
+    _extracted_run_id           VARCHAR,
+    _source_endpoint            VARCHAR
+);
+
+
 -- One row per Somerville building / inspection permit (Socrata `vxgw-vmky`).
 -- 64,521 rows covering 2014-02-13 to 2023-10-24. Source stopped refreshing
 -- 2023-05-16 -- treat as historical, not ongoing. Ward derived via spatial
