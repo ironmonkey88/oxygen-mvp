@@ -19,7 +19,7 @@
 2. **MVP 3 — Happiness Survey silver/gold curation** as a dedicated plan. Scope: year-aware column filtering, question-key harmonization across waves, k-anonymity gates on demographic combinations, weighting strategy for joined aggregates.
 3. **MVP 3 — silver layer for permits + citations** — citation-event-grain derived view (suffix-strip), ward-trim, status-cleanup on permits.
 
-**Cumulative verification deferred to next session:** `./run.sh manual` end-to-end (~15 min) + chat agent test questions against new gold for permits/citations/at-a-glance.
+**Cumulative verification done Session 50 (2026-05-16):** `./run.sh manual` success in 897s on EC2 (run-id `01KRQDK2JT3MNQG6Q9Y5AEM2AB`); `/metrics` regenerated to 22 measures × 11 views; both chat agent test questions answered with trust contract firing. Plan 23 closed end-to-end. Two durability items also landed: STACK.md DuckDB-spatial pattern + pre-flight rule; autonomous-PR-merge policy moved to committed CLAUDE.md.
 
 ### Carry-over queued items
 
