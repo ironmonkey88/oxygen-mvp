@@ -482,6 +482,72 @@ Oxygen reads lazily and doesn't hold the file open (verified via
 expected MVP 4 data volumes; Oxygen supports it natively as a
 database backend.
 
+#### Spatial extension — pattern and pre-flight rule
+
+**Pre-flight rule, before the pattern.** Before reaching for the
+spatial join, pre-flight whether spatial derivation is the best signal
+available. If the source publishes a usable region column (`ward`,
+`neighborhood`, `precinct`), compare its coverage to the spatial join's
+projected coverage. Use whichever wins; document the comparison either
+way. The spatial pattern is correct when source doesn't publish, OR
+when source coverage is meaningfully worse than spatial would produce.
+
+Two Plan 23 precedents:
+
+- **Permits (Phase A, [PR #36](https://github.com/ironmonkey88/oxygen-mvp/pull/36)).** Source has no `ward` column.
+  Spatial join derived ward at 96.62% match (62,337 / 64,521 rows;
+  2,176 outside Somerville polygons get NULL ward). The pattern landed.
+- **Citations (Phase B, [PR #38](https://github.com/ironmonkey88/oxygen-mvp/pull/38)).** Source publishes `ward` with
+  0.12% NULL (84 / 67,311 rows). Pre-flight ran the spatial join
+  speculatively: 99.82% match, *worse* than source's 99.88% coverage.
+  Spatial was NOT used despite the pattern being available.
+
+**Halt threshold:** if spatial-derived match rate is <90% of total
+rows, halt and surface. Don't paper over — that signals geocoding
+quality, polygon boundary issues, or coordinate-system mismatch worth
+investigating before the gold layer ships.
+
+**The pattern** (lifted from `dbt/models/gold/fct_permits.sql`):
+
+```sql
+{{ config(
+    materialized='table',
+    schema='gold',
+    pre_hook=["INSTALL spatial", "LOAD spatial"]
+) }}
+
+with ward_polys as (
+    select ward, st_geomfromtext(geometry_wkt_wgs84) as geom
+    from {{ ref('dim_ward') }}
+),
+points as (
+    select *,
+           case when latitude is null or longitude is null then null
+                else st_point(cast(longitude as double),
+                              cast(latitude as double)) end as pt
+    from {{ ref('raw_source_with_latlng') }}
+),
+joined as (
+    select p.*, w.ward as derived_ward
+    from points p
+    left join ward_polys w
+      on p.pt is not null and st_contains(w.geom, p.pt)
+)
+select ... from joined
+```
+
+`dim_ward.geometry_wkt_wgs84` stores polygons as WGS84 WKT strings;
+`ST_GeomFromText` re-parses them at join time, `ST_Contains` does the
+point-in-polygon test. `pre_hook` ensures `INSTALL spatial; LOAD
+spatial;` runs on each model materialization (DuckDB extensions are
+per-connection). The `LEFT JOIN ... ON p.pt IS NOT NULL AND
+ST_Contains(...)` form keeps `derived_ward` NULL for rows missing
+lat/lng without exploding the join cardinality.
+
+For the `relationships` test on the derived ward column, add a
+`WHERE ward IS NOT NULL` carve-out so the small unmatched fraction
+doesn't trip the test (per Plan 23 Phase A precedent).
+
 ---
 
 ### 2.3 dbt Core
