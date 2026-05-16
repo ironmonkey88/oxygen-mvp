@@ -99,7 +99,49 @@ slices.
 
 - Bronze: as-is. Caveats live here and are surfaced by the Answer
   Agent's trust contract when survey-affecting queries are asked.
+- **Gold: deferred (Plan 23 Phase D halted 2026-05-15).** Pre-flight
+  applied the prompt's cross-wave-presence filter (a `{topic}_num`
+  column must have <50% NULL in ≥5 of the 8 waves to be analyst-
+  usable). Only **8 of 50 `_num` columns survived** the filter —
+  below the threshold of 12 the prompt set as the floor for a usable
+  gold layer. Thin gold isn't worth jamming in. See Phase D halt
+  matrix below.
 - Silver / gold: MVP 3 work. Curation will resolve the column-drift
   issue (year-aware filtering, harmonized question keys), apply
   k-anonymity on demographic combinations, and document the
   weighting strategy if joined aggregates are surfaced.
+
+## Phase D pre-flight cross-wave-presence matrix (2026-05-15)
+
+8 of 50 `_num` columns met the ≥5-wave / <50%-NULL filter:
+
+| column | waves<50% NULL |
+|---|---|
+| `happiness_num` | 8 |
+| `life_satisfaction_num` | 8 |
+| `somerville_satisfaction_num` | 8 |
+| `beauty_neighborhood_satisfaction_num` | 7 |
+| `streets_maintenance_satisfaction_num` | 7 |
+| `education_quality_satisfaction_num` | 6 |
+| `social_community_events_satisfaction_num` | 6 |
+| `city_services_information_availability_satisfaction_num` | 6 |
+
+The 42 excluded columns split into:
+
+- Topics asked in 4 waves (4 columns: housing_condition, getting_around,
+  neighbors, priced_out, crossing_street_safety, rats_mice,
+  city_services_quality).
+- Topics asked in 2 waves (5 columns).
+- Topics asked in 1 wave (24 columns including
+  `feel_safe_somerville_num` — the Plan 23 prompt-named safety Likert).
+- Topics asked in 0 waves at <50% NULL (8 columns, mostly 2025
+  additions covering childcare / OST / accessibility).
+
+**The right move per the prompt's halt instruction**: dedicate a
+future MVP 3 plan to survey silver/gold. That plan can do
+question-key harmonization across waves, k-anonymity on demographic
+combinations, weighting strategy documentation, and year-aware
+filtering on the column-drift surface. Treating the 8 surviving
+columns as "MVP 2 minimum viable survey gold" without that scaffolding
+ships a misleading analyst surface (analysts would treat the columns
+as fully covered; they aren't).
