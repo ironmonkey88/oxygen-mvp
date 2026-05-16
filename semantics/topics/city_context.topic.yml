@@ -1,0 +1,15 @@
+name: city_context
+description: |
+  City-level Somerville KPI compendium ("Somerville at a Glance",
+  Socrata `jnde-mi6j`). Long-tidy shape: one row per (topic, year,
+  value) covering 25 topics across 1850-2024. Provides analyst-facing
+  context for operational data — population, median household income,
+  housing tenure, commute mode, language, etc.
+
+  Single-view topic at launch (the `public_safety` precedent — topic
+  launched with crime as its only domain view, then accumulated more).
+  Does not share `wards` (KPIs are city-level, not ward-level). Does
+  not share `dates` (the year range 1850-2024 exceeds what dim_date
+  covers; analysts should use the fact's `year` column directly).
+views:
+  - somerville_kpis

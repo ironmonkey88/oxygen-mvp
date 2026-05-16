@@ -411,6 +411,93 @@ models:
               config:
                 where: "ward IS NOT NULL"
 
+  - name: fct_somerville_kpi
+    description: |
+      Gold fact over the "Somerville at a Glance" KPI compendium
+      (Socrata `jnde-mi6j`). 749 rows in long-tidy shape: one row per
+      (topic, year, value) across 25 distinct topics. Year range
+      1850-2024 (Population carries back-history; most KPIs are
+      2010-2024 with uneven per-topic coverage; see
+      somerville-at-a-glance-uneven-year-coverage). Pre-flight
+      2026-05-15 confirmed all 749 values are castable to DOUBLE
+      (no NULLs, no text sentinels). Pairs with dim_kpi_topic for the
+      latest-value-per-topic surface.
+    columns:
+      - name: kpi_id
+        description: "Surrogate PK -- md5(topic + '|' + year + '|' + COALESCE(description, '') + '|' + COALESCE(geography, '')). The natural primary key is (topic, year, description, geography) because (a) categorical topics have multiple rows per (topic, year) differentiated by description, AND (b) the source includes both Somerville and Massachusetts benchmark rows at the same (topic, year, description) — geography distinguishes them."
+        data_tests:
+          - not_null
+          - unique
+      - name: topic
+        description: "KPI topic name. 25 distinct values."
+        data_tests:
+          - not_null
+      - name: year
+        description: "Year of observation (SMALLINT). Range 1850-2024."
+        data_tests:
+          - not_null
+      - name: value
+        description: "Observed value (DOUBLE). TRY_CAST from source VARCHAR."
+      - name: kpi_description
+        description: "Source-side editorial description of the KPI (source `description`)."
+      - name: units
+        description: "Units for the value (USD, percent, count, etc.)."
+      - name: geography
+        description: "Geographic scope (typically 'Somerville')."
+      - name: _extracted_at
+        description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
+      - name: _extracted_run_id
+        description: 'Lineage -- ULID of the pipeline run that touched this row.'
+      - name: _source_endpoint
+        description: 'Lineage -- Socrata SODA URL the row came from.'
+      - name: topic
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_kpi_topic')
+                field: topic
+
+  - name: dim_kpi_topic
+    description: |
+      One row per distinct KPI topic on fct_somerville_kpi. 25 rows.
+      Sources from the fact so any topic-name cleanup flows through
+      one place (the dim_offense_code pattern). The source compares
+      Somerville against Massachusetts benchmarks for most topics;
+      `has_massachusetts_benchmark` + `has_somerville_data` flags
+      which geographies are present per topic. To get a clean
+      latest-value lookup, query the fact directly filtering on
+      (topic, geography, year = MAX(year)).
+    columns:
+      - name: topic
+        description: "KPI topic name. Natural key."
+        data_tests:
+          - not_null
+          - unique
+      - name: first_year
+        description: "Earliest year observed for this topic."
+        data_tests:
+          - not_null
+      - name: latest_year
+        description: "Most recent year observed for this topic."
+        data_tests:
+          - not_null
+      - name: observation_count
+        description: "Total observations for this topic across all years and geographies."
+        data_tests:
+          - not_null
+      - name: geography_count
+        description: "Number of distinct geographies observed for this topic (typically 1 = Somerville-only, or 2 = Somerville + Massachusetts benchmark)."
+        data_tests:
+          - not_null
+      - name: has_massachusetts_benchmark
+        description: "TRUE when the topic includes Massachusetts benchmark rows."
+        data_tests:
+          - not_null
+      - name: has_somerville_data
+        description: "TRUE when the topic includes Somerville rows."
+        data_tests:
+          - not_null
+
   - name: fct_citations
     description: |
       Gold fact over Somerville Police traffic citations (Socrata
