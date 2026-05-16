@@ -1,0 +1,71 @@
+name: somerville_kpis
+description: |
+  Somerville at a Glance — KPI compendium covering 25 city-level
+  indicators (Socrata `jnde-mi6j`). 749 rows in long-tidy shape: one
+  row per (topic, year, value). Year range 1850-2024 (Population
+  carries back-history; most KPIs are 2010-2024). Year coverage is
+  uneven per topic — see somerville-at-a-glance-uneven-year-coverage
+  limitation.
+
+  Pairs with `dim_kpi_topic` for the "latest value per topic" surface
+  on time-series topics. Categorical topics (Age Group, Race &
+  Ethnicity, etc.) have multiple values per year and require querying
+  the fact directly.
+table: main_gold.fct_somerville_kpi
+datasource: somerville
+
+entities:
+  - name: kpi
+    type: primary
+    key: kpi_id
+  - name: kpi_topic
+    type: foreign
+    key: topic
+
+dimensions:
+  - name: kpi_id
+    type: string
+    expr: kpi_id
+    primary_key: true
+    description: "Surrogate primary key — md5(topic + '|' + year)."
+  - name: topic
+    type: string
+    expr: topic
+    description: "KPI topic name. 25 distinct values (Population, Median Household Income, Owners vs Renters, ...)."
+  - name: year
+    type: number
+    expr: year
+    description: "Year of observation (SMALLINT). Range 1850-2024."
+  - name: value
+    type: number
+    expr: value
+    description: "Observed value (DOUBLE). Cast from source VARCHAR via TRY_CAST. All 749 rows pre-flighted clean (no NULLs, no text sentinels)."
+  - name: kpi_description
+    type: string
+    expr: kpi_description
+    description: "Source-side editorial description of the KPI."
+  - name: units
+    type: string
+    expr: units
+    description: "Units for the value (USD, percent, count, etc.)."
+  - name: geography
+    type: string
+    expr: geography
+    description: "Geographic scope (typically 'Somerville' or 'City of Somerville')."
+
+measures:
+  - name: kpi_observation_count
+    type: count
+    description: "Total (topic, year, value) observations."
+  - name: kpi_topic_count
+    type: count_distinct
+    description: "Distinct KPI topics tracked."
+    expr: topic
+  - name: years_of_coverage
+    type: count_distinct
+    description: "Distinct years observed across all topics."
+    expr: year
+  - name: latest_value_for_topic
+    type: max
+    description: "Maximum `value` across the topic. For time-series topics with one observation per year (Population, Median Household Income, etc.), MAX surfaces the most recent observation when filtered to that topic. For categorical topics with multiple values per year, prefer querying the fact directly."
+    expr: value

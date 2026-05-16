@@ -406,6 +406,38 @@ CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
 );
 
 
+-- One row per (KPI topic, year, value) from the "Somerville at a Glance"
+-- compendium (Socrata `jnde-mi6j`). 749 rows / 25 distinct topics; year
+-- range 1850-2024 (uneven per-topic coverage).
+-- See limitations: somerville-at-a-glance-uneven-year-coverage.
+CREATE TABLE IF NOT EXISTS gold.fct_somerville_kpi (
+    kpi_id                      VARCHAR PRIMARY KEY,                  -- md5(topic + '|' + year)
+    topic                       VARCHAR NOT NULL REFERENCES gold.dim_kpi_topic(topic),
+    year                        SMALLINT NOT NULL,
+    value                       DOUBLE,                               -- TRY_CAST from source VARCHAR
+    kpi_description             VARCHAR,                              -- source `description`
+    units                       VARCHAR,
+    geography                   VARCHAR,                              -- typically 'Somerville'
+
+    -- audit columns (passthrough from bronze)
+    _extracted_at               TIMESTAMP,
+    _extracted_run_id           VARCHAR,
+    _source_endpoint            VARCHAR
+);
+
+-- One row per distinct KPI topic on fct_somerville_kpi. 25 rows.
+-- Sourced from the fact so topic-name cleanup flows through one place.
+CREATE TABLE IF NOT EXISTS gold.dim_kpi_topic (
+    topic                       VARCHAR PRIMARY KEY,                  -- natural key
+    first_year                  SMALLINT NOT NULL,
+    latest_year                 SMALLINT NOT NULL,
+    observation_count           INTEGER NOT NULL,
+    is_time_series              BOOLEAN NOT NULL,                     -- TRUE when 1 obs per year
+    latest_value                DOUBLE,                               -- NULL for non-time-series
+    latest_units                VARCHAR
+);
+
+
 -- One row per (Somerville traffic citation, violation) (Socrata `3mqx-eye9`).
 -- 67,311 rows covering 2017-01-01 to 2026-03-27; daily refresh.
 -- Source publishes ward with 0.12% NULL — spatial join not used.
