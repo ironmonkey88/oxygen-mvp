@@ -5,7 +5,9 @@
 
 ---
 
-## Next Focus — Plan 24 MVP 3 survey curation + Plans 18/19 Builder-CLI dashboards
+## Next Focus — Plan 24 MVP 3 survey curation + Plans 18/19 Builder-CLI dashboards + Oxy customer-feedback bundle
+
+**Plan 26 done 2026-05-16** — housekeeping pass. LOG.md Recent Sessions rotated to the 5-entry cap (Sessions 39-46 moved to Earlier Sessions as one-liners). New `oxy-df-interchange-empty-result-panic` limitations entry created (was queued but never made). Oxy customer-feedback doc `[VERIFY]` markers filled inline; ready for Gordon to send to Oxy.
 
 **Plan 25 done 2026-05-16** — per-tier column-level erDiagrams now live on `/erd` below the tier flowchart (Bronze 7 / Silver placeholder / Gold 12 with 9 FK arrows / Admin 3). The Silver placeholder will auto-populate when Plan 24's first silver model lands — no further ERD work needed. See [Session 51](docs/sessions/session-51-2026-05-16-plan-25-per-tier-erdiagrams.md).
 
