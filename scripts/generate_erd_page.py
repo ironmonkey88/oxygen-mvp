@@ -130,12 +130,16 @@ HTML = """<!doctype html>
   <main>
     <section class="diagram">
       <h2>Warehouse tables</h2>
-      <p class="lede">Bronze mirrors the source, gold is business-ready,
-      admin is data-quality + pipeline observability. Column-level details
-      live in the <a href="/docs/">data dictionary</a>; column-level shape
-      lives on <a href="/profile">/profile</a>. Audit columns
-      (<code>_extracted_at</code>, <code>_first_seen_at</code>, etc.)
-      are omitted here for legibility.</p>
+      <p class="lede">Tables grouped by medallion tier:
+      <strong>bronze</strong> mirrors the source,
+      <strong>silver</strong> (coming with MVP 3) will hold curated
+      derivations, <strong>gold</strong> is analyst-facing, and
+      <strong>admin</strong> carries pipeline + data-quality
+      observability. The dotted "dbt" arrows indicate the medallion
+      flow conceptually; solid arrows are foreign-key relationships
+      between tables. Column-level details live in the
+      <a href="/docs/">data dictionary</a>; column-level shape lives
+      on <a href="/profile">/profile</a>.</p>
       <pre class="mermaid">
 {warehouse_mermaid}
       </pre>
