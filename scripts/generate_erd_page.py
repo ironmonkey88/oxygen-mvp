@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Assemble portal/erd.html from the two Mermaid sources.
+"""Assemble portal/erd.html from the Mermaid sources.
 
-Renders:
-  - Warehouse ERD (from portal/erd-warehouse.mmd)
+Renders, top to bottom:
+  - Tier flowchart (from portal/erd-warehouse.mmd) — structure + flow
+  - Per-tier erDiagrams (from portal/erd-tier-{bronze,gold,admin}.mmd) —
+    column-level detail, one per tier. Silver renders as an HTML
+    placeholder until MVP 3's survey-curation plan lands the first
+    silver model.
   - Semantic-layer diagram (from portal/erd-semantic-layer.mmd)
 
 Uses the official Mermaid CDN (jsdelivr) for client-side rendering. The
@@ -23,6 +27,103 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_PATH       = REPO_ROOT / "portal" / "erd.html"
 WAREHOUSE_MMD  = REPO_ROOT / "portal" / "erd-warehouse.mmd"
 SEMANTIC_MMD   = REPO_ROOT / "portal" / "erd-semantic-layer.mmd"
+
+# Per-tier erDiagram inputs. Missing file => empty tier (placeholder rendered).
+TIER_MMD = {
+    "bronze": REPO_ROOT / "portal" / "erd-tier-bronze.mmd",
+    "silver": REPO_ROOT / "portal" / "erd-tier-silver.mmd",
+    "gold":   REPO_ROOT / "portal" / "erd-tier-gold.mmd",
+    "admin":  REPO_ROOT / "portal" / "erd-tier-admin.mmd",
+}
+
+# Tier metadata for headings, captions, accent colors.
+TIER_META = {
+    "bronze": {
+        "label": "Bronze",
+        "subtitle": "Source mirrors — raw, untransformed feeds",
+        "accent": "#a07028",
+        "fill":   "#efe0c8",
+        "text":   "#3d2806",
+        "caption": "Each table mirrors a Socrata source one-to-one. "
+                   "dlt owns the merge; dbt only passes the bronze view through. "
+                   "Audit columns (<code>_extracted_at</code>, <code>_dlt_id</code>, …) "
+                   "are omitted from this diagram — they're on /docs/ and /profile.",
+    },
+    "silver": {
+        "label": "Silver",
+        "subtitle": "Curated derivations — coming with MVP 3",
+        "accent": "#888888",
+        "fill":   "#e8e8e8",
+        "text":   "#333333",
+        "caption": "The Silver tier is structurally present but holds "
+                   "no tables yet. Plan 24 (MVP 3 — Happiness Survey "
+                   "silver/gold curation) will land the first silver "
+                   "model. The generator reads <code>dbt/models/silver/"
+                   "schema.yml</code>, so a new silver model lands on "
+                   "this diagram on the next <code>./run.sh</code>.",
+    },
+    "gold": {
+        "label": "Gold",
+        "subtitle": "Analyst-facing star schema — fct + dim tables",
+        "accent": "#c19d3a",
+        "fill":   "#fff4c8",
+        "text":   "#5c4a0b",
+        "caption": "Six fact tables (311 requests, crime, citations, "
+                   "permits, KPI snapshots) and seven dimensions "
+                   "(ward, date, request type, status, offense code + "
+                   "category, KPI topic). FK arrows show fct → dim "
+                   "joins. This is what the chat agent queries.",
+    },
+    "admin": {
+        "label": "Admin",
+        "subtitle": "Pipeline + data-quality observability",
+        "accent": "#3a8fc1",
+        "fill":   "#dceefc",
+        "text":   "#0b3a5c",
+        "caption": "Three observability tables: pipeline runs, data "
+                   "quality test definitions, and test run results. "
+                   "Powers /trust and the drift-fail guardrail in "
+                   "<code>./run.sh</code>.",
+    },
+}
+
+
+def tier_section_html(tier: str, mmd_content: str | None) -> str:
+    meta = TIER_META[tier]
+    badge_style = (
+        f"display:inline-block;width:10px;height:10px;border-radius:50%;"
+        f"background:{meta['fill']};border:1px solid {meta['accent']};"
+        f"margin-right:8px;vertical-align:middle;"
+    )
+    header = (
+        f'<h2 class="tier-heading"><span class="tier-badge" '
+        f'style="{badge_style}"></span>{meta["label"]} — '
+        f'<span class="tier-subtitle">{meta["subtitle"]}</span></h2>'
+    )
+    caption = f'<p class="lede">{meta["caption"]}</p>'
+
+    if mmd_content:
+        body = f'<pre class="mermaid">\n{mmd_content}\n      </pre>'
+    else:
+        # Empty-tier placeholder. Styled to match the tier's accent so it
+        # reads as intentional rather than broken, with a dashed border
+        # echoing the flowchart's Silver placeholder.
+        body = (
+            f'<div class="tier-empty" style="'
+            f'border:1px dashed {meta["accent"]};'
+            f'background:{meta["fill"]};'
+            f'color:{meta["text"]};'
+            f'padding:32px 24px;text-align:center;border-radius:4px;'
+            f'font-family:\'DM Mono\', monospace;font-size:13px;'
+            f'">(no tables yet — the Silver tier lands with MVP 3 '
+            f'survey curation)</div>'
+        )
+
+    return (
+        '<section class="diagram tier-section">'
+        f'{header}{caption}{body}'
+        '</section>'
+    )
 
 
 HTML = """<!doctype html>
@@ -102,6 +203,31 @@ HTML = """<!doctype html>
     color: var(--text-mid); font-size: 15px; margin: 0 0 18px; max-width: 720px;
   }}
 
+  /* Per-tier section accents */
+  section.tier-section h2.tier-heading {{
+    font-size: 22px; margin: 0 0 8px;
+  }}
+  section.tier-section .tier-subtitle {{
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px; color: var(--text-muted);
+    font-weight: 400; letter-spacing: 0;
+  }}
+
+  /* Tier-detail divider — sits before the Bronze section to signal
+     the altitude shift from "flow overview" to "column-level detail". */
+  .tier-detail-divider {{
+    display: flex; align-items: center; gap: 14px;
+    margin: 8px 0 22px;
+  }}
+  .tier-detail-divider::before, .tier-detail-divider::after {{
+    content: ""; flex: 1; height: 1px; background: var(--border);
+  }}
+  .tier-detail-divider span {{
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-muted);
+  }}
+
   .mermaid {{
     background: #fafafa;
     border: 1px solid var(--border); border-radius: 4px;
@@ -145,6 +271,12 @@ HTML = """<!doctype html>
       </pre>
     </section>
 
+    <div class="tier-detail-divider">
+      <span>Column-level detail by tier</span>
+    </div>
+
+{tier_sections}
+
     <section class="diagram">
       <h2>Semantic layer</h2>
       <p class="lede">Each view in the diagram maps to a
@@ -177,9 +309,21 @@ def main() -> int:
     semantic = SEMANTIC_MMD.read_text(encoding="utf-8")
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+    # Build the per-tier sections in medallion order.
+    tier_section_blocks: list[str] = []
+    for tier in ("bronze", "silver", "gold", "admin"):
+        mmd_path = TIER_MMD[tier]
+        if mmd_path.exists():
+            mmd_content = mmd_path.read_text(encoding="utf-8")
+        else:
+            mmd_content = None
+        tier_section_blocks.append(tier_section_html(tier, mmd_content))
+    tier_sections = "\n    ".join(tier_section_blocks)
+
     html = HTML.format(
         warehouse_mermaid=warehouse,
         semantic_mermaid=semantic,
+        tier_sections=tier_sections,
         generated_at=generated,
         NAV_CSS=NAV_CSS,
         nav_block=nav_html(active="erd"),

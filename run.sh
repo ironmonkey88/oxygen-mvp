@@ -244,6 +244,7 @@ fi
 ERROR_STAGE="erd_diagrams"
 echo "==> 9e/10 regenerate warehouse ERD + semantic-layer diagrams"
 python scripts/generate_warehouse_erd.py
+python scripts/generate_per_tier_erd.py
 python scripts/generate_semantic_layer_diagram.py
 python scripts/generate_erd_page.py
 if [ -d /var/www/somerville ] && [ -f portal/erd.html ]; then
