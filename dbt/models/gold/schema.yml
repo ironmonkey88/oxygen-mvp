@@ -424,7 +424,7 @@ models:
       latest-value-per-topic surface.
     columns:
       - name: kpi_id
-        description: "Surrogate PK -- md5(topic + '|' + year + '|' + COALESCE(description, '')). Description is part of the SK because categorical topics (Age Group, Race & Ethnicity, etc.) have multiple rows per (topic, year), differentiated by description."
+        description: "Surrogate PK -- md5(topic + '|' + year + '|' + COALESCE(description, '') + '|' + COALESCE(geography, '')). The natural primary key is (topic, year, description, geography) because (a) categorical topics have multiple rows per (topic, year) differentiated by description, AND (b) the source includes both Somerville and Massachusetts benchmark rows at the same (topic, year, description) — geography distinguishes them."
         data_tests:
           - not_null
           - unique
@@ -461,12 +461,12 @@ models:
     description: |
       One row per distinct KPI topic on fct_somerville_kpi. 25 rows.
       Sources from the fact so any topic-name cleanup flows through
-      one place (the dim_offense_code pattern). `is_time_series` flags
-      topics with exactly one observation per year (Population, Median
-      Household Income, etc.) -- only those topics have a meaningful
-      latest_value. Categorical topics (Age Group, Race & Ethnicity)
-      have multiple values per year and `latest_value` is NULL for
-      them.
+      one place (the dim_offense_code pattern). The source compares
+      Somerville against Massachusetts benchmarks for most topics;
+      `has_massachusetts_benchmark` + `has_somerville_data` flags
+      which geographies are present per topic. To get a clean
+      latest-value lookup, query the fact directly filtering on
+      (topic, geography, year = MAX(year)).
     columns:
       - name: topic
         description: "KPI topic name. Natural key."
@@ -482,17 +482,21 @@ models:
         data_tests:
           - not_null
       - name: observation_count
-        description: "Total observations for this topic across all years."
+        description: "Total observations for this topic across all years and geographies."
         data_tests:
           - not_null
-      - name: is_time_series
-        description: "TRUE when the topic has exactly one observation per year (time-series shape). FALSE for categorical topics with multiple values per year."
+      - name: geography_count
+        description: "Number of distinct geographies observed for this topic (typically 1 = Somerville-only, or 2 = Somerville + Massachusetts benchmark)."
         data_tests:
           - not_null
-      - name: latest_value
-        description: "Latest observed value for the topic. NULL for categorical topics (see is_time_series)."
-      - name: latest_units
-        description: "Units of the latest observed value. NULL for categorical topics."
+      - name: has_massachusetts_benchmark
+        description: "TRUE when the topic includes Massachusetts benchmark rows."
+        data_tests:
+          - not_null
+      - name: has_somerville_data
+        description: "TRUE when the topic includes Somerville rows."
+        data_tests:
+          - not_null
 
   - name: fct_citations
     description: |

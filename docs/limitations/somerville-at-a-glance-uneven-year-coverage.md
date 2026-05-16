@@ -28,15 +28,28 @@ Probed 2026-05-15: 749 rows across 25 distinct topics. Year range
 
 The 25 topics split into two analytical shapes:
 
-- **16 time-series topics** with one observation per year (Population,
-  Median Home Value, Median Household Income, Median Rent, Rent
-  Burdened Households, Vacancy Rate, Poverty, etc.). 30 observations
-  each across 2010-2024. Clean line-charts.
-- **9 categorical topics** with multiple values per year (Age Group,
-  Percent Age Group, Household by Income Category, Median Rent by
-  Year Moved In, Disability Characteristics, Race & Ethnicity,
-  Commute Time, Language Speakers, Age of Housing Stock). Most appear
-  only in 2024. `dim_kpi_topic.is_time_series` flags this distinction.
+- **Time-series topics** with one observation per year per geography
+  (Population, Median Home Value, Median Household Income, Median
+  Rent, Rent Burdened Households, Vacancy Rate, Poverty, etc.). Most
+  carry both Somerville and Massachusetts series for benchmarking.
+- **Categorical topics** with multiple values per year per geography
+  (Age Group, Percent Age Group, Household by Income Category, Median
+  Rent by Year Moved In, Disability Characteristics, Race & Ethnicity,
+  Commute Time, Language Speakers, Age of Housing Stock). The source
+  publishes a Somerville breakdown + a Massachusetts benchmark
+  breakdown at the same year, differentiated by `description` (the
+  category name) and `geography`. Most appear only in 2024.
+
+`dim_kpi_topic.geography_count` (1 vs 2) and
+`has_massachusetts_benchmark` flag the geography shape per topic.
+
+**Surrogate key implication.** kpi_id is
+`md5(topic + year + description + geography)` — all four columns are
+needed for uniqueness. Two iterative test failures during Phase C
+built up to this finding: first only `topic + year` (collided on
+categorical breakdowns), then `topic + year + description` (still
+collided on Somerville-vs-MA pairs). The final four-column SK
+matches the source's full natural key.
 
 ## Impact
 

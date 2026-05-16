@@ -411,7 +411,7 @@ CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
 -- range 1850-2024 (uneven per-topic coverage).
 -- See limitations: somerville-at-a-glance-uneven-year-coverage.
 CREATE TABLE IF NOT EXISTS gold.fct_somerville_kpi (
-    kpi_id                      VARCHAR PRIMARY KEY,                  -- md5(topic + '|' + year + '|' + description)
+    kpi_id                      VARCHAR PRIMARY KEY,                  -- md5(topic + year + description + geography)
     topic                       VARCHAR NOT NULL REFERENCES gold.dim_kpi_topic(topic),
     year                        SMALLINT NOT NULL,
     value                       DOUBLE,                               -- TRY_CAST from source VARCHAR
@@ -432,9 +432,9 @@ CREATE TABLE IF NOT EXISTS gold.dim_kpi_topic (
     first_year                  SMALLINT NOT NULL,
     latest_year                 SMALLINT NOT NULL,
     observation_count           INTEGER NOT NULL,
-    is_time_series              BOOLEAN NOT NULL,                     -- TRUE when 1 obs per year
-    latest_value                DOUBLE,                               -- NULL for non-time-series
-    latest_units                VARCHAR
+    geography_count             INTEGER NOT NULL,                     -- 1 (Somerville-only) or 2 (with MA benchmark)
+    has_massachusetts_benchmark BOOLEAN NOT NULL,
+    has_somerville_data         BOOLEAN NOT NULL
 );
 
 

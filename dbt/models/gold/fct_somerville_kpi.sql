@@ -21,14 +21,19 @@
 -- Surrogate PK `kpi_id` = md5(topic || year). Composite natural key
 -- (topic, year) is preserved on the row for cross-topic time-series
 -- queries.
--- Surrogate PK includes description because categorical topics
--- (Age Group, Race & Ethnicity, Household by Income Category, etc.)
--- have multiple rows per (topic, year) with different `description`
--- values for the category breakdown. (topic, year, description) is
--- the natural primary key. Test caught this -- honest finding,
+-- Surrogate PK includes description AND geography because:
+--   1) Categorical topics (Age Group, Race & Ethnicity, etc.) have
+--      multiple rows per (topic, year) with different `description`
+--      values for the category breakdown.
+--   2) Some topics carry Somerville rows AND Massachusetts benchmark
+--      rows at the same (topic, year, description) — the source uses
+--      this dataset to compare Somerville to MA. `geography` (typically
+--      'Somerville' vs 'Massachusetts') is the second discriminator.
+-- The natural primary key is (topic, year, description, geography).
+-- Two test failures iterated through this -- honest findings,
 -- recorded in the limitations entry.
 select
-    md5(topic || '|' || year || '|' || coalesce(description, ''))             as kpi_id,
+    md5(topic || '|' || year || '|' || coalesce(description, '') || '|' || coalesce(geography, '')) as kpi_id,
     topic,
     cast(try_cast(year as integer) as smallint)                               as year,
     try_cast(value as double)                                                 as value,
