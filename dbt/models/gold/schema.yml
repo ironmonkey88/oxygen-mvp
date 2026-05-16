@@ -424,7 +424,7 @@ models:
       latest-value-per-topic surface.
     columns:
       - name: kpi_id
-        description: "Surrogate PK -- md5(topic + '|' + year)."
+        description: "Surrogate PK -- md5(topic + '|' + year + '|' + COALESCE(description, '')). Description is part of the SK because categorical topics (Age Group, Race & Ethnicity, etc.) have multiple rows per (topic, year), differentiated by description."
         data_tests:
           - not_null
           - unique

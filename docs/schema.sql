@@ -411,7 +411,7 @@ CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
 -- range 1850-2024 (uneven per-topic coverage).
 -- See limitations: somerville-at-a-glance-uneven-year-coverage.
 CREATE TABLE IF NOT EXISTS gold.fct_somerville_kpi (
-    kpi_id                      VARCHAR PRIMARY KEY,                  -- md5(topic + '|' + year)
+    kpi_id                      VARCHAR PRIMARY KEY,                  -- md5(topic + '|' + year + '|' + description)
     topic                       VARCHAR NOT NULL REFERENCES gold.dim_kpi_topic(topic),
     year                        SMALLINT NOT NULL,
     value                       DOUBLE,                               -- TRY_CAST from source VARCHAR

@@ -21,8 +21,14 @@
 -- Surrogate PK `kpi_id` = md5(topic || year). Composite natural key
 -- (topic, year) is preserved on the row for cross-topic time-series
 -- queries.
+-- Surrogate PK includes description because categorical topics
+-- (Age Group, Race & Ethnicity, Household by Income Category, etc.)
+-- have multiple rows per (topic, year) with different `description`
+-- values for the category breakdown. (topic, year, description) is
+-- the natural primary key. Test caught this -- honest finding,
+-- recorded in the limitations entry.
 select
-    md5(topic || '|' || year)                                                 as kpi_id,
+    md5(topic || '|' || year || '|' || coalesce(description, ''))             as kpi_id,
     topic,
     cast(try_cast(year as integer) as smallint)                               as year,
     try_cast(value as double)                                                 as value,
