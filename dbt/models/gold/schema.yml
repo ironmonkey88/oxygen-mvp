@@ -410,3 +410,82 @@ models:
                 field: ward
               config:
                 where: "ward IS NOT NULL"
+
+  - name: fct_citations
+    description: |
+      Gold fact over Somerville Police traffic citations (Socrata
+      `3mqx-eye9`). 67,311 rows covering 2017-01-01 to 2026-03-27,
+      daily refresh. One row per (citation, violation) -- multi-
+      violation tickets become multiple rows.
+
+      Honest-finding deviation from Plan 23 prompt: source publishes
+      `ward` with only 0.12% NULL (84 rows). Spatial join NOT used
+      (pre-flight 2026-05-15 confirmed: source coverage 99.88% vs
+      spatial 99.82%; source is more reliable and cheaper). The Plan
+      23 Phase A spatial pre_hook pattern is correctly absent.
+
+      Source-quality realities: vehicle_mph is 82.5% NULL (recorded
+      only on speed violations); 4 rows have implausible speeds >100
+      MPH (one at 62,021 -- source data-entry error, passed through);
+      citation_number carries a numeric suffix on every row (61,603
+      distinct after suffix-strip, per the existing
+      citations-composite-grain-violation-suffix limitation).
+    columns:
+      - name: citation_id
+        description: 'Surrogate PK -- md5(citation_number).'
+        data_tests:
+          - not_null
+          - unique
+      - name: citation_number
+        description: 'Source citation number with numeric suffix. Multi-violation tickets share the root; 67,311 rows = 61,603 distinct roots + 5,708 supplementary-violation rows.'
+        data_tests:
+          - not_null
+          - unique
+      - name: citation_ts
+        description: 'Full timestamp the citation was issued (source dtissued, TIMESTAMP WITH TIME ZONE).'
+        data_tests:
+          - not_null
+      - name: citation_date
+        description: 'Date of citation issuance (DATE).'
+      - name: citation_year
+        description: 'Year of citation issuance (SMALLINT).'
+      - name: police_shift
+        description: 'Police shift during which the citation was issued. Same vocabulary as crime ("Day Shift (8AM - 4PM)", "First Half (4PM - Midnight)", "Last Half (Midnight - 8AM)").'
+      - name: charge_code
+        description: 'MGL chapter/section reference for the violation (source chgcode).'
+      - name: charge_description
+        description: 'Source-side description of the violation (chgdesc).'
+      - name: charge_category
+        description: 'Broader category for the violation (source chgcategory). 109 distinct values -- not tested for accepted_values.'
+      - name: vehicle_mph
+        description: 'Vehicle speed in MPH (TRY_CAST from VARCHAR; NULL when uncastable). ~82.5% NULL -- recorded only on speed-related violations. 4 rows have implausible speeds >100 (data-entry errors at source, passed through).'
+      - name: posted_mph_zone
+        description: 'Posted speed limit at the citation location (TRY_CAST from VARCHAR).'
+      - name: latitude
+        description: 'Geocoded latitude (WGS84). 0% NULL.'
+      - name: longitude
+        description: 'Geocoded longitude (WGS84). 0% NULL.'
+      - name: ward
+        description: 'Somerville ward 1-7 (source-published, not spatially derived). 84 rows NULL (~0.12%).'
+      - name: block_code
+        description: '15-character census block code (source blockcode).'
+      - name: address
+        description: 'Intersection or street address where the citation was issued.'
+      - name: warning_flag
+        description: 'Source "Y" / "N" indicator. 51,422 Y / 15,889 N (76% warnings, 24% fines).'
+      - name: is_warning
+        description: 'Boolean -- TRUE when warning_flag = "Y".'
+      - name: _extracted_at
+        description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
+      - name: _extracted_run_id
+        description: 'Lineage -- ULID of the pipeline run that touched this row.'
+      - name: _source_endpoint
+        description: 'Lineage -- Socrata SODA URL the row came from.'
+      - name: ward
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL"

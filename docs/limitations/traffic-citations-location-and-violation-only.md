@@ -86,7 +86,13 @@ is about **where and what**, not **who**.
 
 - Bronze: as-is. Caveats live here and are surfaced by the Answer
   Agent's trust contract when citation-affecting queries are asked.
-- Silver / gold: MVP 3 work. Will cast types (`dtissued` ->
-  TIMESTAMP, `vehiclemph` -> INTEGER, `lat`/`long` -> DOUBLE),
-  trim space-padded chgcode if needed, optionally derive a
-  citation-grain table by stripping the violation suffix.
+- **Gold: landed 2026-05-15 (Plan 23 Phase B).** `main_gold.fct_citations`
+  + `semantics/views/citations.view.yml` + topic membership in
+  `public_safety`. Type casts done at gold (`citation_ts` →
+  TIMESTAMPTZ, `vehicle_mph` → INTEGER, `latitude`/`longitude` →
+  DOUBLE). 5 measures shipped: citation_count, count_by_day_shift,
+  count_by_night_shift, average_vehicle_speed_on_speed_violations,
+  count_distinct_violation_types.
+- Silver: deferred to MVP 3. Will optionally derive a citation-event-
+  grain table by stripping the violation suffix; see
+  citations-composite-grain-violation-suffix limitation.
