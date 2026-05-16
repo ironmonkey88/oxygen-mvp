@@ -1,0 +1,108 @@
+name: permits
+description: |
+  Somerville building / inspection permits 2014-2023 from the city's
+  open-data feed (Socrata `vxgw-vmky`). One row per source permit
+  number. **The source stopped refreshing 2023-05-16 -- treat as a
+  historical dataset, not an ongoing feed.** Ward is derived via
+  point-in-polygon spatial join (96.6% match rate; the other 3.4% are
+  geocoded outside Somerville's 7 ward polygons and have NULL ward).
+  Joins to wards and dates for cross-topic comparison with 311 and
+  crime.
+table: main_gold.fct_permits
+datasource: somerville
+
+entities:
+  - name: permit
+    type: primary
+    key: permit_id
+  - name: ward
+    type: foreign
+    key: ward
+  - name: date
+    type: foreign
+    key: application_date
+
+dimensions:
+  - name: permit_id
+    type: string
+    expr: permit_id
+    primary_key: true
+    description: "Surrogate primary key (md5 of permit_number)."
+  - name: permit_number
+    type: string
+    expr: permit_number
+    description: 'Year-prefixed natural key from source (e.g. "B14-001277" = Building, 2014, #001277). Public reference.'
+  - name: application_date
+    type: date
+    expr: application_date
+    description: "Date the permit application was submitted."
+  - name: issue_date
+    type: date
+    expr: issue_date
+    description: "Date the permit was issued. NULL for non-issued applications (Withdrawn / Denied / Under Review)."
+  - name: application_year
+    type: number
+    expr: application_year
+    description: "Year of application_date."
+  - name: issue_year
+    type: number
+    expr: issue_year
+    description: "Year of issue_date. NULL when issue_date is NULL."
+  - name: permit_type
+    type: string
+    expr: permit_type
+    description: "Permit type. 20+ values observed -- mostly 'Residential Building' (~73%) and 'Commercial Building' (~15%). 11 rows have NULL type."
+  - name: permit_status
+    type: string
+    expr: permit_status
+    description: "Permit status. 96.68% 'Issued'. 21 rows NULL; 6 empty-string; 3 rows carry dates as status values (source data quality issue). See permits-static-since-2023 limitation."
+  - name: is_issued
+    type: boolean
+    expr: is_issued
+    description: "TRUE when permit_status = 'Issued'. The vast majority (96.68%) of rows are issued; filter on this for analyst-clean 'permits actually issued' counts."
+  - name: permit_amount
+    type: number
+    expr: permit_amount
+    description: "Permit fee amount in USD. Numeric source column."
+  - name: address
+    type: string
+    expr: address
+    description: "Property address. Public information for permits, by design."
+  - name: work_description
+    type: string
+    expr: work_description
+    description: "Freeform description of permitted work (e.g. 'Remove and replace 1500 sf of roofing'). Source-side text -- no applicant names observed."
+  - name: ward
+    type: string
+    expr: ward
+    description: "Somerville ward 1-7, derived via point-in-polygon spatial join of (longitude, latitude) against dim_ward. NULL for ~3.4% of rows (geocoded outside Somerville boundary). See permits-spatial-ward-derivation limitation."
+    samples: ["1", "2", "3", "4", "5", "6", "7"]
+  - name: latitude
+    type: number
+    expr: latitude
+    description: "Geocoded latitude (WGS84). 8 rows are NULL."
+  - name: longitude
+    type: number
+    expr: longitude
+    description: "Geocoded longitude (WGS84). 8 rows are NULL."
+
+measures:
+  - name: permit_count
+    type: count
+    description: "Total count of permit applications (all statuses)."
+  - name: issued_permit_count
+    type: count
+    description: "Count of permits actually issued (permit_status = 'Issued', 96.68% of rows)."
+    expr: case when is_issued then permit_id end
+  - name: total_issued_permit_value
+    type: sum
+    description: "Sum of permit_amount across issued permits, in USD."
+    expr: case when is_issued then permit_amount end
+  - name: avg_issued_permit_value
+    type: avg
+    description: "Average permit_amount across issued permits, in USD."
+    expr: case when is_issued then permit_amount end
+  - name: distinct_address_count
+    type: count_distinct
+    description: "Number of distinct property addresses with at least one permit."
+    expr: address
