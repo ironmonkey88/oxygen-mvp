@@ -406,6 +406,36 @@ CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
 );
 
 
+-- One row per Somerville building / inspection permit (Socrata `vxgw-vmky`).
+-- 64,521 rows covering 2014-02-13 to 2023-10-24. Source stopped refreshing
+-- 2023-05-16 -- treat as historical, not ongoing. Ward derived via spatial
+-- point-in-polygon join (longitude, latitude) against dim_ward; 96.62%
+-- match rate, remaining 3.37% have NULL ward.
+-- See limitations: permits-static-since-2023, permits-spatial-ward-derivation.
+CREATE TABLE IF NOT EXISTS gold.fct_permits (
+    permit_id                   VARCHAR PRIMARY KEY,                  -- md5(permit_number)
+    permit_number               VARCHAR NOT NULL UNIQUE,              -- NK: source `id`, year-prefixed (e.g. "B14-001277")
+    application_date            DATE NOT NULL,
+    issue_date                  DATE,                                 -- NULL for non-issued applications
+    application_year            SMALLINT,
+    issue_year                  SMALLINT,                             -- NULL when issue_date is NULL
+    permit_type                 VARCHAR,                              -- 11 rows NULL (source DQ)
+    permit_status               VARCHAR,                              -- ~97% 'Issued'; some date-as-status anomalies
+    is_issued                   BOOLEAN,                              -- derived: permit_status = 'Issued'
+    permit_amount               DOUBLE,                               -- fee in USD
+    address                     VARCHAR,                              -- public for permits
+    work_description            VARCHAR,                              -- freeform; no PII observed
+    ward                        VARCHAR,                              -- 1-7 (FK to dim_ward) / NULL for outside-Somerville
+    latitude                    DOUBLE,
+    longitude                   DOUBLE,
+
+    -- audit columns (passthrough from bronze)
+    _extracted_at               TIMESTAMP,
+    _extracted_run_id           VARCHAR,
+    _source_endpoint            VARCHAR
+);
+
+
 -- =============================================================
 -- ADMIN — infrastructure: profiling and data quality
 -- =============================================================

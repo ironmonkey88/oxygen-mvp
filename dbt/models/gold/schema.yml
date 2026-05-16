@@ -343,3 +343,70 @@ models:
         data_tests:
           - not_null
           - unique
+
+  - name: fct_permits
+    description: |
+      Gold fact over Somerville building / inspection permits (Socrata
+      `vxgw-vmky`). One row per source permit number. 64,521 rows
+      covering 2014-02-13 to 2023-10-24. **Source stopped refreshing
+      2023-05-16** -- treat as historical, not ongoing. Surrogate PK
+      with the source permit_number preserved for analyst back-
+      reference. Ward derived via point-in-polygon spatial join of
+      (longitude, latitude) against dim_ward (96.62% match rate;
+      remaining 3.37% are geocoded outside Somerville and have NULL
+      ward, same posture as crime's ~13% NULL ward). See
+      docs/limitations/permits-spatial-ward-derivation.md and
+      docs/limitations/permits-static-since-2023.md.
+    columns:
+      - name: permit_id
+        description: 'Surrogate PK -- md5(permit_number). Matches the gold-dim pattern.'
+        data_tests:
+          - not_null
+          - unique
+      - name: permit_number
+        description: 'Year-prefixed natural key from source (e.g. "B14-001277" = Building, 2014, #001277). Preserved for back-reference to the public permit log.'
+        data_tests:
+          - not_null
+          - unique
+      - name: application_date
+        description: 'Date the permit application was submitted. Cast from source TIMESTAMP to DATE.'
+        data_tests:
+          - not_null
+      - name: issue_date
+        description: 'Date the permit was issued. NULL for non-issued applications (Withdrawn, Denied, Under Review).'
+      - name: application_year
+        description: 'Year of application_date (SMALLINT).'
+      - name: issue_year
+        description: 'Year of issue_date (SMALLINT). NULL when issue_date is NULL.'
+      - name: permit_type
+        description: 'Permit type. ~73% Residential Building, ~15% Commercial Building, 20+ values. **11 rows have NULL type** per the documented source data quality issue (Plan 21 honest-test precedent).'
+      - name: permit_status
+        description: 'Permit status. ~97% "Issued". 21 NULL, 6 empty-string, and 3 rows carry dates as status values (source DQ issue documented in permits-static-since-2023).'
+      - name: is_issued
+        description: 'Boolean -- TRUE when permit_status = "Issued". Filter on this for analyst-clean issued-permit counts (96.68% of rows).'
+      - name: permit_amount
+        description: 'Permit fee amount in USD. Source DOUBLE.'
+      - name: address
+        description: 'Property address (public information for permits, by design).'
+      - name: work_description
+        description: 'Freeform description of permitted work. Source-side text; no applicant names observed.'
+      - name: ward
+        description: 'Somerville ward 1-7 derived via spatial join. NULL for ~3.4% of rows (geocoded outside Somerville). See permits-spatial-ward-derivation limitation.'
+      - name: latitude
+        description: 'Geocoded latitude (WGS84). 8 rows are NULL.'
+      - name: longitude
+        description: 'Geocoded longitude (WGS84). 8 rows are NULL.'
+      - name: _extracted_at
+        description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
+      - name: _extracted_run_id
+        description: 'Lineage -- ULID of the pipeline run that touched this row.'
+      - name: _source_endpoint
+        description: 'Lineage -- Socrata SODA URL the row came from.'
+      - name: ward
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL"
