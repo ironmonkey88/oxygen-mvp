@@ -5,15 +5,17 @@
 
 ---
 
-## Next Focus — MVP 2 silver/gold curation + Builder-CLI dashboards (pending Gordon's call)
+## Next Focus — Plan 23 Phases B / C / D in fresh threads (Phase A done Session 48)
 
-**Plan 21 closed 2026-05-14** — overnight batch landed 4 new bronze sources (Happiness Survey, Permits, Traffic Citations, Somerville at a Glance) plus the `/about` info page. Warehouse now carries 6 source datasets with bronze views auto-profiled at `/profile`. End-to-end `./run.sh manual` exits 0 in 946s with 92/92 tests passing. See [Session 46](docs/sessions/session-46-2026-05-14-prompts-09-10-11-overnight-batch.md) for the full batch narrative.
+**Plan 23 Phase A done 2026-05-15** — Permits gold + semantic landed via [PR #36](https://github.com/ironmonkey88/oxygen-mvp/pull/36) (`d269aab`). `main_gold.fct_permits` with DuckDB-spatial ward derivation (96.62% match), `permits.view.yml` (5 measures, 14 dimensions), new `built_environment` topic, `permits-spatial-ward-derivation.md` limitation entry. See [Session 48](docs/sessions/session-48-2026-05-15-plan-23-phase-a-permits-gold.md).
 
-Two natural next-thread paths:
+**Per-phase independent-value model: each remaining phase is its own fresh-thread prompt.** The original Plan 23 prompt has all four phases scoped; B/C/D can be lifted directly:
 
-1. **Silver/gold curation for the new bronze sources** — type casts (`dtissued` -> TIMESTAMP, `vehiclemph` -> INTEGER, `lat`/`long` -> DOUBLE, `year` -> INTEGER); ward-trim on space-padded sources; spatial point-in-polygon ward join for permits + citations (no `ward` column at source); composite citation-grain derived view (strip violation suffix). MVP 3 work.
+1. **Plan 23 Phase B — Traffic Citations gold + semantic.** Same shape as A (spatial point-in-polygon ward derivation, gold fact, semantic view, limitations entry), but joins into the existing `public_safety` topic rather than a new one. Halt threshold: lat/lng coverage <90% on bronze. Pre-flight that gate first.
+2. **Plan 23 Phase C — Somerville at a Glance gold + semantic.** Long-tidy KPI fact (`fct_somerville_kpi`) + new `dim_kpi_topic`. No spatial join — joins via `topic` natural key. New `city_context` topic.
+3. **Plan 23 Phase D — Happiness Survey gold + semantic.** **Halt risk:** cross-wave column-presence filter (column must appear in ≥5 of 8 waves with <50% NULL). If <12 columns survive, halt and surface — survey isn't usable gold yet and should be MVP 3 silver/gold curation as a dedicated plan. New `resident_perception` topic.
 
-2. **Plans 18 + 19 — Builder-CLI dashboards** — deferred Sessions 45/46. Now that 4 new bronze datasets are in scope, the analyst questions ("Are permit-rich wards seeing more 311 complaints?" / "Does the Happiness Survey's `feel_safe_somerville_num` track citations + crime by ward and year?") can be dashboard-built. Open in a fresh Code thread.
+Plans 18 + 19 (Builder-CLI dashboards) still deferred. The cross-source analyst questions named in the original Plan 23 prompt (permits vs 311 by ward, safety perception vs citations) become buildable once Plan 23 phases land.
 
 ### Carry-over queued items
 
