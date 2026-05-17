@@ -5,6 +5,9 @@ This file is instructions for Claude Code. The project has a hierarchy of docume
 **Foundational (not project-specific):**
 - `docs/Analytics_Platform_Primer.docx` — analytics-platform knowledge the project builds on (Knowledge Products, the Hierarchy of Needs, the Maturity Lifecycle, the medallion architecture, Working Backwards). Read once.
 
+**Convictions (foundational, not authority):**
+- `PHILOSOPHY.md` — the *why beneath the why*: three inspirations (Fix The News, Intelligent Optimism, system humanism); the synthesis (an honest full picture is itself service to residents); the institutional precedent (New Urban Mechanics); the engineering discipline (systems-engineering V-model + requirements-first + lifecycle); seven principles each tied to something already in the codebase. Not operational — MVP.md and BUILD.md remain the authorities on scope and "done." Consult §3 and §6 as a tiebreaker when a design question is genuinely open.
+
 **Strategic + construction (project authorities):**
 - `MVP.md` — the *why*: protagonist, emotional arc (relief → momentum → ownership → pride → sharing), success test ("you have to try this"), the compass, the portal as opening note, the four-MVP roadmap.
 - `BUILD.md` — the *how*: Knowledge Product Pipeline instantiated stage-by-stage, Component Trajectory (best-of-breed today, Oxygen-native at the destination), the four-MVP build sequence with what each retires/produces, disciplines that hold the work together, scope boundaries, glossary.
