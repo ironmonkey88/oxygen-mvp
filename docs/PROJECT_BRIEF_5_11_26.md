@@ -192,6 +192,7 @@ Deferred to MVP 2+:
 | Need | Read |
 |---|---|
 | Strategic positioning, audience, the four-MVP roadmap | [MVP.md](../MVP.md) |
+| The *why beneath the why* — convictions, inspirations, principles | [PHILOSOPHY.md](../PHILOSOPHY.md) |
 | Project instructions for Claude Code | [CLAUDE.md](../CLAUDE.md) |
 | How do prompts from Chat get shaped and processed? | [PROMPTS.md](../PROMPTS.md) |
 | Architecture decisions, component map, data flow, constraints | [ARCHITECTURE.md](../ARCHITECTURE.md) |
