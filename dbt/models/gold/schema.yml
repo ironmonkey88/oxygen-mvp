@@ -161,6 +161,14 @@ models:
         description: 'Department tag -- public space cleanliness and environmental health. Boolean. Sparse.'
       - name: is_voting_tag
         description: 'Department tag -- voting and election information. Boolean. Sparse.'
+      - name: ward
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL"
 
   - name: dim_ward
     description: |
