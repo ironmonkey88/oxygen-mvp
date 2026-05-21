@@ -347,11 +347,13 @@ See `ARCHITECTURE.md` for full table designs.
 ```yaml
 # config.yml
 models:
-  - name: claude-sonnet-4-6
+  - name: claude-opus-4-7
     vendor: anthropic
-    model_ref: claude-sonnet-4-6
+    model_ref: claude-opus-4-7
     key_var: ANTHROPIC_API_KEY
 ```
+
+The Answer Agent migrated from Sonnet 4.6 to Opus 4.7 on 2026-05-11 (TASKS.md MVP 1.5 row, commit `a5853d0`). The driver was SPA rate-limit headroom — Opus 4.7 carries a much larger tokens/min ceiling, which the multi-turn SPA chat path was tripping under Sonnet. Trust contract behavior and the 5-question CLI bench were re-verified post-migration.
 
 Two env vars must be set on EC2 before running Oxygen:
 
