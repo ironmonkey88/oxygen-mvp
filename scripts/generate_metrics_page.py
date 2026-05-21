@@ -45,7 +45,7 @@ def expand_measure_sql(view: dict, measure: dict) -> str:
         select = f"COUNT(DISTINCT {expr})"
     elif mtype == "sum" and expr:
         select = f"SUM({expr})"
-    elif mtype == "avg" and expr:
+    elif mtype == "average" and expr:
         select = f"AVG({expr})"
     elif mtype == "min" and expr:
         select = f"MIN({expr})"
