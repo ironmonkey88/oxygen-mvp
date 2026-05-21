@@ -5,7 +5,9 @@
 
 ---
 
-## Next Focus — Plan 24 MVP 3 survey curation + Plans 18/19 Builder-CLI dashboards + Oxy customer-feedback bundle
+## Next Focus — Plan 29 tidy-day batch (in progress) → then Plan 24 MVP 3 survey curation + Plans 18/19 Builder-CLI dashboards
+
+**Plan 29 in progress 2026-05-21** — [~] tidy-day batch: 7 items from the 2026-05-17 tech-debt review (`docs/tech-debt-review-2026-05-17.md`) plus a credential-exposure check. Items: (1) `/metrics` `average` measure SQL fix; (2) `deploy_html` silent-failure tighten; (3) gold/schema.yml `ward` dedup; (4) CLAUDE.md Sonnet→Opus; (5) CLAUDE.md file-structure refresh; (6) `docs/schema.sql` reconciliation; (7) `.claude/settings.json` `sudo cp/mv/ln` scoping; (8) EC2 `/etc/environment` mode check.
 
 **Plan 28 done 2026-05-17** — [x] PHILOSOPHY.md landed at repo root (commit `0877242`) plus the three wiring sites per the Plan 22 pattern: CLAUDE.md new "Convictions (foundational, not authority)" tier above Strategic+construction; session-starter.md "How We Work Together" pointer; PROJECT_BRIEF_5_11_26.md §10 reference-map row. Content-additive only — no edits to existing authority docs. See [Session 54](docs/sessions/session-54-2026-05-17-plan-28-philosophy.md).
 
