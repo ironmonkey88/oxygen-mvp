@@ -135,6 +135,13 @@ models:
         description: 'Full timestamp the most recent status was set.'
       - name: ward
         description: 'Somerville ward 1-7 as VARCHAR. NULL when unknown.'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL"
       - name: block_code
         description: 'Block identifier. Carried through from source -- still padded with spaces when unknown; cleanup deferred to Silver. See docs/limitations/block-code-padded.md.'
       - name: accuracy
@@ -161,14 +168,6 @@ models:
         description: 'Department tag -- public space cleanliness and environmental health. Boolean. Sparse.'
       - name: is_voting_tag
         description: 'Department tag -- voting and election information. Boolean. Sparse.'
-      - name: ward
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_ward')
-                field: ward
-              config:
-                where: "ward IS NOT NULL"
 
   - name: dim_ward
     description: |
@@ -259,6 +258,13 @@ models:
                 values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
       - name: ward
         description: 'Somerville ward (TRIM applied; source pads to length 15). 7 valid ward strings (1-7), NULL for ~13% of rows, "CAM" for 2 cross-jurisdiction rows. See docs/limitations/crime-ward-coverage-gaps.md.'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL AND ward <> 'CAM'"
       - name: block_code
         description: '15-character census block code. NULL for sensitive incidents (same 2,798 rows as NULL incident_dt). Block-level analysis on the full dataset is therefore similarly bounded.'
       - name: _extracted_at
@@ -269,14 +275,6 @@ models:
         description: 'Lineage -- UTC timestamp when this incident was first ingested. Preserved across re-extractions.'
       - name: _source_endpoint
         description: 'Lineage -- Socrata SODA URL the row came from.'
-      - name: ward
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_ward')
-                field: ward
-              config:
-                where: "ward IS NOT NULL AND ward <> 'CAM'"
       - name: offense_code
         data_tests:
           - relationships:

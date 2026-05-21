@@ -36,18 +36,38 @@ cd "$REPO_ROOT"
 # shellcheck disable=SC1091
 source "$REPO_ROOT/.venv/bin/activate"
 
-# Portal deploy helper — Plan 14b (2026-05-13). The portal docroot
-# /var/www/somerville should be ubuntu-owned; if a stray `sudo cp`
-# elsewhere has flipped a target file to root, this self-heals before
-# the cp. Sudoers allows ubuntu to chown files under /var/www/somerville
-# without a password (configured Plan 14b).
+# Portal deploy helper — Plan 14b (2026-05-13); tightened Plan 29
+# (2026-05-21). The portal docroot /var/www/somerville should be
+# ubuntu-owned; if a stray `sudo cp` elsewhere has flipped a target
+# file to root, this self-heals before the cp. Sudoers allows ubuntu
+# to chown files under /var/www/somerville without a password
+# (configured Plan 14b).
+#
+# Plan 29 changes:
+#   1. Source-file precondition: refuse to deploy a file the generator
+#      didn't produce. Previously a generator that exited 0 without
+#      writing the file would leave the previous portal page in place
+#      and the run would report success — a silent stale-trust-surface
+#      failure mode.
+#   2. `chown` no longer masked with `|| true`. If passwordless sudo is
+#      mis-configured, the ERR trap surfaces the failure instead of
+#      letting it slide. Sudoers regression should be visible, not
+#      buried.
+#   3. Atomic write: cp to ${dst}.tmp then mv into place, so an
+#      interrupted-mid-cp window cannot leave a half-written portal
+#      file under nginx.
 deploy_html() {
     local src="$1"
     local dst="$2"
-    if [ -e "$dst" ] && [ ! -w "$dst" ]; then
-        sudo chown ubuntu:ubuntu "$dst" 2>/dev/null || true
+    if [ ! -f "$src" ]; then
+        echo "ERROR: source file $src was not generated; refusing to deploy" >&2
+        return 1
     fi
-    cp "$src" "$dst"
+    if [ -e "$dst" ] && [ ! -w "$dst" ]; then
+        sudo chown ubuntu:ubuntu "$dst"
+    fi
+    cp "$src" "${dst}.tmp"
+    mv "${dst}.tmp" "$dst"
 }
 
 RUN_TYPE="${1:-manual}"

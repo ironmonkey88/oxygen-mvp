@@ -1,10 +1,22 @@
 -- =============================================================
--- schema.sql — Somerville 311 Analytics Platform
--- Source of truth for all table definitions.
--- ERD generated from this file. Do not edit the ERD directly.
+-- schema.sql — DDL reference for the Answer Agent
 --
--- Schemas: bronze, gold, admin
--- Silver is defined in MVP 3.
+-- Loaded as static context by agents/answer_agent.agent.yml so the
+-- agent has full table + column shape (broader than the semantic-layer
+-- views, which only enumerate query-relevant columns).
+--
+-- NOT the authoritative source of truth — the dbt model SQL +
+-- schema.yml files are the build artifacts, and the runtime ERD
+-- (scripts/generate_warehouse_erd.py) reads live DuckDB metadata
+-- and dbt's schema.yml, not this file.
+--
+-- Schema-name convention (dbt-duckdb pattern: default profile
+-- `main` + `+schema: X` produces `main_X`):
+--   main_bronze, main_gold, main_admin
+--   Silver (`main_silver`) is defined in MVP 3.
+--
+-- When a dbt model is added or column descriptions change, refresh
+-- this file by hand so the agent context tracks the warehouse shape.
 -- =============================================================
 
 
@@ -13,12 +25,12 @@
 -- No transforms. All columns VARCHAR. Arrival checks only.
 -- =============================================================
 
-CREATE SCHEMA IF NOT EXISTS bronze;
+CREATE SCHEMA IF NOT EXISTS main_bronze;
 
 -- Raw 311 requests as received from Somerville SODA API.
 -- Column names and types preserved exactly as source delivers them.
 -- block_code is padded with spaces in source — do not trim here.
-CREATE TABLE IF NOT EXISTS bronze.raw_311_requests (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_311_requests (
     id                                              VARCHAR,  -- primary key from source
     classification                                  VARCHAR,  -- Service / Information / Feedback
     category                                        VARCHAR,  -- e.g. Parking, Trash & Recycling
@@ -54,7 +66,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_311_requests (
 -- Geometry held in the source projection (NAD83/MA Mainland, EPSG:2249, US survey feet)
 -- via DuckDB's spatial extension; WKT strings in both source projection and WGS84
 -- are also persisted for portability + dbt-view compatibility.
-CREATE TABLE IF NOT EXISTS bronze.raw_somerville_wards_raw (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_somerville_wards_raw (
     OGC_FID             BIGINT,   -- assigned by the spatial reader
     OBJECTID            BIGINT,   -- ESRI internal id
     WARD                BIGINT,   -- ward number 1–7
@@ -76,8 +88,8 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_wards_raw (
 -- data 2017-present. Source-level PII redaction already applied to
 -- sensitive incidents (time/location stripped); project-side silver-layer
 -- redaction is MVP 3 work. See
--- docs/limitations/crime-data-pii-unredacted-in-bronze.md.
-CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
+-- docs/limitations/crime-bronze-restricted-from-analysis.md.
+CREATE TABLE IF NOT EXISTS main_bronze.raw_somerville_crime_raw (
     incnum              VARCHAR,  -- PK from source; the dlt merge key
     day_and_month       VARCHAR,  -- "M/D"; NULL/blank for sensitive incidents stripped at source
     year                VARCHAR,  -- "2017"–present
@@ -99,7 +111,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
     _dlt_id             VARCHAR
 );
 
--- bronze.raw_somerville_at_a_glance_raw -- demographic/housing/economic KPIs
+-- main_bronze.raw_somerville_at_a_glance_raw -- demographic/housing/economic KPIs
 -- (Prompt 11 Phase D, 2026-05-14). Socrata `jnde-mi6j`. Replace mode: 749
 -- rows / 6 columns. Long/tidy format: one row per (topic, description, year,
 -- geography). 25 topics, 2 geographies (Somerville + Massachusetts), years
@@ -107,7 +119,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_crime_raw (
 -- ACS releases. Not wired into run.sh; re-run manually via
 -- dlt/somerville_at_a_glance_pipeline.py. Read directly by the /somerville
 -- info portal page (Prompt 11 Phase E).
-CREATE TABLE IF NOT EXISTS bronze.raw_somerville_at_a_glance_raw (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_somerville_at_a_glance_raw (
     topic           VARCHAR,  -- top-level metric grouping (25 distinct values)
     description     VARCHAR,  -- sub-label within topic
     year            INTEGER,
@@ -124,7 +136,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_at_a_glance_raw (
     -- no _first_seen_at: replace mode wipes the table on each ingest
 );
 
--- bronze.raw_somerville_traffic_citations_raw -- SPD traffic citations
+-- main_bronze.raw_somerville_traffic_citations_raw -- SPD traffic citations
 -- (Prompt 11 Phase C, 2026-05-14). Socrata `3mqx-eye9`. Merge mode on
 -- `citationnum`. ~67K rows / 14 columns; data 2017-present. Source refreshes
 -- daily with a one-month publication delay. Wired into run.sh as stage 1c.
@@ -132,7 +144,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_at_a_glance_raw (
 -- suffix (e.g. "T2725339-1"). PII surface is low -- intersection-level
 -- address, violation type, ward, speed -- no driver name / license / vehicle.
 -- See docs/limitations/traffic-citations-location-and-violation-only.md.
-CREATE TABLE IF NOT EXISTS bronze.raw_somerville_traffic_citations_raw (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_somerville_traffic_citations_raw (
     citationnum         VARCHAR,  -- PK incl. violation suffix; dlt merge key
     dtissued            VARCHAR,  -- timestamp issued; cast to TIMESTAMP in silver
     police_shift        VARCHAR,
@@ -157,7 +169,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_traffic_citations_raw (
     _dlt_id             VARCHAR
 );
 
--- bronze.raw_somerville_permits_raw -- ISD permit applications (Prompt 11 Phase B,
+-- main_bronze.raw_somerville_permits_raw -- ISD permit applications (Prompt 11 Phase B,
 -- 2026-05-14). Socrata `vxgw-vmky`. Replace mode (not merge): 64,521 rows /
 -- 10 columns, source `rowsUpdatedAt = 2023-05-16` (nearly 3 years stale). One
 -- row per permit application; `id` is the source PK. Manual one-shot ingestion
@@ -165,7 +177,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_traffic_citations_raw (
 -- daily cadence when source is static). No ward column at source -- ward joins
 -- require spatial via lat/lng (silver work). See
 -- docs/limitations/permits-static-since-2023.md for staleness + status DQ.
-CREATE TABLE IF NOT EXISTS bronze.raw_somerville_permits_raw (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_somerville_permits_raw (
     id                  VARCHAR,  -- PK; year-prefixed (e.g. B14-001277)
     application_date    VARCHAR,  -- calendar_date from source
     issue_date          VARCHAR,  -- calendar_date; NULL for non-issued applications
@@ -186,7 +198,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_permits_raw (
     -- no _first_seen_at: replace mode wipes the table on each ingest
 );
 
--- bronze.raw_somerville_happiness_survey_raw -- biennial city perception survey
+-- main_bronze.raw_somerville_happiness_survey_raw -- biennial city perception survey
 -- (Prompt 11 Phase A, 2026-05-14). Socrata `wmeh-zuz2`.
 -- Replace mode (not merge): 12,583 rows / 150 columns, static between waves
 -- (next ~2027). One row per (respondent, survey_year); `id` is the source PK.
@@ -198,7 +210,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_permits_raw (
 -- for per-column docs, and
 -- docs/limitations/happiness-survey-self-selection-and-coverage.md for the
 -- caveat list.
-CREATE TABLE IF NOT EXISTS bronze.raw_somerville_happiness_survey_raw (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_somerville_happiness_survey_raw (
     id                                VARCHAR,  -- PK from source; year-prefixed integer
     year                              INTEGER,  -- survey wave: 2011, 2013, ..., 2025
     survey_method                     VARCHAR,
@@ -240,7 +252,7 @@ CREATE TABLE IF NOT EXISTS bronze.raw_somerville_happiness_survey_raw (
 
 -- Raw load of dbt run_results.json after each pipeline run.
 -- Loaded by dlt/load_dbt_results.py. Parsed by admin models.
-CREATE TABLE IF NOT EXISTS bronze.raw_dbt_results (
+CREATE TABLE IF NOT EXISTS main_bronze.raw_dbt_results (
     loaded_at       TIMESTAMPTZ,  -- when this row was loaded
     run_id          VARCHAR,      -- dbt invocation id
     run_started_at  VARCHAR,      -- from run_results.json metadata
@@ -258,11 +270,11 @@ CREATE TABLE IF NOT EXISTS bronze.raw_dbt_results (
 -- Airlayer and agents point to this schema only.
 -- =============================================================
 
-CREATE SCHEMA IF NOT EXISTS gold;
+CREATE SCHEMA IF NOT EXISTS main_gold;
 
 -- Standard date spine. Generated by dbt macro — not sourced from 311 data.
 -- Covers 2010-01-01 through 2030-12-31.
-CREATE TABLE IF NOT EXISTS gold.dim_date (
+CREATE TABLE IF NOT EXISTS main_gold.dim_date (
     date_sk         INTEGER PRIMARY KEY,  -- surrogate key: YYYYMMDD e.g. 20240101
     date_dt         DATE NOT NULL,
     year            INTEGER NOT NULL,
@@ -277,7 +289,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_date (
 
 -- Classification → category → type hierarchy.
 -- Natural key is the concatenation of all three levels.
-CREATE TABLE IF NOT EXISTS gold.dim_request_type (
+CREATE TABLE IF NOT EXISTS main_gold.dim_request_type (
     request_type_sk INTEGER PRIMARY KEY,
     request_type_id VARCHAR NOT NULL,     -- natural key: classification|category|type
     classification  VARCHAR NOT NULL,     -- Service / Information / Feedback
@@ -286,7 +298,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_request_type (
 );
 
 -- Open / Closed status with boolean convenience columns.
-CREATE TABLE IF NOT EXISTS gold.dim_status (
+CREATE TABLE IF NOT EXISTS main_gold.dim_status (
     status_sk       INTEGER PRIMARY KEY,
     status_id       VARCHAR NOT NULL,     -- natural key: raw status value
     status          VARCHAR NOT NULL,     -- Open / Closed
@@ -297,9 +309,9 @@ CREATE TABLE IF NOT EXISTS gold.dim_status (
 -- How the request was submitted: Contact Center, Website, etc.
 -- Low cardinality — typically 5–10 distinct values.
 -- Ward dim — 7 administrative wards (2020 Census redistricting).
--- Sourced from `scripts/ingest_somerville_wards.py` via bronze.raw_somerville_wards_raw.
+-- Sourced from `scripts/ingest_somerville_wards.py` via main_bronze.raw_somerville_wards_raw.
 -- Static reference data. Natural-key joins to fct_311_requests on `ward`.
-CREATE TABLE IF NOT EXISTS gold.dim_ward (
+CREATE TABLE IF NOT EXISTS main_gold.dim_ward (
     ward_id             VARCHAR PRIMARY KEY,  -- md5(ward) surrogate key
     ward                VARCHAR NOT NULL UNIQUE,  -- ward number 1–7 (VARCHAR for natural-key join)
     ward_name           VARCHAR,              -- 'Ward N' display label
@@ -311,7 +323,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_ward (
     _extracted_at       TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS gold.dim_origin (
+CREATE TABLE IF NOT EXISTS main_gold.dim_origin (
     origin_sk       INTEGER PRIMARY KEY,
     origin_id       VARCHAR NOT NULL,     -- natural key: raw origin value
     origin          VARCHAR NOT NULL
@@ -319,7 +331,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_origin (
 
 -- NIBRS offense code dim — 39 rows (37 atomic NIBRS codes + 2 source-side
 -- multi-code grouping strings). Sources from fct_crime_incidents.
-CREATE TABLE IF NOT EXISTS gold.dim_offense_code (
+CREATE TABLE IF NOT EXISTS main_gold.dim_offense_code (
     offense_code                VARCHAR PRIMARY KEY,
     offense                     VARCHAR NOT NULL,
     offense_type                VARCHAR NOT NULL,
@@ -330,27 +342,27 @@ CREATE TABLE IF NOT EXISTS gold.dim_offense_code (
 
 -- NIBRS top-level category dim — 4 rows, hardcoded.
 -- severity_rank is editorial (1=Person, 2=Property, 3=Society, 4=Other).
-CREATE TABLE IF NOT EXISTS gold.dim_offense_category (
+CREATE TABLE IF NOT EXISTS main_gold.dim_offense_category (
     offense_category    VARCHAR PRIMARY KEY,
     severity_rank       SMALLINT NOT NULL UNIQUE
 );
 
--- One row per Somerville Police incident report. Source: bronze.raw_somerville_crime
+-- One row per Somerville Police incident report. Source: main_bronze.raw_somerville_crime
 -- via dlt merge on `incnum`. Three source-data realities surfaced via flags +
 -- limitations: sensitive-incident redaction (incident_year_only), multi-code offense
 -- groupings (multi_offense_flag), ward coverage gaps (ward NULL / 'CAM').
-CREATE TABLE IF NOT EXISTS gold.fct_crime_incidents (
+CREATE TABLE IF NOT EXISTS main_gold.fct_crime_incidents (
     incident_id                 VARCHAR PRIMARY KEY,                  -- md5(case_number)
     case_number                 VARCHAR NOT NULL UNIQUE,              -- NK: source `incnum`
     incident_dt                 DATE,                                 -- NULL for sensitive incidents
     incident_year               SMALLINT NOT NULL,
     incident_year_only          BOOLEAN NOT NULL,                     -- TRUE = day-and-month stripped at source
     police_shift                VARCHAR,                              -- NULL for sensitive incidents
-    offense_code                VARCHAR NOT NULL REFERENCES gold.dim_offense_code(offense_code),
+    offense_code                VARCHAR NOT NULL REFERENCES main_gold.dim_offense_code(offense_code),
     multi_offense_flag          BOOLEAN NOT NULL,
     offense                     VARCHAR,                              -- denormalized from dim_offense_code
     offense_type                VARCHAR,                              -- denormalized from dim_offense_code
-    offense_category            VARCHAR NOT NULL REFERENCES gold.dim_offense_category(offense_category),
+    offense_category            VARCHAR NOT NULL REFERENCES main_gold.dim_offense_category(offense_category),
     ward                        VARCHAR,                              -- 1–7 (FK to dim_ward) / NULL / 'CAM'
     block_code                  VARCHAR,                              -- 15-char census block; NULL for sensitive
 
@@ -366,13 +378,13 @@ CREATE TABLE IF NOT EXISTS gold.fct_crime_incidents (
 -- dim_location will be introduced in MVP 3.
 -- Dept tag columns cast from VARCHAR '0'/'1' to BOOLEAN.
 -- Survey columns kept as VARCHAR — sparse, free-text responses.
-CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
+CREATE TABLE IF NOT EXISTS main_gold.fct_311_requests (
     request_sk                  INTEGER PRIMARY KEY,
     request_id                  VARCHAR NOT NULL,         -- NK: source id
-    date_created_sk             INTEGER REFERENCES gold.dim_date(date_sk),
-    request_type_sk             INTEGER REFERENCES gold.dim_request_type(request_type_sk),
-    status_sk                   INTEGER REFERENCES gold.dim_status(status_sk),
-    origin_sk                   INTEGER REFERENCES gold.dim_origin(origin_sk),
+    date_created_sk             INTEGER REFERENCES main_gold.dim_date(date_sk),
+    request_type_sk             INTEGER REFERENCES main_gold.dim_request_type(request_type_sk),
+    status_sk                   INTEGER REFERENCES main_gold.dim_status(status_sk),
+    origin_sk                   INTEGER REFERENCES main_gold.dim_origin(origin_sk),
 
     -- Timestamps (full precision retained)
     date_created_dt             TIMESTAMPTZ,
@@ -410,9 +422,9 @@ CREATE TABLE IF NOT EXISTS gold.fct_311_requests (
 -- compendium (Socrata `jnde-mi6j`). 749 rows / 25 distinct topics; year
 -- range 1850-2024 (uneven per-topic coverage).
 -- See limitations: somerville-at-a-glance-uneven-year-coverage.
-CREATE TABLE IF NOT EXISTS gold.fct_somerville_kpi (
+CREATE TABLE IF NOT EXISTS main_gold.fct_somerville_kpi (
     kpi_id                      VARCHAR PRIMARY KEY,                  -- md5(topic + year + description + geography)
-    topic                       VARCHAR NOT NULL REFERENCES gold.dim_kpi_topic(topic),
+    topic                       VARCHAR NOT NULL REFERENCES main_gold.dim_kpi_topic(topic),
     year                        SMALLINT NOT NULL,
     value                       DOUBLE,                               -- TRY_CAST from source VARCHAR
     kpi_description             VARCHAR,                              -- source `description`
@@ -427,7 +439,7 @@ CREATE TABLE IF NOT EXISTS gold.fct_somerville_kpi (
 
 -- One row per distinct KPI topic on fct_somerville_kpi. 25 rows.
 -- Sourced from the fact so topic-name cleanup flows through one place.
-CREATE TABLE IF NOT EXISTS gold.dim_kpi_topic (
+CREATE TABLE IF NOT EXISTS main_gold.dim_kpi_topic (
     topic                       VARCHAR PRIMARY KEY,                  -- natural key
     first_year                  SMALLINT NOT NULL,
     latest_year                 SMALLINT NOT NULL,
@@ -443,7 +455,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_kpi_topic (
 -- Source publishes ward with 0.12% NULL — spatial join not used.
 -- See limitations: traffic-citations-location-and-violation-only,
 -- citations-composite-grain-violation-suffix.
-CREATE TABLE IF NOT EXISTS gold.fct_citations (
+CREATE TABLE IF NOT EXISTS main_gold.fct_citations (
     citation_id                 VARCHAR PRIMARY KEY,                  -- md5(citation_number)
     citation_number             VARCHAR NOT NULL UNIQUE,              -- NK: source `citationnum`, includes suffix
     citation_ts                 TIMESTAMPTZ NOT NULL,                 -- source `dtissued`
@@ -476,7 +488,7 @@ CREATE TABLE IF NOT EXISTS gold.fct_citations (
 -- point-in-polygon join (longitude, latitude) against dim_ward; 96.62%
 -- match rate, remaining 3.37% have NULL ward.
 -- See limitations: permits-static-since-2023, permits-spatial-ward-derivation.
-CREATE TABLE IF NOT EXISTS gold.fct_permits (
+CREATE TABLE IF NOT EXISTS main_gold.fct_permits (
     permit_id                   VARCHAR PRIMARY KEY,                  -- md5(permit_number)
     permit_number               VARCHAR NOT NULL UNIQUE,              -- NK: source `id`, year-prefixed (e.g. "B14-001277")
     application_date            DATE NOT NULL,
@@ -504,12 +516,12 @@ CREATE TABLE IF NOT EXISTS gold.fct_permits (
 -- ADMIN — infrastructure: profiling and data quality
 -- =============================================================
 
-CREATE SCHEMA IF NOT EXISTS admin;
+CREATE SCHEMA IF NOT EXISTS main_admin;
 
 -- Column-level profiling snapshots.
 -- Observational only — does NOT generate rows in fct_test_run.
 -- Appended on every pipeline run. Query max(profiled_at) for current state.
-CREATE TABLE IF NOT EXISTS admin.fct_data_profile (
+CREATE TABLE IF NOT EXISTS main_admin.fct_data_profile (
     profiled_at     TIMESTAMPTZ NOT NULL,   -- when the profile was run
     table_name      VARCHAR NOT NULL,
     column_name     VARCHAR NOT NULL,
@@ -531,7 +543,7 @@ CREATE TABLE IF NOT EXISTS admin.fct_data_profile (
 -- For dbt tests, expected_value = '0' (zero failures expected).
 -- Baselines auto-generated on first run with certified_by = 'system'.
 -- Promote to certified_by = 'gordon' to manually certify a baseline.
-CREATE TABLE IF NOT EXISTS admin.dim_data_quality_test (
+CREATE TABLE IF NOT EXISTS main_admin.dim_data_quality_test (
     test_sk         INTEGER PRIMARY KEY,
     test_id         VARCHAR NOT NULL UNIQUE, -- natural key e.g. baseline.raw_311_requests.year_2016.row_count
     test_type       VARCHAR NOT NULL,        -- baseline | dbt_generic | dbt_singular
@@ -549,9 +561,9 @@ CREATE TABLE IF NOT EXISTS admin.dim_data_quality_test (
 -- One row per test per dbt run.
 -- Sources from both baseline comparisons and parsed dbt test results.
 -- status: 'pass' | 'fail' | 'warn'
-CREATE TABLE IF NOT EXISTS admin.fct_test_run (
+CREATE TABLE IF NOT EXISTS main_admin.fct_test_run (
     test_run_sk     INTEGER PRIMARY KEY,
-    test_sk         INTEGER REFERENCES admin.dim_data_quality_test(test_sk),
+    test_sk         INTEGER REFERENCES main_admin.dim_data_quality_test(test_sk),
     run_id          VARCHAR NOT NULL,        -- dbt invocation id
     run_at          TIMESTAMPTZ NOT NULL,
     actual_value    VARCHAR,                 -- what the data showed

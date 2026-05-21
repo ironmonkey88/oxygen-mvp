@@ -70,42 +70,78 @@ See [STACK.md](STACK.md) for full self-contained definitions of each Oxygen comp
 oxygen-mvp/
 ├── run.sh                          ← single entry point — always use this
 ├── CLAUDE.md
+├── MVP.md                          ← strategic positioning (read first)
+├── BUILD.md                        ← construction logic per layer
+├── STACK.md                        ← self-contained component reference
+├── STANDARDS.md                    ← done-done gates by layer
 ├── ARCHITECTURE.md
+├── DASHBOARDS.md                   ← Data App design standard
+├── PROMPTS.md                      ← Chat-to-Code prompt standard
+├── PHILOSOPHY.md                   ← Convictions (not authority — read once)
+├── PRODUCT_NOTES.md                ← exploratory notebook
 ├── SETUP.md
 ├── LOG.md
 ├── TASKS.md
+├── session-starter.md              ← per-session orientation
+├── slack-update-format.md          ← Slack handoff format
 ├── config.yml
-├── portal/
-│   └── index.html                  ← project portal, served by nginx at port 80
+├── portal/                         ← static HTML mirrored to /var/www/somerville
+│   ├── index.html                  ← project portal, served by nginx at port 80
+│   ├── chat-redirect.html
+│   ├── dashboards.html             ← auto-built listing of apps/*.app.yml
+│   ├── erd-tier-*.mmd              ← per-tier ERD diagrams
+│   ├── somerville-wards-background.svg
+│   └── fonts/
+├── nginx/
+│   └── somerville.conf             ← canonical site config (deploy via SETUP.md §13)
+├── systemd/
+│   ├── pipeline-refresh.{service,timer}      ← daily 06:00 ET
+│   ├── profile-tables.{service,timer}        ← weekly Sun 02:00 ET
+│   └── source-health-check.{service,timer}   ← hourly
 ├── docs/
-│   └── schema.sql                  ← DDL source of truth for all tables
+│   ├── schema.sql                  ← DDL reference loaded as Answer Agent context
+│   ├── limitations/                ← Markdown + _index.yaml limitations registry
+│   ├── sessions/                   ← per-session narratives (session-NN-*.md)
+│   ├── log-archive.md              ← rotated LOG.md overflow
+│   ├── oxygen-docs/                ← mirrored Oxygen documentation
+│   └── tech-debt-review-2026-05-17.md
 ├── data/
 │   └── somerville.duckdb
 ├── dlt/
 │   ├── somerville_311_pipeline.py
-│   └── load_dbt_results.py         ← loads run_results.json → raw_dbt_results
+│   ├── somerville_crime_pipeline.py
+│   ├── somerville_permits_pipeline.py
+│   ├── somerville_traffic_citations_pipeline.py
+│   ├── somerville_at_a_glance_pipeline.py
+│   ├── somerville_happiness_survey_pipeline.py
+│   └── load_dbt_results.py         ← appends run_results.json → raw_dbt_results_raw
+├── scripts/                        ← Python build/deploy helpers + dlt helpers
+│   ├── pipeline_run_{start,end}.py
+│   ├── generate_*.py               ← /metrics, /trust, /profile, /erd, /about, /dashboards
+│   ├── profile_tables.py
+│   ├── check_profile_staleness.py
+│   ├── source_health_check.py
+│   ├── ingest_somerville_wards.py
+│   ├── build_limitations_index.py
+│   ├── build_socrata_inventory.py
+│   └── _nav.py                     ← shared nav HTML
 ├── dbt/
 │   ├── dbt_project.yml
-│   ├── profiles.yml
+│   ├── profiles.example.yml        ← template; live profile at ~/.dbt/profiles.yml
 │   ├── models/
-│   │   ├── bronze/
-│   │   ├── silver/
-│   │   ├── gold/
+│   │   ├── bronze/                 ← raw views, _raw tables owned by dlt
+│   │   ├── silver/                 ← MVP 3 (placeholder today)
+│   │   ├── gold/                   ← facts + dimensions
 │   │   └── admin/                  ← profiling + DQ star schema
 │   └── tests/
+│       └── singular/               ← dq_drift_fail_guardrail.sql
 ├── semantics/
-│   ├── views/
-│   │   ├── requests.view.yml
-│   │   ├── request_types.view.yml
-│   │   ├── statuses.view.yml
-│   │   └── dates.view.yml
-│   └── topics/
-│       └── service_requests.topic.yml
+│   ├── views/                      ← 11 .view.yml files (one per gold table)
+│   └── topics/                     ← service_requests, public_safety, built_environment, city_context
 ├── agents/
-│   ├── answer_agent.agent.yml
-│   └── routing_agent.agent.yml
+│   └── answer_agent.agent.yml      ← Routing Agent lands in MVP 4
 └── apps/
-    └── somerville_dashboard.app.yml
+    └── rat_complaints_by_ward.app.yml   ← first Builder-CLI dashboard
 ```
 
 ---
@@ -347,11 +383,13 @@ See `ARCHITECTURE.md` for full table designs.
 ```yaml
 # config.yml
 models:
-  - name: claude-sonnet-4-6
+  - name: claude-opus-4-7
     vendor: anthropic
-    model_ref: claude-sonnet-4-6
+    model_ref: claude-opus-4-7
     key_var: ANTHROPIC_API_KEY
 ```
+
+The Answer Agent migrated from Sonnet 4.6 to Opus 4.7 on 2026-05-11 (TASKS.md MVP 1.5 row, commit `a5853d0`). The driver was SPA rate-limit headroom — Opus 4.7 carries a much larger tokens/min ceiling, which the multi-turn SPA chat path was tripping under Sonnet. Trust contract behavior and the 5-question CLI bench were re-verified post-migration.
 
 Two env vars must be set on EC2 before running Oxygen:
 
