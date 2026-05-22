@@ -153,6 +153,131 @@ Last updated: 2026-05-13
 
 ---
 
+## Entry 5 — The annotated multi-track civic timeline
+
+A portal surface that places one or more of the warehouse's time series on a
+shared horizontal time axis, overlaid with a curated track of civic events, so
+a resident can *see* whether a movement in the data lines up with something
+that happened in the city. The annotated timeline is the project's first
+genuine **storytelling visual** — every surface to date answers a question the
+analyst already had; the timeline proposes hypotheses the analyst didn't.
+
+This entry is exploratory. It is written in depth because the timeline is the
+keystone several other progress-lens ideas depend on (the findings library's
+"how much, over what timeframe" claims, the long-term trend write-ups), and
+because it carries real design tension that should be reasoned through before
+it ever becomes a plan.
+
+### Why this, and why it fits the project
+
+A multi-track timeline is the difference between being *shown a conclusion*
+and being *handed an instrument*. When the rat-complaint line jumps in the
+same vertical slice where a "warm winter" marker and a "new commissioner"
+marker sit, the platform has not asserted a causal link — it has put the
+tracks in registration and let the resident's eye do the work it is very good
+at. That is the honest version of correlation: the analyst finds it, tests it,
+and owns it.
+
+It also serves the [PHILOSOPHY.md](PHILOSOPHY.md) synthesis directly. A
+timeline that shows a complaint count *and its multi-year trajectory* is the
+"whole picture, not the convenient half" principle made visible — the same
+data, telling the true longer story instead of a snapshot that reads as
+crisis. And it is a natural MVP 3 diagnostic surface: "narrow from a noticed
+pattern to a verified one" is the MVP 3 demo moment, and the timeline is a
+doorway into exactly that.
+
+### The hard part: vertical alignment reads as causation
+
+The single fact that makes a multi-track timeline powerful is the same fact
+that makes it dangerous. Put two tracks in the same column and the human eye
+welds them together whether the platform intends a claim or not. The design
+must *earn* that power honestly. Four design positions follow from this:
+
+**1. The tracks are not all the same kind of thing, and the encoding must say
+so.** There are at least three species:
+
+- *Measured data over time* — 311 volumes, response times, citation counts.
+  Reproducible, lives in the warehouse, every point has receipts.
+- *Discrete civic events* — a commissioner appointed, a zoning vote, the Green
+  Line Extension opening. Hand-curated, editorial, **not** derived from data.
+- *Conditions or periods* — "the 2023 heat wave," a stretch of T closures.
+  Spans rather than points; may be partly data-backed, partly editorial.
+
+If all three render with the same visual weight, the timeline silently
+launders the editorial events into looking as authoritative as the measured
+lines. The fix is honest encoding: data tracks look like data (a plotted line,
+trust-contract receipts one click away); event markers look like annotations
+(a different shape, a different layer, visibly editorial — the same fence
+`/about` already puts around "the framing is ours"). A resident should never
+be unsure which track they could reproduce and which is someone's judgment.
+
+**2. "Natural correlation" means *a prompt for a hypothesis*, never evidence.**
+The design should resist over-reading structurally, not with a disclaimer
+nobody reads. The strongest move: every visible alignment is *one click from
+becoming a real query*. The resident sees the rat line and the warm-winter
+marker line up, clicks, and the platform hands them the actual data behind
+that slice plus the SQL — now they can *test* what the timeline suggested
+instead of believing it. This turns the timeline from a place where
+correlations get asserted into a doorway into the warehouse.
+
+**3. Grain honesty.** Timelines lie beautifully when the grain is wrong. A
+monthly 311 line beside year-only crime data beside a single-date event marker
+will read as commensurable when it is not — and the project's data already has
+this problem (sensitive crime data is year-only). Each track must declare its
+resolution; the rendering must not give a year-resolution series false monthly
+structure; where a track cannot go finer, the timeline says so rather than
+interpolating a smooth lie. This is the project's honest-reporting discipline
+applied to a visual.
+
+**4. Curated, not infinite — at least for v1.** The power is in *deliberate
+registration*: two or three tracks that genuinely belong in the same frame.
+A timeline where a resident can pile on twelve tracks becomes noise, and noise
+is where spurious alignment breeds. **v1 decision: the platform ships a small
+number of pre-composed timelines**, each one a deliberate story someone
+thought hard about ("311 service load vs. weather vs. staffing changes,
+2015–2025"). The editorial work of choosing what belongs in frame *is* the
+analytical contribution — the Fix The News "curated" principle. Letting a
+resident freely compose their own tracks is a strong v2; it is explicitly out
+of scope for the first build.
+
+### The double-edged-trend caution
+
+Some movements a resident would want to read as good news are not
+unambiguous. Rising median home value reads as prosperity and also reads as
+displacement pressure. The timeline must not become the place where
+uncomfortable trends get relabeled as wins. The honest rule: the timeline
+shows trajectories and lets the resident judge direction; it does not
+pre-decide which direction is "good." A falling complaint count is
+unambiguous progress and can be framed as such. A rising home value is a
+*trend*, shown as a trend, full stop.
+
+### Open question — the build path
+
+This is the most technically ambitious visual the project will have attempted.
+Every portal surface to date is static-Python-generated HTML plus Mermaid; a
+multi-track aligned timeline with click-through-to-query is genuinely
+interactive, a different animal from `generate_erd_page.py`. The build path is
+**unresolved** and belongs to a future scoping thread, not this entry. Candidate
+shapes: a Builder-CLI Data App; a bespoke interactive component; or a
+static-rendered SVG for v1 with the click-through deferred. The v1 *curation*
+decision above does not settle the v1 *technology* decision.
+
+### Relationship to other notebook ideas
+
+This entry is the keystone of a cluster of progress-lens ideas surfaced in the
+same 2026-05-16 Chat session — the pre-done findings library (and its "signs
+of progress" subtype), the pair-every-stress-metric-with-its-trajectory
+dashboard-standard rule, the curious-questions list, and the honest-civic-
+analytics education content. Those are lighter and several are bends on
+existing surfaces; they warrant their own batch of notebook entries. The
+timeline is separated out because it is heavier, more novel, and load-bearing
+for the rest.
+
+Status: exploratory
+Last updated: 2026-05-16
+
+---
+
 ## Naming conventions
 
 Used consistently from here forward; will appear in future MVP planning if
