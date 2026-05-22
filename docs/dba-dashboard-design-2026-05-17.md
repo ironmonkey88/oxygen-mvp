@@ -1,16 +1,20 @@
 # DBA Dashboard — Design Document
 
 **Status:** design phase (no implementation yet)
-**Date:** 2026-05-17
+**Date:** 2026-05-17 (revised after scope cut)
 **Author:** Chat session with Gordon
 **Audience for the dashboard:** the platform operator — Gordon today, anyone Oxygen hands a reference deployment to tomorrow
 **Companion docs:** [DASHBOARDS.md](../DASHBOARDS.md), [BUILD.md](../BUILD.md), [ARCHITECTURE.md](../ARCHITECTURE.md), [PHILOSOPHY.md](../PHILOSOPHY.md)
 
 ---
 
+## 0. Revision note
+
+The earlier version of this design included three new external API integrations: Anthropic Usage API for inference spend, AWS Cost Explorer for EC2 spend, and Oxygen chat-state for activity. The Anthropic Admin API requires Organization-tier account access, which this deployment does not have. Rather than ship a v1 with two of three cost integrations or a partial spend story, all spend tracking was cut from v1. The dashboard ships as an activity-and-health surface; cost visibility lives in the AWS and Anthropic consoles for now. See §11 for what a future plan to restore cost panels would look like.
+
 ## 1. Purpose (per DASHBOARDS.md §2.1)
 
-A single operator-facing surface answering one question: is the platform running cleanly? Today there is no unified answer; the data exists in `fct_pipeline_run_raw`, `fct_source_health_raw`, `fct_column_profile_raw`, and Anthropic's usage console — but an operator has to look in four places and synthesize. The DBA dashboard collapses that synthesis into one page that loads in under two seconds and tells the operator at a glance whether to investigate.
+A single operator-facing surface answering one question: is the platform running cleanly? Today there is no unified answer; the data exists in `fct_pipeline_run_raw`, `fct_source_health_raw`, `fct_test_run`, and `fct_column_profile_raw` — but an operator has to look in four places and synthesize. The DBA dashboard collapses that synthesis into one page that loads in under two seconds and tells the operator at a glance whether to investigate.
 
 It is not the analyst-facing `/trust` page. `/trust` answers "should I trust this dataset?" with prose framing and editorial care for an analyst audience. The DBA dashboard answers "is the machine running?" with panel density for an operator. Same underlying data in places; different selection, different framing, different audiences. Both surfaces survive.
 
@@ -24,7 +28,7 @@ Under healthy operation the headline will frequently sit at yellow, because the 
 
 To prevent strict-yellow from becoming noise that gets tuned out, the dashboard pairs the headline traffic light with a "what's currently yellow" panel that lists every yellow contributor by name, severity, and source. The headline tells you whether to look; the advisory panel tells you where. Without the panel, the headline is a nag with no payload.
 
-There is no fourth color. Red means at least one critical item is failing — pipeline didn't run today, Anthropic API is down, EC2 is unreachable, warehouse stale > 48 hours. Yellow means at least one advisory item is non-green. Green means everything is green. Three states, clean enough for an at-a-glance read.
+There is no fourth color. Red means at least one critical item is failing — pipeline didn't run today, Oxygen runtime is unreachable, warehouse stale > 48 hours. Yellow means at least one advisory item is non-green. Green means everything is green. Three states, clean enough for an at-a-glance read.
 
 **Headline computation**
 
@@ -38,7 +42,7 @@ Each panel below carries an explicit `severity: critical | advisory` classificat
 
 ## 3. Panel inventory
 
-Eleven panels, organized into four groups. Each panel declares:
+Nine panels (eight named + one context panel), organized into four groups. Each panel declares:
 
 - **What:** what it shows
 - **Source:** where the data comes from (existing table | new integration)
@@ -91,28 +95,16 @@ Eleven panels, organized into four groups. Each panel declares:
 - **Severity:** advisory
 - **Public-eligible:** no
 
-### Group C: Activity and cost
+### Group C: Activity
 
 **C1. Chat activity (last 7 days)**
 
 - **What:** count of agent conversations, count of messages, count of distinct sessions; sparkline of daily message volume
-- **Source:** NEW INTEGRATION — Oxygen exposes message history in its own SQLite/state store; needs a small reader script landing rows into a new `main_admin.fct_chat_activity_raw`. Open question: what shape does Oxygen's local-mode chat state actually have? Implementation prompt must verify before promising a schema.
+- **Source:** NEW INTEGRATION — Oxygen exposes message history in its own SQLite/state store; needs a small reader script landing rows into a new `main_admin.fct_chat_activity_raw`. Open question: what shape does Oxygen's local-mode chat state actually have? The implementation prompt must inspect it on EC2 before promising a schema.
 - **Severity:** advisory (low chat activity is informational, not a failure)
 - **Public-eligible:** no — usage information
 
-**C2. Anthropic API spend (this month)**
-
-- **What:** month-to-date USD spend; sparkline of daily spend; current burn rate vs. last month's same-day pace
-- **Source:** NEW INTEGRATION — Anthropic Usage API. New pipeline stage `dlt/load_anthropic_usage.py` lands daily rollups into `main_admin.fct_anthropic_usage_raw`. Refresh cadence: daily (the API has its own 24h-ish lag).
-- **Severity:** advisory by default; the design recommends a configured monthly budget threshold that elevates to critical when crossed
-- **Public-eligible:** no — commercial information
-
-**C3. AWS/EC2 spend (this month)**
-
-- **What:** month-to-date USD spend on the EC2 host; sparkline; same framing as C2
-- **Source:** NEW INTEGRATION — AWS Cost Explorer API. New pipeline stage `dlt/load_aws_costs.py` lands daily rollups into `main_admin.fct_aws_cost_raw`. Cost Explorer has a ~24h lag.
-- **Severity:** advisory by default; same budget-threshold elevation option as C2
-- **Public-eligible:** no
+*(Group C originally also held two cost panels — C2 Anthropic spend and C3 AWS spend. Both cut from v1; see §0 and §11.)*
 
 ### Group D: Service availability
 
@@ -148,33 +140,32 @@ A single-page, top-to-bottom dense layout. No tabs. The dashboard's whole job is
 +----------------------------------------------------------+
 |  What's currently yellow                                  |
 |   • B2: 1 dbt test in 'warn' (baseline.row_count_2026)   |
-|   • C2: API spend pace 11% over last month                |
+|   • A3: pipeline 22% slower than 30-day median           |
 +----------------------------------------------------------+
 |  A1 Last refresh    A2 Streak       A3 Duration trend     |
 +----------------------------------------------------------+
 |  B1 Source freshness (table, 6 rows)                      |
 +----------------------------------------------------------+
-|  B2 dbt tests       B3 Profile coverage                   |
-+----------------------------------------------------------+
-|  C1 Chat activity   C2 API spend     C3 AWS spend         |
+|  B2 dbt tests       B3 Profile coverage   C1 Chat activity|
 +----------------------------------------------------------+
 |  D1 Oxygen health   D2 Warehouse size                     |
 +----------------------------------------------------------+
 ```
+
+C1 moves up to share a row with B2 and B3 now that Group C is a single panel — keeps the grid tight and avoids a row with one panel and two empty cells.
 
 ## 5. Refresh cadence
 
 The dashboard is a regenerated static HTML page, in keeping with the rest of the portal architecture (no live server-side rendering, no client-side data fetching for v1).
 
 - Regenerated by `run.sh` at the end of every pipeline run (alongside `/trust`, `/metrics`, `/profile`).
-- Plus a lighter regeneration cadence for cost panels (C2, C3) and the service-health check (D1) — these can move independently of a pipeline run. v1 keeps it simple: regenerate the whole page on a 15-minute timer via a new lightweight systemd timer (`dashboard-refresh.timer`), which re-queries the existing admin tables and re-runs the page-build-time checks (Oxygen `/api/health`, warehouse size).
-
-The cost-data integrations (`load_anthropic_usage.py`, `load_aws_costs.py`) run on their own daily timer, not on every dashboard refresh. They're upstream of the dashboard, not part of it.
+- Plus a lighter regeneration cadence for D1 (service health) and D2 (warehouse size) — these can move independently of a pipeline run. v1 keeps it simple: regenerate the whole page on a 15-minute timer via a new lightweight systemd timer (`dashboard-refresh.timer`), which re-queries the existing admin tables and re-runs the page-build-time checks (Oxygen `/api/health`, warehouse size).
+- Chat activity (C1) loads on the same 15-minute cadence — the Oxygen chat-state reader runs at page build time. No separate timer.
 
 ## 6. URL and access
 
 - **URL:** `/admin` (not `/dba`, which reads as a job title rather than a function). nginx serves the static page from `/var/www/somerville/admin/`.
-- **Access control:** the v1 page is internal-only and must not be publicly indexable. nginx gates `/admin` behind a Tailnet-only IP restriction (settled via §11 resolution 2026-05-22) so it isn't reachable from the public internet at all. Basic Auth was the fallback option; retired now that Tailnet-only is the operator's choice.
+- **Access control:** Tailnet-only IP restriction. The page is internal-only and must not be reachable from the public internet. Basic Auth is the fallback if the Tailnet restriction proves awkward in practice; design ships Tailnet-only.
 - **No nav-link from the public portal homepage.** The page exists; it doesn't advertise itself. A future plan that builds the public-subset derivation will create a separate `/status` URL with its own publicly-linked entry point.
 
 ## 7. The public-subset derivation (future plan, not v1)
@@ -187,12 +178,13 @@ For when the public-status-page plan eventually opens, this is the selection tha
 - **B2** → "N data-quality tests passed in the last run." No test names, no fail/warn breakdown.
 - **D1** → "Chat service: up / degraded / down." No latency, no uptime detail.
 
-Everything else stays internal. Costs, chat activity, warehouse internals, profile coverage, pipeline durations — none of those go public.
+Everything else stays internal. Chat activity, warehouse internals, profile coverage, pipeline durations — none of those go public. *(Cost panels would have been in this list too; with C2/C3 cut from v1, the question is moot for v1.)*
 
 The future plan also needs to add editorial structure that v1 does not have: incident communication (a place to post "we're investigating an issue"), historical uptime (N-day rollups), and per-panel descriptive prose that translates internal concepts (dbt tests, Socrata sources) into public-audience language. That editorial layer is the actual hard part of the public derivation, not the panel selection.
 
 ## 8. What this design deliberately omits
 
+- **No spend tracking.** Cut from v1 per §0. Cost visibility lives in the AWS Console and Anthropic Console for now.
 - **No log tailing.** The dashboard is summary-grade; raw `journalctl` output belongs in `ssh` sessions.
 - **No alerting.** Alerting is its own plan with its own delivery channel (email? Slack? webhook?); the dashboard is the display. v1 builds the display; alerting can hang off the same admin tables in a later plan.
 - **No historical drill-down beyond sparklines.** A "click the panel for 90 days of detail" view would double the page's complexity and significantly delay v1. Sparklines are sufficient for "is the trend worsening or recovering."
@@ -205,7 +197,7 @@ This design implies one small update to `DASHBOARDS.md`, because the current sta
 
 > Operator dashboards (`/admin`, future `/status`) may read from `main_admin.*` tables directly rather than through the semantic layer. The trust-contract receipts requirement applies to the underlying SQL queries, not to a semantic-layer wrapper; operator-dashboard panels must still cite their source table and the query that produced the displayed value, exactly as analyst dashboards must.
 
-That carve-out is honest and small. Worth landing it as part of the dashboard implementation PR rather than separately.
+Approved by operator on 2026-05-17. Lands as part of the dashboard implementation PR rather than separately.
 
 ## 10. What the v1 implementation will need
 
@@ -213,59 +205,66 @@ For when the implementation prompt comes (separately, after this design is signe
 
 **New data sources:**
 
-- Anthropic Usage API integration → `main_admin.fct_anthropic_usage_raw`
-- AWS Cost Explorer API integration → `main_admin.fct_aws_cost_raw`
-- Oxygen chat-state reader → `main_admin.fct_chat_activity_raw` (open question on schema until Oxygen's local store is inspected)
+- Oxygen chat-state reader → `main_admin.fct_chat_activity_raw` (open question on schema until Oxygen's local store is inspected — Phase A verification step)
 
 **New scripts:**
 
-- `dlt/load_anthropic_usage.py`
-- `dlt/load_aws_costs.py`
-- `scripts/load_chat_activity.py` (or equivalent)
+- `scripts/load_chat_activity.py` (or equivalent — naming finalized in Plan A)
 - `scripts/generate_admin_dashboard.py`
 
 **New infrastructure:**
 
 - `dashboard-refresh.timer` + `.service` for the 15-minute cadence
-- nginx route for `/admin` with Tailnet-only IP restriction (per §11 resolution 2026-05-22)
+- nginx route for `/admin` with Tailnet-only restriction
 
-**New secrets:**
-
-- Anthropic Admin API key (for the Usage API — distinct from the inference key already in `/etc/environment`)
-- AWS access key with `ce:GetCostAndUsage` IAM permission
+**New secrets:** none. (Anthropic Admin API and AWS Cost Explorer secrets are no longer needed with cost panels cut.)
 
 **New limitations entries:**
 
-- `aws-cost-explorer-24h-lag.md`
-- `anthropic-usage-api-rounding.md` (if rounding behavior turns out to matter)
 - `chat-activity-local-state-only.md` (chat activity is whatever Oxygen's local store contains; if `--local` mode loses state on restart, this becomes load-bearing)
 
-## 11. Open questions to resolve before implementation
+## 11. Cost panels as a future plan
 
-1. **Oxygen chat-state schema.** What does Oxygen's local-mode chat history actually look like on disk? A `--local` deployment vs. multi-workspace will have different shapes. Implementation prompt needs a verification step before promising a schema.
-   - *Resolved 2026-05-22: deployment is `--local`. Implementation prompt still verifies the on-disk shape before promising `fct_chat_activity_raw` columns, but the mode is settled.*
-2. **Budget thresholds for cost panels.** If C2 and C3 should elevate to `critical` at a threshold, what threshold? "Anything over $X this month" is configurable; needs a value.
-   - *Resolved 2026-05-22: dollar-denominated thresholds confirmed as the right shape. Specific dollar values are configuration, not design — set when the implementation prompt opens (or via a config knob that ships unset and stays advisory-only until populated).*
-3. **Anthropic Admin API access.** Confirm the Anthropic account has Admin API access enabled and an API key for it; this is distinct from the inference key.
-   - *Resolved 2026-05-22: confirmed available.*
-4. **AWS IAM permissions.** Confirm a key with `ce:GetCostAndUsage` is available, or be willing to provision one.
-   - *Resolved 2026-05-22: confirmed available.*
-5. **Tailnet-only vs. Basic Auth for `/admin` access.** Both work; Tailnet is preferred per design. Operator's call which to ship.
-   - *Resolved 2026-05-22: Tailnet-only. Basic Auth fallback retired from the design.*
+The design intentionally preserves the work that went into thinking about cost panels, in case a future account-tier change makes them viable. When that happens, the future plan picks up here:
 
-## 12. Sign-off checklist
+**Panels to restore:**
+
+- **C2. Anthropic API spend (this month).** Month-to-date USD spend; sparkline of daily spend; burn rate vs. last month's same-day pace. Severity advisory by default; configurable budget threshold can elevate to critical. Public-eligible: no.
+- **C3. AWS/EC2 spend (this month).** Same shape, different source. Public-eligible: no.
+
+**Integrations required:**
+
+- Anthropic Usage API → `main_admin.fct_anthropic_usage_raw`. Requires an Anthropic Admin API key (`sk-ant-admin-...`), which in turn requires Organization-tier account access.
+- AWS Cost Explorer API → `main_admin.fct_aws_cost_raw`. Requires Cost Explorer enabled on the AWS account and IAM credentials with `ce:GetCostAndUsage`. Cost Explorer charges $0.01 per API request; daily cadence puts this in pennies-per-month.
+
+**Layout adjustment:** Group C grows from one panel (C1) back to three (C1 + C2 + C3); the C1-in-Group-B-row arrangement reverts to a dedicated Group C row.
+
+**Limitations entries to add when restored:**
+
+- `aws-cost-explorer-24h-lag.md`
+- `anthropic-usage-api-rounding.md` (if rounding behavior turns out to matter)
+
+This section is the durable record of the cost-tracking design so the future plan doesn't re-derive it.
+
+## 12. Open questions to resolve before implementation
+
+1. **Oxygen chat-state schema.** What does Oxygen's local-mode chat history actually look like on disk? A `--local` deployment vs. multi-workspace will have different shapes. Implementation prompt handles this as a Phase A verification step on EC2 before promising a schema.
+
+*(Questions #2–#5 from the prior design — budget thresholds, Anthropic Admin API access, AWS IAM permissions, Tailnet-vs-Basic-Auth — are resolved: thresholds moot with cost cut, Admin API moot with cost cut, AWS IAM moot with cost cut, access settled as Tailnet-only.)*
+
+## 13. Sign-off checklist
 
 Before this design becomes an implementation prompt, the following must be true:
 
-- [ ] Operator agrees with the panel inventory (Section 3) — adds, cuts, severity adjustments
-- [ ] Operator agrees with the strict-yellow + advisory-panel pairing (Section 2)
-- [x] Open questions in Section 11 are answered or explicitly deferred *(2026-05-22: all five resolved inline)*
-- [ ] `DASHBOARDS.md` standards carve-out (Section 9) is approved
+- [x] Operator agrees with the panel inventory (Section 3)
+- [x] Operator agrees with the strict-yellow + advisory-panel pairing (Section 2)
+- [x] `DASHBOARDS.md` standards carve-out (Section 9) is approved
 - [ ] Plan-number slot reserved in LOG.md Plans Registry
+- [x] Open questions in Section 12 are answered or explicitly deferred (only #1 remains, handled in Phase A of the implementation prompt)
 
-After sign-off, implementation splits into at least two plans:
+After sign-off, implementation is two plans:
 
-- **Plan N:** the three new data integrations (Anthropic Usage, AWS Cost Explorer, Oxygen chat-state) landing into admin tables. Pure pipeline work, no UI.
-- **Plan N+1:** the dashboard generator and the page itself, reading the new tables plus the existing ones. Pure presentation work.
+- **Plan A:** the Oxygen chat-state integration landing into `main_admin.fct_chat_activity_raw`. Pure pipeline work, no UI. Smaller than the prior design's Plan A because the two cost integrations are cut.
+- **Plan B:** the dashboard generator and the page itself, reading the new table plus the existing ones. Pure presentation work.
 
-Splitting is recommended because the integrations are independently useful (the cost tables, in particular, become source material for future panels and alerts), and because a single PR doing both would be hard to review.
+Splitting is recommended because Plan A's data integration has value on its own (the chat-activity table is source material for any future activity-based panel or alert), and because a single PR doing both would be hard to review.
