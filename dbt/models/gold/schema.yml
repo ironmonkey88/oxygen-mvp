@@ -398,6 +398,13 @@ models:
         description: 'Freeform description of permitted work. Source-side text; no applicant names observed.'
       - name: ward
         description: 'Somerville ward 1-7 derived via spatial join. NULL for ~3.4% of rows (geocoded outside Somerville). See permits-spatial-ward-derivation limitation.'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL"
       - name: latitude
         description: 'Geocoded latitude (WGS84). 8 rows are NULL.'
       - name: longitude
@@ -408,14 +415,6 @@ models:
         description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _source_endpoint
         description: 'Lineage -- Socrata SODA URL the row came from.'
-      - name: ward
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_ward')
-                field: ward
-              config:
-                where: "ward IS NOT NULL"
 
   - name: fct_somerville_kpi
     description: |
@@ -560,6 +559,13 @@ models:
         description: 'Geocoded longitude (WGS84). 0% NULL.'
       - name: ward
         description: 'Somerville ward 1-7 (source-published, not spatially derived). 84 rows NULL (~0.12%).'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_ward')
+                field: ward
+              config:
+                where: "ward IS NOT NULL"
       - name: block_code
         description: '15-character census block code (source blockcode).'
       - name: address
@@ -574,11 +580,3 @@ models:
         description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _source_endpoint
         description: 'Lineage -- Socrata SODA URL the row came from.'
-      - name: ward
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('dim_ward')
-                field: ward
-              config:
-                where: "ward IS NOT NULL"
