@@ -174,7 +174,7 @@ The cost-data integrations (`load_anthropic_usage.py`, `load_aws_costs.py`) run 
 ## 6. URL and access
 
 - **URL:** `/admin` (not `/dba`, which reads as a job title rather than a function). nginx serves the static page from `/var/www/somerville/admin/`.
-- **Access control:** the v1 page is internal-only and must not be publicly indexable. nginx config gates `/admin` behind the same Basic Auth used for `/chat`, or — preferred — behind a Tailnet-only IP restriction so it isn't reachable from the public internet at all. The design favors the Tailnet restriction; Basic Auth is the fallback.
+- **Access control:** the v1 page is internal-only and must not be publicly indexable. nginx gates `/admin` behind a Tailnet-only IP restriction (settled via §11 resolution 2026-05-22) so it isn't reachable from the public internet at all. Basic Auth was the fallback option; retired now that Tailnet-only is the operator's choice.
 - **No nav-link from the public portal homepage.** The page exists; it doesn't advertise itself. A future plan that builds the public-subset derivation will create a separate `/status` URL with its own publicly-linked entry point.
 
 ## 7. The public-subset derivation (future plan, not v1)
@@ -227,7 +227,7 @@ For when the implementation prompt comes (separately, after this design is signe
 **New infrastructure:**
 
 - `dashboard-refresh.timer` + `.service` for the 15-minute cadence
-- nginx route for `/admin` with Tailnet-only restriction (preferred) or Basic Auth (fallback)
+- nginx route for `/admin` with Tailnet-only IP restriction (per §11 resolution 2026-05-22)
 
 **New secrets:**
 
@@ -243,10 +243,15 @@ For when the implementation prompt comes (separately, after this design is signe
 ## 11. Open questions to resolve before implementation
 
 1. **Oxygen chat-state schema.** What does Oxygen's local-mode chat history actually look like on disk? A `--local` deployment vs. multi-workspace will have different shapes. Implementation prompt needs a verification step before promising a schema.
+   - *Resolved 2026-05-22: deployment is `--local`. Implementation prompt still verifies the on-disk shape before promising `fct_chat_activity_raw` columns, but the mode is settled.*
 2. **Budget thresholds for cost panels.** If C2 and C3 should elevate to `critical` at a threshold, what threshold? "Anything over $X this month" is configurable; needs a value.
+   - *Resolved 2026-05-22: dollar-denominated thresholds confirmed as the right shape. Specific dollar values are configuration, not design — set when the implementation prompt opens (or via a config knob that ships unset and stays advisory-only until populated).*
 3. **Anthropic Admin API access.** Confirm the Anthropic account has Admin API access enabled and an API key for it; this is distinct from the inference key.
+   - *Resolved 2026-05-22: confirmed available.*
 4. **AWS IAM permissions.** Confirm a key with `ce:GetCostAndUsage` is available, or be willing to provision one.
+   - *Resolved 2026-05-22: confirmed available.*
 5. **Tailnet-only vs. Basic Auth for `/admin` access.** Both work; Tailnet is preferred per design. Operator's call which to ship.
+   - *Resolved 2026-05-22: Tailnet-only. Basic Auth fallback retired from the design.*
 
 ## 12. Sign-off checklist
 
@@ -254,7 +259,7 @@ Before this design becomes an implementation prompt, the following must be true:
 
 - [ ] Operator agrees with the panel inventory (Section 3) — adds, cuts, severity adjustments
 - [ ] Operator agrees with the strict-yellow + advisory-panel pairing (Section 2)
-- [ ] Open questions in Section 11 are answered or explicitly deferred
+- [x] Open questions in Section 11 are answered or explicitly deferred *(2026-05-22: all five resolved inline)*
 - [ ] `DASHBOARDS.md` standards carve-out (Section 9) is approved
 - [ ] Plan-number slot reserved in LOG.md Plans Registry
 
