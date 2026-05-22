@@ -33,6 +33,14 @@
     - bronze.raw_311_requests
     - main_bronze.raw_311_requests
   path: docs/limitations/bronze-varchar-source-cols.md
+- id: citations-composite-grain-violation-suffix
+  title: Citations grain is (citation, violation) -- multi-violation tickets become multiple rows
+  severity: warning
+  affects:
+    - main_bronze.raw_somerville_traffic_citations
+    - main_gold.fct_citations
+    - citations
+  path: docs/limitations/citations-composite-grain-violation-suffix.md
 - id: crime-bronze-restricted-from-analysis
   title: Crime bronze table is for lineage and reprocessing — not analysis
   severity: warning
@@ -132,6 +140,21 @@
   affects:
     - deploy.oxy_build
   path: docs/limitations/oxy-build-postgres-dependency.md
+- id: oxy-df-interchange-empty-result-panic
+  title: Oxy panics on `execute_sql` queries whose WHERE filter matches zero rows
+  severity: warning
+  affects:
+    - chat
+    - answer_agent
+    - execute_sql
+  path: docs/limitations/oxy-df-interchange-empty-result-panic.md
+- id: permits-spatial-ward-derivation
+  title: 3.4% of permits have NULL ward — geocoded outside the Somerville polygon set
+  severity: warning
+  affects:
+    - main_gold.fct_permits
+    - ward
+  path: docs/limitations/permits-spatial-ward-derivation.md
 - id: permits-static-since-2023
   title: Permits dataset has not refreshed since 2023-05-16 (~3 years stale)
   severity: high
@@ -162,6 +185,15 @@
     - raw_somerville_at_a_glance
     - somerville_at_a_glance
   path: docs/limitations/somerville-at-a-glance-acs-scope.md
+- id: somerville-at-a-glance-uneven-year-coverage
+  title: At-a-Glance KPI year coverage is uneven — most topics are 2010-2024, a few are 2024-only
+  severity: warning
+  affects:
+    - main_bronze.raw_somerville_at_a_glance
+    - main_gold.fct_somerville_kpi
+    - main_gold.dim_kpi_topic
+    - somerville_kpis
+  path: docs/limitations/somerville-at-a-glance-uneven-year-coverage.md
 - id: source-bulk-republish-no-per-row-modified
   title: Source publishes the dataset in bulk; there is no per-row modified field
   severity: info
@@ -169,6 +201,13 @@
     - requests
     - pipeline.refresh
   path: docs/limitations/source-bulk-republish-no-per-row-modified.md
+- id: spa-artifact-load-404
+  title: "Oxygen SPA \"Unable to load the selected artifact\" — backend returns 404 on artifact retrieval"
+  severity: warning
+  affects:
+    - chat
+    - answer_agent
+  path: docs/limitations/spa-artifact-load-404.md
 - id: spa-no-deeplink-prepopulation
   title: Oxygen SPA does not support URL-based question prepopulation
   severity: low
