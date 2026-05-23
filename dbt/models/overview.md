@@ -2,7 +2,7 @@
 
 # Somerville Analytics — Data dictionary
 
-<a href="/" style="display:inline-block;padding:8px 16px;margin:4px 0 20px;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px">&larr; Back to Somerville Analytics portal</a>
+[← Back to Somerville Analytics portal](/)
 
 This is the data dictionary for an independent, resident-built data platform exploring Somerville's public Open Data. It documents every table and column the platform makes available, with descriptions, relationships, tests, and lineage — so an analyst (or an answer agent) can see exactly what's in the warehouse before asking a question of it. **Not affiliated with the City of Somerville**; the data is the city's public 311 + crime + open-data feeds, the warehouse and dictionary are this project's.
 
