@@ -216,6 +216,14 @@
       "Bash(git remote *)",
       "Bash(./scripts/*.sh)",
 
+      "Bash(tailscale status)",
+      "Bash(tailscale status *)",
+
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Preview__preview_inspect",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+
       "Write(.claude/settings.local.json)",
       "Read(.claude/settings.local.json)",
       "Write(.claude/worktrees/*/.claude/settings.local.json)",

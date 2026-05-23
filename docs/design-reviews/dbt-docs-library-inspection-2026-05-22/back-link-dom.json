@@ -1,0 +1,46 @@
+[
+  {
+    "kind": "literal-text",
+    "outerHTML": "<p>&lt;a href=\"/\" style=\"display:inline-block;padding:8px 16px;margin:4px 0 20px;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px\"&gt;\u2190 Back to Somerville Analytics portal&lt;/a&gt;</p>",
+    "textContent": "<a href=\"/\" style=\"display:inline-block;padding:8px 16px;margin:4px 0 20px;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px\">\u2190 Back to Somerville Analytics portal</a>",
+    "boundingBox": {
+      "x": 360,
+      "y": 194.3125,
+      "width": 860,
+      "height": 44.8125,
+      "top": 194.3125,
+      "right": 1220,
+      "bottom": 239.125,
+      "left": 360
+    },
+    "computedStyle": {
+      "display": "block",
+      "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "color": "rgb(94, 102, 108)",
+      "padding": "0px",
+      "fontWeight": "400"
+    }
+  },
+  {
+    "kind": "literal-text",
+    "outerHTML": "<p>&lt;a href=\"/\" style=\"display:inline-block;padding:8px 16px;margin:8px 0;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px\"&gt;\u2190 Back to Somerville Analytics portal&lt;/a&gt;</p>",
+    "textContent": "<a href=\"/\" style=\"display:inline-block;padding:8px 16px;margin:8px 0;background:#e8f0eb;border:1px solid #b8d4c0;border-radius:4px;color:#1e4d2b;font-weight:600;text-decoration:none;font-size:14px\">\u2190 Back to Somerville Analytics portal</a>",
+    "boundingBox": {
+      "x": 360,
+      "y": 1546.53125,
+      "width": 860,
+      "height": 44.8125,
+      "top": 1546.53125,
+      "right": 1220,
+      "bottom": 1591.34375,
+      "left": 360
+    },
+    "computedStyle": {
+      "display": "block",
+      "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "color": "rgb(94, 102, 108)",
+      "padding": "0px",
+      "fontWeight": "400"
+    }
+  }
+]

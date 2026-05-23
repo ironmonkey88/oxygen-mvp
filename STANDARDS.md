@@ -199,3 +199,75 @@ Single flat checklist. Pulls from §3, §4, §5 — every box ticked before MVP 
 - **Limitations registry — location and format?** ✅ Resolved 2026-05-08 → Option (b) `docs/limitations/`. Markdown files with YAML frontmatter (`id`, `title`, `severity`, `affects`, `since`, `status`) and free-form prose body. See [`docs/limitations/README.md`](docs/limitations/README.md). The Answer Agent and `/trust` page consume from this single location.
 - **Does Oxygen's Answer Agent natively support emitting SQL + row count + citations, or is it prompt-configured only?** ✅ Resolved 2026-05-09 (Plan 6 pre-flight) → **partial native, prompt-enforced.** The Oxygen runtime renders the executed SQL block and the result table automatically (the CLI prints `SQL query:` / `Result:` / `Output:` tri-sections; the SPA does the equivalent via the internal API on `127.0.0.1:3001`). The `Output:` section is fully prompt-controlled. Citations and explicit "Returned N rows" framing are not native — they live in the agent's `system_instructions` and are tested against the 5-question bench. Limitations registry is loaded as a static `context.file` glob (`docs/limitations/*.md`); refresh on agent restart.
 - **Where does the `/metrics` page generator live?** ✅ Resolved 2026-05-08 → `scripts/generate_metrics_page.py`. Treated as build tooling: pure Python, reads `semantics/views/*.view.yml` and writes `portal/metrics.html`. Run.sh step 7/7 invokes it after `dbt docs generate` and copies the output to `/var/www/somerville/metrics.html`.
+
+---
+
+## 8. Rendered-page verification
+
+The MVP 1 retrospective named this as binding: *verify the rendered surface,
+not the artifact one level removed*. Plan 32 (back-link styled-pill fix)
+landed the wrong fix because the diagnosis was based on the source-file
+shape rather than what the SPA actually rendered; Plan 33 closes that gap
+by adding a Playwright-driven helper.
+
+### When to use it
+
+Any verification gate where the satisfying state is *what the user sees in
+the browser* — styled output, dynamic chart rendering, SPA-mediated DOM,
+client-side Markdown rendering, dashboard panels, network behavior at page
+load. If a `curl` of the underlying HTML wouldn't tell you whether the
+feature works, the gate needs the rendered-page helper.
+
+If a verification gate involves the words "looks right," "renders as," "is
+visible," "is clickable," or "appears as a styled X" — use this. The
+helper turns those soft claims into concrete evidence (a screenshot, a
+DOM dump, a computed-style snapshot, a network log).
+
+### The helper
+
+`scripts/rendered_page.py` runs headless Chromium on EC2 (`pip install
+playwright pillow` + `playwright install chromium`, installed once during
+Plan 33). Two entry points:
+
+- `test_page(url, assertions, screenshot_path) -> TestResult` — pass/fail
+  assertions against the rendered page. Each assertion is a callable that
+  takes the Playwright page object and returns `(passed: bool, message:
+  str)`. Always writes a screenshot for evidence even on pass.
+  ```python
+  result = test_page(
+      "http://18.224.151.49/trust",
+      [lambda p: ("All tests passed" in p.content(),
+                  "trust banner shows all-pass state")],
+      screenshot_path="evidence/trust-2026-05-23.png",
+  )
+  ```
+
+- `review_page(url, output_dir, focus=None) -> ReviewArtifact` — grounded
+  review path. Captures screenshot, annotated screenshot, network log,
+  window globals scan, DOM samples, and source-map probes; writes a
+  scaffolded `finding.md` with all evidence sections pre-filled. The
+  reviewer (human or Code) fills in the prose findings based on the
+  evidence.
+  ```python
+  artifact = review_page(
+      "http://18.224.151.49/dashboards",
+      output_dir="docs/design-reviews/dashboards-listing-pass-2026-06-01",
+      focus="confirm the auto-generated listing matches the apps/*.app.yml metadata blocks",
+  )
+  ```
+
+### Output paths
+
+Review artifacts live under `docs/design-reviews/<slug>-<YYYY-MM-DD>/`.
+Each review's `finding.md` and `annotated.png` are committed alongside the
+PR they support, so the gate-evidence trail is on main rather than scoped
+to a PR description that disappears after merge. See
+[`docs/design-reviews/README.md`](docs/design-reviews/README.md) for the
+review file conventions.
+
+### What it doesn't do
+
+- Local-machine Playwright — public-URL only.
+- Annotated-screenshot diffs (then-vs-now) — single snapshot only.
+- CI integration — invoked on demand during verification gates; not in `run.sh`.
+- Design-system check against `DASHBOARDS.md` — future work.
