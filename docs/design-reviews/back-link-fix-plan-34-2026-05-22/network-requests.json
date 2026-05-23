@@ -1,0 +1,86 @@
+{
+  "requests": [
+    {
+      "url": "http://18.224.151.49/docs/",
+      "method": "GET",
+      "resource_type": "document"
+    },
+    {
+      "url": "http://18.224.151.49/docs/manifest.json?cb=1779564226844",
+      "method": "GET",
+      "resource_type": "xhr"
+    },
+    {
+      "url": "http://18.224.151.49/docs/catalog.json?cb=1779564226844",
+      "method": "GET",
+      "resource_type": "xhr"
+    },
+    {
+      "url": "http://d1fc8wv8zag5ca.cloudfront.net/2.9.0/sp.js",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "http://18.224.151.49/docs/%7B%7B%20getIcon(item.type,%20'on')%20%7D%7D",
+      "method": "GET",
+      "resource_type": "other"
+    },
+    {
+      "url": "http://18.224.151.49/docs/%7B%7B%20getIcon(item.type,%20'off')%20%7D%7D",
+      "method": "GET",
+      "resource_type": "other"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/snowplow/sp-js-assets@2.9.0/sp.js",
+      "method": "GET",
+      "resource_type": "script"
+    },
+    {
+      "url": "https://fishtownanalytics.sinter-collect.com/i?stm=1779564227343&e=pv&url=https%3A%2F%2Ffuzzed.getdbt.com%2F&page=dbt%20Docs&refr=https%3A%2F%2Ffuzzed.getdbt.com%2F&tv=js-2.9.0&tna=sp&aid=dbt-docs&p=web&tz=UTC&lang=en-US%40posix&cs=UTF-8&res=1280x720&cd=24&cookie=1&eid=7767b1ab-a139-4302-aa0e-842fd1f3f017&dtm=1779564227340&vp=1280x720&ds=1280x720&vid=1&sid=d5c8a484-8157-45fe-b7bc-cd80558ebced&duid=62d5acbf-245a-42a7-920e-19323c128e53&cx=eyJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIiwiZGF0YSI6W3sic2NoZW1hIjoiaWdsdTpjb20uZGJ0L2RidF9kb2NzL2pzb25zY2hlbWEvMS0wLTAiLCJkYXRhIjp7ImlzX2Nsb3VkX2hvc3RlZCI6ZmFsc2UsImNvcmVfcHJvamVjdF9pZCI6ImQ4YzFiMWY4NWVhZWNjMDc2NzljN2IzMmM1Y2FkZjFmIn19LHsic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsImRhdGEiOnsiaWQiOiJmMTA1ZDUyZS0xMGNiLTRkODAtYmVjYy1mYTQ0MTE5NGU0NzQifX1dfQ",
+      "method": "GET",
+      "resource_type": "image"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://18.224.151.49/docs/",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "url": "http://18.224.151.49/docs/manifest.json?cb=1779564226844",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "url": "http://18.224.151.49/docs/catalog.json?cb=1779564226844",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "url": "http://18.224.151.49/docs/%7B%7B%20getIcon(item.type,%20'on')%20%7D%7D",
+      "status": 404,
+      "content_type": "text/html"
+    },
+    {
+      "url": "http://18.224.151.49/docs/%7B%7B%20getIcon(item.type,%20'off')%20%7D%7D",
+      "status": 404,
+      "content_type": "text/html"
+    },
+    {
+      "url": "http://d1fc8wv8zag5ca.cloudfront.net/2.9.0/sp.js",
+      "status": 301,
+      "content_type": ""
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/snowplow/sp-js-assets@2.9.0/sp.js",
+      "status": 200,
+      "content_type": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://fishtownanalytics.sinter-collect.com/i?stm=1779564227343&e=pv&url=https%3A%2F%2Ffuzzed.getdbt.com%2F&page=dbt%20Docs&refr=https%3A%2F%2Ffuzzed.getdbt.com%2F&tv=js-2.9.0&tna=sp&aid=dbt-docs&p=web&tz=UTC&lang=en-US%40posix&cs=UTF-8&res=1280x720&cd=24&cookie=1&eid=7767b1ab-a139-4302-aa0e-842fd1f3f017&dtm=1779564227340&vp=1280x720&ds=1280x720&vid=1&sid=d5c8a484-8157-45fe-b7bc-cd80558ebced&duid=62d5acbf-245a-42a7-920e-19323c128e53&cx=eyJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIiwiZGF0YSI6W3sic2NoZW1hIjoiaWdsdTpjb20uZGJ0L2RidF9kb2NzL2pzb25zY2hlbWEvMS0wLTAiLCJkYXRhIjp7ImlzX2Nsb3VkX2hvc3RlZCI6ZmFsc2UsImNvcmVfcHJvamVjdF9pZCI6ImQ4YzFiMWY4NWVhZWNjMDc2NzljN2IzMmM1Y2FkZjFmIn19LHsic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsImRhdGEiOnsiaWQiOiJmMTA1ZDUyZS0xMGNiLTRkODAtYmVjYy1mYTQ0MTE5NGU0NzQifX1dfQ",
+      "status": 200,
+      "content_type": "image/gif"
+    }
+  ]
+}

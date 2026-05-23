@@ -29,6 +29,7 @@ Thumbs.db
 
 # Oxygen
 .oxy/
+.oxy_state/
 
 # Claude Code local files
 .claude/settings.local.json

@@ -245,6 +245,12 @@ Note on activation timing: settings are re-read per tool call, so editing `setti
 
 ---
 
+## Known gotchas
+
+- **`git push` fails with `HTTP 400` + `remote end hung up unexpectedly`** on commits containing large binary blobs (PNG screenshots, HTML evidence files, etc.). Fix: bump the per-repo HTTP postBuffer once: `git -C <repo-path> config http.postBuffer 524288000`. EC2's local clone already has this set as of Plan 33; fresh local clones (worktrees, new machines) need to re-set it. Pattern: if a push fails with that exact error on a commit with hundreds of KB or more of binary data, set the buffer and retry — don't compress, don't drop the evidence files.
+
+---
+
 ## Naming Standards
 
 ### Schemas
