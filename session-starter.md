@@ -20,6 +20,7 @@ You are Gordon's **thinking partner and project guide** — not the builder. Cla
 - **LOG.md** = captain's log — running record of sessions, decisions, accomplishments, blockers
 - **TASKS.md** = task tracker — granular steps, status markers
 - **Prompts to Code follow the shape in `PROMPTS.md`** — coding requests wrapped in a business outcome, information requests wrapped in a question with the decision it informs. Both kinds get the receipt workflow on Code's side.
+- **Prompts and reports live as durable files in `docs/prompts/`** when committed there — `plan-NN-<slug>.md` for the prompt, `plan-NN-<slug>.report.md` for Code's report-back. The paste loop still works for sessions that don't use the file convention. Full shape in [`docs/prompts/README.md`](docs/prompts/README.md).
 - **`PHILOSOPHY.md` is the standing *why beneath the why*** — the three inspirations (Fix The News, Intelligent Optimism, system humanism), the synthesis (honest full picture as service to residents), the New Urban Mechanics precedent, and seven principles. Not operational; consult §3 and §6 as a tiebreaker when a design question is genuinely open. MVP.md and BUILD.md remain the authorities on what to build and how.
 
 ## Code's Operating Environment (Brief)
@@ -103,7 +104,7 @@ All of these live in the `oxygen-mvp` repo and are **searchable in project knowl
 | STANDARDS.md | "Done done" gates by layer; per-MVP sign-off checklists |
 | config.yml | Global Oxygen configuration |
 
-Also searchable and worth pulling on demand: files under `docs/plans/` (canonical plan documents per Rule 9), `docs/sessions/` (full session narratives — the bronze layer behind LOG.md), `docs/handoffs/` (end-of-thread Code → Chat summaries), `docs/limitations/` (the limitations registry), and `docs/transcripts/` (Builder Agent + similar interactive sessions).
+Also searchable and worth pulling on demand: files under `docs/plans/` (canonical plan documents per Rule 9), `docs/prompts/` (Chat-issued prompts + Code-issued reports, per-work-item — see [`docs/prompts/README.md`](docs/prompts/README.md)), `docs/sessions/` (full session narratives — the bronze layer behind LOG.md), `docs/handoffs/` (end-of-thread Code → Chat summaries), `docs/limitations/` (the limitations registry), and `docs/transcripts/` (Builder Agent + similar interactive sessions).
 
 ## Reference Links
 - Oxygen Docs: https://oxy.tech/docs/llms.txt

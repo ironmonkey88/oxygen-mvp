@@ -242,6 +242,13 @@ If Code's restatement materially differs from the prompt's Outcome,
 that is a finding. Halt and surface -- the Outcome is unclear and needs
 clarification before work begins.
 
+**If the prompt arrived as a file in `docs/prompts/`** (per the
+convention named in §5.5 below), Code's restatement is additionally
+appended to the prompt file as a `**Code's restatement:**` paragraph
+before execution begins. The terminal restatement still happens too --
+the file edit is in addition to, not instead of, the terminal step. If
+the prompt arrived only via paste (no file), behavior is unchanged.
+
 ### Step 5 -- Pre-flight
 
 Confirm the technical assumptions the prompt is built on. Probe live
@@ -402,6 +409,17 @@ the durable artifact anymore.
 If Code realizes something after emitting the report, it goes into the
 next session's report, not as a tail on this one.
 
+**If the prompt arrived as a file in `docs/prompts/`** (per the
+convention named in §5.5 below), Code additionally writes the report
+to the sibling `.report.md` file (e.g., the report for
+`docs/prompts/plan-43-prompt-report-lineage.md` lands at
+`docs/prompts/plan-43-prompt-report-lineage.report.md`). The report
+file holds the same content as the terminal report-back -- file is the
+durable home, terminal is the conversational copy. The report file
+typically lands as the last commit on the PR branch before merge, so
+the merged state carries both prompt and report. If the prompt arrived
+only via paste (no file), behavior is unchanged.
+
 **The report-back shape:**
 
 ```
@@ -445,6 +463,35 @@ frontmatter):
 - `deferred` -- Work item intentionally not started this session (per
   Halt conditions, Out of scope, or a Chat/Gordon decision
   mid-session). The Worth-flagging section names why.
+
+---
+
+## 5.5 The `docs/prompts/` file convention
+
+Prompts and reports may live as durable files in `docs/prompts/`
+rather than only in chat scrollback. The convention is additive --
+the paste-and-execute loop survives untouched, and Code's existing
+terminal behavior is unchanged for prompts that arrive via paste.
+
+For prompts that arrive as files:
+
+- **Filename pattern:** `plan-NN-<slug>.md` for the prompt;
+  `plan-NN-<slug>.report.md` for the report. Slug matches LOG.md
+  Plans Registry slug where one exists.
+- **Step 4 amendment:** Code's restatement of the Outcome appends to
+  the prompt file as a `**Code's restatement:**` paragraph (in
+  addition to the terminal restatement).
+- **Step 9 amendment:** Code's report-back lands in the sibling
+  `.report.md` file (in addition to the terminal report). Typically
+  as the last commit on the PR branch before merge.
+- **Lifecycle:** prompt commits -> Code executes per §5 -> Code
+  commits report alongside -> PR merges -> cycle complete.
+
+A prompt file is "consumed" when its sibling report file exists.
+
+Full convention -- filename pattern, what goes in each file,
+lifecycle, lineage chain, backfill policy, coexistence with
+`docs/handoffs/` -- lives in [`docs/prompts/README.md`](docs/prompts/README.md).
 
 ---
 
