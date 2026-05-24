@@ -249,6 +249,8 @@ Note on activation timing: settings are re-read per tool call, so editing `setti
 
 - **`git push` fails with `HTTP 400` + `remote end hung up unexpectedly`** on commits containing large binary blobs (PNG screenshots, HTML evidence files, etc.). Fix: bump the per-repo HTTP postBuffer once: `git -C <repo-path> config http.postBuffer 524288000`. EC2's local clone already has this set as of Plan 33; fresh local clones (worktrees, new machines) need to re-set it. Pattern: if a push fails with that exact error on a commit with hundreds of KB or more of binary data, set the buffer and retry — don't compress, don't drop the evidence files.
 
+- **The bash safety hook fires *before* Claude Code's built-in auto-allow.** A command whose leading token would normally auto-allow (`ls`, `grep`, `cat`, `git log`, etc.) will still be hook-denied if the command string contains a hook-blocked operator (`&&`, `||`, naked `;`, `$(...)`, `<()`, `>()`, leading `cd`, leading `export`). Practical implication: don't reach for the `command || fallback` pattern thinking "ls would auto-allow, the `||` should be fine" — the hook gets a vote first. Use separate Bash calls or write the chain to a `scratch/` wrapper. *Inferred during Plan 36's allowlist audit from a real `ls .../worktrees/ 2>/dev/null || echo "no"` denial event; precedence not documented in Claude Code upstream as of 2026-05-22.*
+
 ---
 
 ## Naming Standards
