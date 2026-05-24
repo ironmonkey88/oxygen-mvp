@@ -1,0 +1,10 @@
+[Unit]
+Description=Run DBA dashboard refresh every 15 minutes (Plan 38)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Unit=dashboard-refresh.service
+
+[Install]
+WantedBy=timers.target

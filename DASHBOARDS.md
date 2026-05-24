@@ -257,3 +257,14 @@ For a Builder Agent prompt, or a reviewer checking a finished file:
 - **The `/dashboards` listing.** Covered by the Plan 17 generator and
   the metadata-block contract; this standard only requires that the
   metadata block be present and accurate.
+
+## 9. Operator dashboards (`/admin`, future `/status`)
+
+Operator dashboards (`/admin`, future `/status`) may read from
+`main_admin.*` tables directly rather than through the semantic layer.
+The trust-contract receipts requirement applies to the underlying SQL
+queries, not to a semantic-layer wrapper; operator-dashboard panels
+must still cite their source table and the query that produced the
+displayed value, exactly as analyst dashboards must.
+
+Added 2026-05-23 per Plan 38 / DBA dashboard design doc §9.
