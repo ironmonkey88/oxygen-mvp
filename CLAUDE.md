@@ -181,11 +181,12 @@ A hook in `.claude/settings.json` will soft-warn before any `ssh oxygen-mvp` com
 
 When receiving a prompt from Chat: follow the workflow defined in [PROMPTS.md](PROMPTS.md) §5. Read the header, verify state, branch on kind, and run the steps in order. Coding requests get the full 9-step flow; information requests skip to execution.
 
-Three rules worth internalizing:
+Four rules worth internalizing:
 
 - **Code/config changes commit only after their verification gate passes.** Documentation changes (LOG.md, TASKS.md, session notes, handoffs, limitations, glossary edits) commit without a gate — the artifact existing in the committed state is the gate. See PROMPTS.md §5 Step 8.
 - **A partial completion with a documented finding outranks a fake-clean `complete`.** Status vocabulary: `complete`, `partial`, `blocked`, `deferred`. Pick the honest one.
 - **The report-back (PROMPTS.md §5 Step 9) is the last thing Code emits in the session.** No afterthoughts, no follow-up messages, no "one more thing." If something surfaces after the report, it goes into the next session's report.
+- **Prompts may arrive as files in `docs/prompts/plan-NN-<slug>.md`** rather than as pasted text. When they do, execution still follows PROMPTS.md §5, with Step 4's restatement and Step 9's report-back additionally written to the file (Step 9 lands in the sibling `plan-NN-<slug>.report.md`). See PROMPTS.md §5.5 and [`docs/prompts/README.md`](docs/prompts/README.md) for the full convention.
 
 ### Autonomous PR-merge policy
 
