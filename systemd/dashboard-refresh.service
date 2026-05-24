@@ -1,0 +1,18 @@
+[Unit]
+Description=Somerville Analytics DBA dashboard refresh (Plan 38)
+# 15-min cadence for D1 (oxy /api/health probe) + D2 (warehouse size) +
+# C1/C2 (chat activity + token spend from main_admin.fct_chat_activity_raw).
+# A1-B3 are also refreshed but their underlying data changes less often
+# (daily pipeline cadence); the 15-min re-render is cheap and keeps the
+# headline traffic light current as oxy uptime / warehouse size shift.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/oxygen-mvp
+EnvironmentFile=/etc/environment
+ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/generate_admin_dashboard.py
+StandardOutput=journal
+StandardError=journal
