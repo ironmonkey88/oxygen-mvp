@@ -12,6 +12,10 @@
 
 The earlier version of this design included three new external API integrations: Anthropic Usage API for inference spend, AWS Cost Explorer for EC2 spend, and Oxygen chat-state for activity. The Anthropic Admin API requires Organization-tier account access, which this deployment does not have. Rather than ship a v1 with two of three cost integrations or a partial spend story, all spend tracking was cut from v1. The dashboard ships as an activity-and-health surface; cost visibility lives in the AWS and Anthropic consoles for now. See §11 for what a future plan to restore cost panels would look like.
 
+**Revision 2026-05-24 (Plan 38 + Plan 40):** the Anthropic-spend cut was unexpectedly reversed. Plan 38's chat-state schema inspection ([`docs/design-reviews/chat-state-schema-inspection-2026-05-22.md`](design-reviews/chat-state-schema-inspection-2026-05-22.md)) found that the local `oxy-postgres` container's `messages` table carries `input_tokens` and `output_tokens` columns populated per assistant message — providing the spend tracking the design doc had assumed required Admin API access. Plan 38 PR [#65](https://github.com/ironmonkey88/oxygen-mvp/pull/65) shipped a v1 stop-gap (7-day rolling token-spend panel). Plan 40 PR [#68](https://github.com/ironmonkey88/oxygen-mvp/pull/68) replaced that with a richer v1.1 panel (MTD spend + 30-day daily-spend sparkline + burn-rate vs last month's same-day pace). C3 (AWS Cost Explorer) remains future work per §11.
+
+**Revision 2026-05-24 (Plan 40):** B1 source-freshness coverage expanded from 1 source (311 only) to 6 sources (311 + crime + traffic-citations + permits + wards + at-a-glance). Plan 40 pre-flight found all 6 datasets share the same Socrata metadata API shape (`/api/views/{id}.json` returns `rowsUpdatedAt`), so a single parameterized checker handles all 6 cleanly. Per-dataset staleness thresholds reflect actual refresh expectations (36h for daily-refresh sources, very high values for documented-static or annual sources to suppress chronic-"stale" alerts that the limitations registry already explains).
+
 ## 1. Purpose (per DASHBOARDS.md §2.1)
 
 A single operator-facing surface answering one question: is the platform running cleanly? Today there is no unified answer; the data exists in `fct_pipeline_run_raw`, `fct_source_health_raw`, `fct_test_run`, and `fct_column_profile_raw` — but an operator has to look in four places and synthesize. The DBA dashboard collapses that synthesis into one page that loads in under two seconds and tells the operator at a glance whether to investigate.
@@ -77,7 +81,7 @@ Nine panels (eight named + one context panel), organized into four groups. Each 
 **B1. Source freshness**
 
 - **What:** for each Socrata endpoint, hours since the source itself last updated (from Socrata's `rowsUpdatedAt`), and hours since we last successfully pulled it. Tabular: one row per source.
-- **Source:** `main_admin.fct_source_health_raw` (latest row per source)
+- **Source:** `main_admin.fct_source_health_raw` (latest row per source). v1 shipped with 1 source (311 only); v1.1 (Plan 40) expanded to 6 sources via independent hourly timers per dataset: 311, crime, traffic-citations, permits, wards, at-a-glance. Per-dataset staleness thresholds reflect documented refresh expectations (36h for daily-refresh sources; very high values for documented-static / annual sources like wards / permits / at-a-glance so the panel doesn't repeat what the limitations registry already explains).
 - **Severity:** critical (source not pulled in > 48h is red)
 - **Public-eligible:** subset — table shape OK, hide endpoint URLs
 
@@ -104,7 +108,14 @@ Nine panels (eight named + one context panel), organized into four groups. Each 
 - **Severity:** advisory (low chat activity is informational, not a failure)
 - **Public-eligible:** no — usage information
 
-*(Group C originally also held two cost panels — C2 Anthropic spend and C3 AWS spend. Both cut from v1; see §0 and §11.)*
+**C2. Cost (month-to-date)** *(restored in v1.1 per §0 Revision 2026-05-24)*
+
+- **What:** Month-to-date USD spend on the chat agent; sparkline of daily spend over the last 30 days; burn-rate as a percentage delta vs last month's same-day cumulative.
+- **Source:** `main_admin.fct_chat_activity_raw.input_tokens` + `.output_tokens` × Opus 4.7 flat-rate pricing ($15/M input, $75/M output). See [`docs/limitations/cost-panel-pricing-assumptions.md`](limitations/cost-panel-pricing-assumptions.md) for the flat-rate assumption and 15-minute regen lag.
+- **Severity:** advisory (no budget threshold in v1.1)
+- **Public-eligible:** no — usage information
+
+*(Group C originally also held a C3 AWS Cost Explorer panel. Still cut from v1.1; the design specification in §11 stands for whenever Admin-tier AWS access becomes available.)*
 
 ### Group D: Service availability
 
@@ -225,19 +236,19 @@ For when the implementation prompt comes (separately, after this design is signe
 
 ## 11. Cost panels as a future plan
 
-The design intentionally preserves the work that went into thinking about cost panels, in case a future account-tier change makes them viable. When that happens, the future plan picks up here:
+**Status update (2026-05-24):** C2 has shipped in v1.1 (Plan 40) using a different integration path than this section originally specified. Plan 38's chat-state schema finding unlocked Anthropic spend tracking via the local `oxy-postgres` container's `messages.input_tokens` + `messages.output_tokens` columns — no Admin API key needed. The C3 (AWS Cost Explorer) panel specification below stands for whenever that integration becomes worth doing.
 
-**Panels to restore:**
+**C2 status: shipped.** Reads from `main_admin.fct_chat_activity_raw` (loaded by `dlt/oxy_chat_activity_pipeline.py` from the local oxy-postgres `messages` table). See [`docs/limitations/cost-panel-pricing-assumptions.md`](limitations/cost-panel-pricing-assumptions.md) for the flat-rate Opus 4.7 assumption, 15-minute regen lag, and cross-check guidance against the Anthropic console.
 
-- **C2. Anthropic API spend (this month).** Month-to-date USD spend; sparkline of daily spend; burn rate vs. last month's same-day pace. Severity advisory by default; configurable budget threshold can elevate to critical. Public-eligible: no.
-- **C3. AWS/EC2 spend (this month).** Same shape, different source. Public-eligible: no.
+**C3 panel — still future work:**
 
-**Integrations required:**
+- **C3. AWS/EC2 spend (this month).** Month-to-date USD spend; sparkline of daily spend; burn rate vs. last month's same-day pace. Public-eligible: no.
 
-- Anthropic Usage API → `main_admin.fct_anthropic_usage_raw`. Requires an Anthropic Admin API key (`sk-ant-admin-...`), which in turn requires Organization-tier account access.
+**Integration still required for C3:**
+
 - AWS Cost Explorer API → `main_admin.fct_aws_cost_raw`. Requires Cost Explorer enabled on the AWS account and IAM credentials with `ce:GetCostAndUsage`. Cost Explorer charges $0.01 per API request; daily cadence puts this in pennies-per-month.
 
-**Layout adjustment:** Group C grows from one panel (C1) back to three (C1 + C2 + C3); the C1-in-Group-B-row arrangement reverts to a dedicated Group C row.
+**Layout adjustment (already implemented in v1.1):** Group C now carries C1 + C2; with C3 future-shipped Group C will carry all three.
 
 **Limitations entries to add when restored:**
 

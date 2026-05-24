@@ -1,0 +1,10 @@
+[Unit]
+Description=Somerville wards hourly source-health check schedule
+Requires=source-health-wards.service
+
+[Timer]
+OnCalendar=*-*-* *:20:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

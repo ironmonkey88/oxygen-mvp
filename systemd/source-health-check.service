@@ -8,6 +8,10 @@ Type=oneshot
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
 EnvironmentFile=/etc/environment
-ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/source_health_check.py
+# Plan 40: explicit "311" arg after source_health_check.py was
+# parameterized to cover 6 datasets (Socrata API shape is uniform).
+# 5 sibling units (crime / permits / traffic-citations / wards /
+# at-a-glance) live in this directory with the same pattern.
+ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/source_health_check.py 311
 StandardOutput=journal
 StandardError=journal

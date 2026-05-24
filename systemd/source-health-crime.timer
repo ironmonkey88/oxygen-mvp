@@ -1,0 +1,10 @@
+[Unit]
+Description=Somerville crime hourly source-health check schedule
+Requires=source-health-crime.service
+
+[Timer]
+OnCalendar=*-*-* *:05:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

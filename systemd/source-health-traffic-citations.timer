@@ -1,0 +1,10 @@
+[Unit]
+Description=Somerville traffic-citations hourly source-health check schedule
+Requires=source-health-traffic-citations.service
+
+[Timer]
+OnCalendar=*-*-* *:15:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
