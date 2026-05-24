@@ -1,0 +1,8 @@
+{
+  "onformdata": "null",
+  "onpageshow": "null",
+  "queueMicrotask": "function queueMicrotask length=1",
+  "showDirectoryPicker": "function showDirectoryPicker length=0",
+  "showOpenFilePicker": "function showOpenFilePicker length=0",
+  "showSaveFilePicker": "function showSaveFilePicker length=0"
+}

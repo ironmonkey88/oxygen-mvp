@@ -1,0 +1,10 @@
+[Unit]
+Description=Somerville at-a-glance hourly source-health check schedule
+Requires=source-health-at-a-glance.service
+
+[Timer]
+OnCalendar=*-*-* *:25:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

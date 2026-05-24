@@ -248,23 +248,91 @@ def panel_c1_chat_activity(con, now):
     return GREEN, ADVISORY, headline, headline, sql, "fct_chat_activity_raw"
 
 
-def panel_c2_token_spend(con, now):
-    sql = f"""
+def _sparkline_svg(values, width=200, height=30, color="#1e6091"):
+    """Tiny inline-SVG sparkline. `values` is a list of numbers, oldest first."""
+    if not values or len(values) < 2:
+        return ""
+    vmin, vmax = min(values), max(values)
+    span = vmax - vmin or 1.0
+    step = width / (len(values) - 1)
+    points = " ".join(
+        f"{i * step:.1f},{height - ((v - vmin) / span) * height:.1f}"
+        for i, v in enumerate(values)
+    )
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+        f'viewBox="0 0 {width} {height}" style="vertical-align:middle">'
+        f'<polyline fill="none" stroke="{color}" stroke-width="1.5" points="{points}"/>'
+        f'</svg>'
+    )
+
+
+def panel_c2_cost(con, now):
+    """v1.1 cost panel: month-to-date spend + 30d sparkline + burn-rate delta.
+
+    Replaces v1's 7-day rolling token-spend panel (Plan 38 stop-gap).
+    Pricing assumes Opus 4.7 flat rate — Plan 40 pre-flight confirmed
+    `messages` table has no model column; config.yml runs a single-model
+    setup. See docs/limitations/cost-panel-pricing-assumptions.md.
+    """
+    # Month-to-date assistant token consumption
+    mtd_sql = f"""
         SELECT
-          SUM(input_tokens) AS in_tokens,
-          SUM(output_tokens) AS out_tokens,
+          COALESCE(SUM(input_tokens), 0) AS in_tokens,
+          COALESCE(SUM(output_tokens), 0) AS out_tokens,
           ROUND(SUM(input_tokens) * {OPUS_INPUT_USD_PER_M} / 1000000
-              + SUM(output_tokens) * {OPUS_OUTPUT_USD_PER_M} / 1000000, 2) AS opus_usd
+              + SUM(output_tokens) * {OPUS_OUTPUT_USD_PER_M} / 1000000, 2) AS usd
         FROM main_admin.fct_chat_activity_raw
-        WHERE message_created_at > NOW() - INTERVAL 7 DAY
+        WHERE DATE_TRUNC('month', message_created_at) = DATE_TRUNC('month', NOW())
           AND is_human = FALSE
     """
-    row = con.execute(sql).fetchone()
-    if not row or row[0] is None:
-        return YELLOW, ADVISORY, "No token-usage data", "—", sql, "fct_chat_activity_raw"
-    in_tok, out_tok, usd = int(row[0] or 0), int(row[1] or 0), float(row[2] or 0)
-    headline = f"${usd:.2f} (7d) · {in_tok:,} in / {out_tok:,} out tokens"
-    return GREEN, ADVISORY, headline, headline + " · Opus 4.7 pricing", sql, "fct_chat_activity_raw"
+    row = con.execute(mtd_sql).fetchone()
+    if not row:
+        return YELLOW, ADVISORY, "No chat-activity data available", "—", mtd_sql, "fct_chat_activity_raw"
+    mtd_in, mtd_out, mtd_usd = int(row[0] or 0), int(row[1] or 0), float(row[2] or 0.0)
+
+    # Last month, same calendar-day cutoff (for burn-rate comparison)
+    last_sql = f"""
+        SELECT
+          ROUND(SUM(input_tokens) * {OPUS_INPUT_USD_PER_M} / 1000000
+              + SUM(output_tokens) * {OPUS_OUTPUT_USD_PER_M} / 1000000, 2) AS usd
+        FROM main_admin.fct_chat_activity_raw
+        WHERE DATE_TRUNC('month', message_created_at) = DATE_TRUNC('month', NOW() - INTERVAL 1 MONTH)
+          AND EXTRACT(DAY FROM message_created_at) <= EXTRACT(DAY FROM NOW())
+          AND is_human = FALSE
+    """
+    last_row = con.execute(last_sql).fetchone()
+    last_usd = float(last_row[0] or 0.0) if last_row else 0.0
+
+    # 30-day daily-spend sparkline
+    sparkline_sql = f"""
+        SELECT DATE_TRUNC('day', message_created_at) AS day,
+               ROUND(SUM(input_tokens) * {OPUS_INPUT_USD_PER_M} / 1000000
+                   + SUM(output_tokens) * {OPUS_OUTPUT_USD_PER_M} / 1000000, 4) AS usd
+        FROM main_admin.fct_chat_activity_raw
+        WHERE message_created_at > NOW() - INTERVAL 30 DAY
+          AND is_human = FALSE
+        GROUP BY 1 ORDER BY 1
+    """
+    spark_rows = con.execute(sparkline_sql).fetchall()
+    spark_values = [float(r[1] or 0) for r in spark_rows]
+
+    # Burn-rate delta vs last month at this point
+    if last_usd > 0:
+        delta_pct = ((mtd_usd - last_usd) / last_usd) * 100
+        delta_str = f"{delta_pct:+.0f}% vs last month at this point"
+    else:
+        delta_str = "no prior-month baseline"
+
+    sparkline_html = _sparkline_svg(spark_values) if len(spark_values) >= 2 else ""
+    headline = f"${mtd_usd:.2f} MTD · {delta_str}"
+    why = (
+        f"${mtd_usd:.2f} MTD · {mtd_in:,} in / {mtd_out:,} out tokens · "
+        f"{delta_str} · 30d daily-spend sparkline: {sparkline_html} · "
+        f"Opus 4.7 flat-rate pricing (single-model config). "
+        f"See <a href='/admin/' style='text-decoration:underline;color:inherit'>methodology</a>."
+    )
+    return GREEN, ADVISORY, headline, why, mtd_sql, "fct_chat_activity_raw"
 
 
 def panel_d1_oxygen_health(now):
@@ -406,7 +474,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 
 def render_panel(panel_id: str, name: str, color: str, headline: str, why: str, sql: str, source_table: str) -> str:
     return f"""
-    <div class="panel">
+    <div class="panel" data-panel-id="{html.escape(panel_id)}">
       <div class="panel-title"><span class="panel-status {color}"></span>{panel_id} · {html.escape(name)}</div>
       <div class="panel-value">{why}</div>
       <div class="panel-cite">
@@ -432,7 +500,7 @@ def main() -> int:
     panels.append(("B2", "dbt tests", *panel_b2_dbt_tests(con, now)))
     panels.append(("B3", "Profile coverage", *panel_b3_profile_coverage(con, now)))
     panels.append(("C1", "Chat activity (7d)", *panel_c1_chat_activity(con, now)))
-    panels.append(("C2", "Token spend (7d)", *panel_c2_token_spend(con, now)))
+    panels.append(("C2", "Cost (MTD)", *panel_c2_cost(con, now)))
     panels.append(("D1", "Oxygen runtime health", *panel_d1_oxygen_health(now)))
     panels.append(("D2", "Warehouse size", *panel_d2_warehouse_size(con, now)))
 

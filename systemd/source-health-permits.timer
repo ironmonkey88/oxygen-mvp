@@ -1,0 +1,10 @@
+[Unit]
+Description=Somerville permits hourly source-health check schedule
+Requires=source-health-permits.service
+
+[Timer]
+OnCalendar=*-*-* *:10:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
