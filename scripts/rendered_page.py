@@ -97,8 +97,19 @@ def test_page(url, assertions, screenshot_path):
     )
 
 
-def review_page(url, output_dir, focus=None):
-    """Capture evidence + write annotated screenshot + scaffolded finding."""
+def review_page(url, output_dir, focus=None, targets_selector=None):
+    """Capture evidence + write annotated screenshot + scaffolded finding.
+
+    targets_selector (Plan 39 P1): CSS selector string OR list of selector
+    strings naming elements to annotate. When provided, the helper uses
+    these as callout targets instead of the back-link-hardcoded probe.
+    When None (default), falls back to the original back-link behavior —
+    preserves Plan 33 and Plan 34 callers without modification.
+
+    Callout labels are derived per Plan 39 P3 rule: prefer the
+    `data-panel-id` attribute, then `id`, then the element's first
+    non-empty text node truncated to ~30 characters.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -141,20 +152,40 @@ def review_page(url, output_dir, focus=None):
             page.screenshot(path=str(screenshot_path), full_page=True)
 
             annotation_targets = []
-            for link in backlink_info:
-                bb = link.get("boundingBox") or {}
-                if not bb or bb.get("width", 0) == 0:
-                    continue
-                annotation_targets.append(
-                    {
-                        "x": bb["x"],
-                        "y": bb["y"],
-                        "width": bb["width"],
-                        "height": bb["height"],
-                        "label": "Back-link element",
-                        "detail": f"display={link['computedStyle']['display']}",
-                    }
-                )
+            if targets_selector is not None:
+                # Plan 39 P1: selector-based annotation path
+                selectors = targets_selector if isinstance(targets_selector, list) else [targets_selector]
+                selector_hits = page.evaluate(_SELECTOR_TARGETS_PROBE, selectors)
+                for hit in selector_hits:
+                    bb = hit.get("boundingBox") or {}
+                    if not bb or bb.get("width", 0) == 0:
+                        continue
+                    annotation_targets.append(
+                        {
+                            "x": bb["x"],
+                            "y": bb["y"],
+                            "width": bb["width"],
+                            "height": bb["height"],
+                            "label": hit.get("label") or "(no label)",
+                            "detail": hit.get("selector") or "",
+                        }
+                    )
+            else:
+                # Plan 33/34 default: back-link probe
+                for link in backlink_info:
+                    bb = link.get("boundingBox") or {}
+                    if not bb or bb.get("width", 0) == 0:
+                        continue
+                    annotation_targets.append(
+                        {
+                            "x": bb["x"],
+                            "y": bb["y"],
+                            "width": bb["width"],
+                            "height": bb["height"],
+                            "label": "Back-link element",
+                            "detail": f"display={link['computedStyle']['display']}",
+                        }
+                    )
         finally:
             browser.close()
 
@@ -207,6 +238,40 @@ def review_page(url, output_dir, focus=None):
             "backlink_info": backlink_info,
         },
     )
+
+
+_SELECTOR_TARGETS_PROBE = """(selectors) => {
+    // Plan 39 P3 labeling rule: data-panel-id > id > first non-empty text
+    // node truncated to 30 chars.
+    const out = [];
+    const seen = new Set();
+    for (const sel of selectors) {
+        let nodes;
+        try {
+            nodes = document.querySelectorAll(sel);
+        } catch (e) {
+            continue;
+        }
+        for (const el of nodes) {
+            if (seen.has(el)) continue;
+            seen.add(el);
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) continue;
+            let label = el.getAttribute('data-panel-id');
+            if (!label) label = el.id || '';
+            if (!label) {
+                const txt = (el.textContent || '').trim().replace(/\\s+/g, ' ');
+                label = txt.slice(0, 30);
+            }
+            out.push({
+                selector: sel,
+                label: label,
+                boundingBox: rect.toJSON(),
+            });
+        }
+    }
+    return out;
+}"""
 
 
 _WINDOW_GLOBALS_PROBE = """() => {
