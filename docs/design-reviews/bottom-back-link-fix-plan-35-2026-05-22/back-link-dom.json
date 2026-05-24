@@ -1,0 +1,44 @@
+[
+  {
+    "kind": "anchor",
+    "outerHTML": "<a href=\"/\">\u2190 Back to Somerville Analytics portal</a>",
+    "boundingBox": {
+      "x": 360,
+      "y": 197.3125,
+      "width": 231.875,
+      "height": 16,
+      "top": 197.3125,
+      "right": 591.875,
+      "bottom": 213.3125,
+      "left": 360
+    },
+    "computedStyle": {
+      "display": "inline",
+      "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "color": "rgb(0, 187, 187)",
+      "padding": "0px",
+      "fontWeight": "400"
+    }
+  },
+  {
+    "kind": "anchor",
+    "outerHTML": "<a href=\"/\">\u2190 Back to Somerville Analytics portal</a>",
+    "boundingBox": {
+      "x": 360,
+      "y": 1527.125,
+      "width": 231.875,
+      "height": 16,
+      "top": 1527.125,
+      "right": 591.875,
+      "bottom": 1543.125,
+      "left": 360
+    },
+    "computedStyle": {
+      "display": "inline",
+      "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "color": "rgb(0, 187, 187)",
+      "padding": "0px",
+      "fontWeight": "400"
+    }
+  }
+]
