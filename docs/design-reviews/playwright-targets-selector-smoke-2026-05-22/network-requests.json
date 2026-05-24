@@ -1,0 +1,16 @@
+{
+  "requests": [
+    {
+      "url": "http://127.0.0.1/admin/",
+      "method": "GET",
+      "resource_type": "document"
+    }
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1/admin/",
+      "status": 200,
+      "content_type": "text/html"
+    }
+  ]
+}

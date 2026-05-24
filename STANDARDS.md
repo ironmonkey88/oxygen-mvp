@@ -242,11 +242,11 @@ Plan 33). Two entry points:
   )
   ```
 
-- `review_page(url, output_dir, focus=None) -> ReviewArtifact` — grounded
-  review path. Captures screenshot, annotated screenshot, network log,
-  window globals scan, DOM samples, and source-map probes; writes a
-  scaffolded `finding.md` with all evidence sections pre-filled. The
-  reviewer (human or Code) fills in the prose findings based on the
+- `review_page(url, output_dir, focus=None, targets_selector=None) -> ReviewArtifact` —
+  grounded review path. Captures screenshot, annotated screenshot,
+  network log, window globals scan, DOM samples, and source-map probes;
+  writes a scaffolded `finding.md` with all evidence sections pre-filled.
+  The reviewer (human or Code) fills in the prose findings based on the
   evidence.
   ```python
   artifact = review_page(
@@ -255,6 +255,21 @@ Plan 33). Two entry points:
       focus="confirm the auto-generated listing matches the apps/*.app.yml metadata blocks",
   )
   ```
+  **`targets_selector` (Plan 39 P1):** CSS selector string or list of
+  selector strings naming elements to annotate. When provided, per-element
+  numbered callouts draw on the screenshot for each matched element.
+  Default `None` falls back to the original back-link probe (preserves
+  Plan 33 + Plan 34 callers).
+  ```python
+  artifact = review_page(
+      "http://127.0.0.1/admin/",
+      output_dir="docs/design-reviews/dba-dashboard-review-...",
+      focus="per-panel callout labels for the admin dashboard",
+      targets_selector="[data-panel-id]",  # or ".panel", or a list
+  )
+  ```
+  Callout labels follow the P3 rule: `data-panel-id` attribute → `id`
+  attribute → first non-empty text node truncated to ~30 chars.
 
 ### Output paths
 

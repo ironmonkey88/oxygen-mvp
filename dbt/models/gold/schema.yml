@@ -9,29 +9,40 @@ models:
       Canonical date spine: every gold time dimension joins here.
     columns:
       - name: date_dt
+        data_type: DATE
         description: 'Calendar date. Primary key for this dimension.'
         data_tests:
           - not_null
           - unique
       - name: year
+        data_type: INTEGER
         description: 'Four-digit year (YYYY) extracted from date_dt.'
       - name: quarter
+        data_type: INTEGER
         description: 'Calendar quarter 1-4.'
       - name: month
+        data_type: INTEGER
         description: 'Month number 1-12.'
       - name: month_name
+        data_type: VARCHAR
         description: 'Full English month name (January, February, ...).'
       - name: day
+        data_type: INTEGER
         description: 'Day of month 1-31.'
       - name: day_of_week
+        data_type: INTEGER
         description: 'Day-of-week index. DuckDB extract(dow): 0=Sunday, 6=Saturday.'
       - name: day_name
+        data_type: VARCHAR
         description: 'Full English day name (Monday, Tuesday, ...).'
       - name: week_of_year
+        data_type: INTEGER
         description: 'ISO week-of-year 1-53.'
       - name: is_weekend
+        data_type: BOOLEAN
         description: 'Boolean -- TRUE for Saturday and Sunday.'
       - name: fiscal_year
+        data_type: INTEGER
         description: 'Fiscal year. Currently equals calendar year -- Somerville fiscal calendar mapping TBD.'
 
   - name: dim_request_type
@@ -42,19 +53,24 @@ models:
       stable joins across pipeline runs.
     columns:
       - name: request_type_id
+        data_type: VARCHAR
         description: 'Surrogate primary key -- md5 hash of request_type.'
         data_tests:
           - not_null
           - unique
       - name: request_type
+        data_type: VARCHAR
         description: 'Human-readable request type display value (sourced from bronze.type).'
         data_tests:
           - not_null
       - name: first_seen_dt
+        data_type: DATE
         description: 'Earliest date_created across all requests of this type.'
       - name: last_seen_dt
+        data_type: DATE
         description: 'Most recent date_created across all requests of this type.'
       - name: request_count
+        data_type: BIGINT
         description: 'Total number of requests of this type, all-time.'
 
   - name: dim_status
@@ -64,11 +80,13 @@ models:
       Closed -> FALSE; Open / In Progress / On Hold -> TRUE.
     columns:
       - name: status_id
+        data_type: VARCHAR
         description: 'Surrogate primary key -- md5 hash of status.'
         data_tests:
           - not_null
           - unique
       - name: status
+        data_type: VARCHAR
         description: 'Human-readable status display value.'
         data_tests:
           - not_null
@@ -76,10 +94,13 @@ models:
               arguments:
                 values: ['Open', 'Closed', 'In Progress', 'On Hold']
       - name: is_open
+        data_type: BOOLEAN
         description: 'Boolean -- FALSE for Closed; TRUE for Open / In Progress / On Hold.'
       - name: first_seen_dt
+        data_type: DATE
         description: 'Earliest date_created among requests with this status.'
       - name: last_seen_dt
+        data_type: DATE
         description: 'Most recent date_created among requests with this status.'
 
   - name: fct_311_requests
@@ -95,17 +116,22 @@ models:
       try_cast (NULL preserved when source is empty).
     columns:
       - name: id
+        data_type: VARCHAR
         description: 'Somerville 311 request ID -- natural key sourced from bronze.id.'
         data_tests:
           - not_null
           - unique
       - name: classification
+        data_type: VARCHAR
         description: 'Top of the type hierarchy: Service / Information / Feedback.'
       - name: category
+        data_type: VARCHAR
         description: 'Mid-level grouping within classification.'
       - name: request_type
+        data_type: VARCHAR
         description: 'Leaf-level request type. Sourced from bronze.type.'
       - name: request_type_id
+        data_type: VARCHAR
         description: 'FK to dim_request_type.request_type_id (md5 of request_type).'
         data_tests:
           - relationships:
@@ -113,8 +139,10 @@ models:
                 to: ref('dim_request_type')
                 field: request_type_id
       - name: status
+        data_type: VARCHAR
         description: 'Most recent status display value (Open / Closed / In Progress / On Hold).'
       - name: status_id
+        data_type: VARCHAR
         description: 'FK to dim_status.status_id (md5 of status).'
         data_tests:
           - relationships:
@@ -122,18 +150,24 @@ models:
                 to: ref('dim_status')
                 field: status_id
       - name: origin
+        data_type: VARCHAR
         description: 'How the request was submitted (Contact Center, Website, etc.). Sourced from bronze.origin_of_request.'
       - name: date_created_dt
+        data_type: DATE
         description: 'Date the request was opened. FK to dim_date.date_dt.'
         data_tests:
           - not_null
       - name: date_created_ts
+        data_type: TIMESTAMP
         description: 'Full timestamp the request was opened (precision retained alongside date_created_dt for time-of-day analysis).'
       - name: most_recent_status_dt
+        data_type: DATE
         description: 'Date the most recent status was set.'
       - name: most_recent_status_ts
+        data_type: TIMESTAMP
         description: 'Full timestamp the most recent status was set.'
       - name: ward
+        data_type: VARCHAR
         description: 'Somerville ward 1-7 as VARCHAR. NULL when unknown.'
         data_tests:
           - relationships:
@@ -143,30 +177,43 @@ models:
               config:
                 where: "ward IS NOT NULL"
       - name: block_code
+        data_type: VARCHAR
         description: 'Block identifier. Carried through from source -- still padded with spaces when unknown; cleanup deferred to Silver. See docs/limitations/block-code-padded.md.'
       - name: accuracy
+        data_type: VARCHAR
         description: 'Post-resolution survey field for accuracy. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: courtesy
+        data_type: VARCHAR
         description: 'Post-resolution survey field for courtesy. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: ease
+        data_type: VARCHAR
         description: 'Post-resolution survey field for ease. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: overallexperience
+        data_type: VARCHAR
         description: 'Post-resolution survey field for overall experience. Sparse -- see docs/limitations/2024-survey-columns-sparse.md.'
       - name: is_emergency_readiness_tag
+        data_type: BOOLEAN
         description: 'Department tag -- emergency readiness and response planning. Boolean. Sparse.'
       - name: is_green_space_tag
+        data_type: BOOLEAN
         description: 'Department tag -- green space care and maintenance. Boolean. Sparse.'
       - name: is_infrastructure_tag
+        data_type: BOOLEAN
         description: 'Department tag -- infrastructure maintenance and repairs. Boolean. Sparse.'
       - name: is_noise_tag
+        data_type: BOOLEAN
         description: 'Department tag -- noise and activity disturbances. Boolean. Sparse.'
       - name: is_reliable_service_tag
+        data_type: BOOLEAN
         description: 'Department tag -- reliable service delivery. Boolean. Sparse.'
       - name: is_city_services_tag
+        data_type: BOOLEAN
         description: 'Department tag -- navigating city services and policies. Boolean. Sparse.'
       - name: is_public_space_tag
+        data_type: BOOLEAN
         description: 'Department tag -- public space cleanliness and environmental health. Boolean. Sparse.'
       - name: is_voting_tag
+        data_type: BOOLEAN
         description: 'Department tag -- voting and election information. Boolean. Sparse.'
 
   - name: dim_ward
@@ -178,28 +225,37 @@ models:
       `fct_311_requests` on `ward` (VARCHAR in both tables).
     columns:
       - name: ward_id
+        data_type: VARCHAR
         description: 'Surrogate key -- md5(ward). Matches the SK pattern of the other gold dims.'
         data_tests:
           - not_null
           - unique
       - name: ward
+        data_type: VARCHAR
         description: 'Ward number (1-7) as VARCHAR. Matches `fct_311_requests.ward` for natural-key joins.'
         data_tests:
           - not_null
           - unique
       - name: ward_name
+        data_type: VARCHAR
         description: 'Human-readable label, "Ward N". Derived (the source shapefile has no name column -- just numbers).'
       - name: geometry_wkt_wgs84
+        data_type: VARCHAR
         description: 'Polygon geometry as WKT in WGS84 (EPSG:4326). Lat/lng-friendly; use ST_GeomFromText to re-parse for spatial operations.'
       - name: area_sqm
+        data_type: DOUBLE
         description: 'Polygon area in square meters, converted from the source projection (NAD83 / MA Mainland, US survey feet).'
       - name: area_sqkm
+        data_type: DOUBLE
         description: 'Polygon area in square kilometers. Wards are ~1.3-2.7 sq km.'
       - name: perimeter_m
+        data_type: DOUBLE
         description: 'Polygon perimeter in meters, converted from US survey feet.'
       - name: _source_url
+        data_type: VARCHAR
         description: 'Lineage -- canonical Socrata permalink for the source dataset.'
       - name: _extracted_at
+        data_type: TIMESTAMP
         description: 'Lineage -- UTC timestamp when the shapefile was last ingested.'
 
   - name: fct_crime_incidents
@@ -216,40 +272,51 @@ models:
       the Plan 13 design.
     columns:
       - name: incident_id
+        data_type: VARCHAR
         description: 'Surrogate PK -- md5(case_number). Matches the gold-dim pattern.'
         data_tests:
           - not_null
           - unique
       - name: case_number
+        data_type: VARCHAR
         description: 'Source case number from Somerville Police. Non-sensitive incidents use 8-char `YYxxxxxx` format; sensitive incidents use 9-char `1xxxxxxxx` sentinel format.'
         data_tests:
           - not_null
           - unique
       - name: incident_dt
+        data_type: DATE
         description: 'Date the incident was reported. NULL for ~12.5% of rows (sensitive incidents -- day-and-month withheld at source). See docs/limitations/crime-sensitive-incidents-no-month.md.'
       - name: incident_year
+        data_type: SMALLINT
         description: 'Year the incident was reported. Populated for all rows.'
         data_tests:
           - not_null
       - name: incident_year_only
+        data_type: BOOLEAN
         description: 'TRUE when only the year is known (sensitive incident with day-and-month stripped at source). Filter `WHERE NOT incident_year_only` to exclude these rows from sub-annual time-series.'
         data_tests:
           - not_null
       - name: police_shift
+        data_type: VARCHAR
         description: 'Shift during which the incident was reported. NULL for sensitive incidents.'
       - name: offense_code
+        data_type: VARCHAR
         description: 'NIBRS offense code from source. Atomic 3-char code for single-offense rows (37 distinct values); also includes 2 multi-code grouping strings used by the source for "Other Criminal MV Offenses" (`991, 998, 999`, 2,500 rows) and "Sex Offenses" (`11A - 11D, 36A, 36B`, 375 rows). See docs/limitations/crime-multi-offense-rows.md.'
         data_tests:
           - not_null
       - name: multi_offense_flag
+        data_type: BOOLEAN
         description: 'TRUE when offense_code is a multi-code grouping string. 2,875 rows (12.9%); filter `WHERE NOT multi_offense_flag` for single-NIBRS-code analysis.'
         data_tests:
           - not_null
       - name: offense
+        data_type: VARCHAR
         description: 'NIBRS offense name (denormalized from dim_offense_code for query convenience). E.g. "Motor Vehicle Theft".'
       - name: offense_type
+        data_type: VARCHAR
         description: 'NIBRS offense type (denormalized from dim_offense_code). Sub-category grouping similar offenses.'
       - name: offense_category
+        data_type: VARCHAR
         description: 'NIBRS top-level category (denormalized from dim_offense_category). One of "Crimes against Property" / "Crimes against Person" / "Crimes against Society" / "Other".'
         data_tests:
           - not_null
@@ -257,6 +324,7 @@ models:
               arguments:
                 values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
       - name: ward
+        data_type: VARCHAR
         description: 'Somerville ward (TRIM applied; source pads to length 15). 7 valid ward strings (1-7), NULL for ~13% of rows, "CAM" for 2 cross-jurisdiction rows. See docs/limitations/crime-ward-coverage-gaps.md.'
         data_tests:
           - relationships:
@@ -266,22 +334,29 @@ models:
               config:
                 where: "ward IS NOT NULL AND ward <> 'CAM'"
       - name: block_code
+        data_type: VARCHAR
         description: '15-character census block code. NULL for sensitive incidents (same 2,798 rows as NULL incident_dt). Block-level analysis on the full dataset is therefore similarly bounded.'
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _first_seen_at
+        data_type: TIMESTAMP
         description: 'Lineage -- UTC timestamp when this incident was first ingested. Preserved across re-extractions.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: 'Lineage -- Socrata SODA URL the row came from.'
       - name: offense_code
+        data_type: VARCHAR
         data_tests:
           - relationships:
               arguments:
                 to: ref('dim_offense_code')
                 field: offense_code
       - name: offense_category
+        data_type: VARCHAR
         data_tests:
           - relationships:
               arguments:
@@ -298,19 +373,23 @@ models:
       string rows.
     columns:
       - name: offense_code
+        data_type: VARCHAR
         description: 'NIBRS offense code or source-side grouping string. PK.'
         data_tests:
           - not_null
           - unique
       - name: offense
+        data_type: VARCHAR
         description: 'NIBRS offense name.'
         data_tests:
           - not_null
       - name: offense_type
+        data_type: VARCHAR
         description: 'NIBRS offense type -- sub-category grouping.'
         data_tests:
           - not_null
       - name: offense_category
+        data_type: VARCHAR
         description: 'NIBRS top-level category.'
         data_tests:
           - not_null
@@ -322,10 +401,12 @@ models:
                 to: ref('dim_offense_category')
                 field: offense_category
       - name: is_multi_offense_grouping
+        data_type: BOOLEAN
         description: 'TRUE when offense_code is a multi-code grouping string (2 rows today). FALSE for atomic NIBRS codes (37 rows).'
         data_tests:
           - not_null
       - name: is_active
+        data_type: BOOLEAN
         description: 'TRUE for all 39 rows today. Placeholder for future code retirement.'
         data_tests:
           - not_null
@@ -337,6 +418,7 @@ models:
       consistent sort order across dashboards; not source-derived.
     columns:
       - name: offense_category
+        data_type: VARCHAR
         description: 'NIBRS top-level category name. PK.'
         data_tests:
           - not_null
@@ -345,6 +427,7 @@ models:
               arguments:
                 values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']
       - name: severity_rank
+        data_type: INTEGER
         description: 'Editorial ordinal -- 1=Person, 2=Property, 3=Society, 4=Other.'
         data_tests:
           - not_null
@@ -365,38 +448,51 @@ models:
       docs/limitations/permits-static-since-2023.md.
     columns:
       - name: permit_id
+        data_type: VARCHAR
         description: 'Surrogate PK -- md5(permit_number). Matches the gold-dim pattern.'
         data_tests:
           - not_null
           - unique
       - name: permit_number
+        data_type: VARCHAR
         description: 'Year-prefixed natural key from source (e.g. "B14-001277" = Building, 2014, #001277). Preserved for back-reference to the public permit log.'
         data_tests:
           - not_null
           - unique
       - name: application_date
+        data_type: DATE
         description: 'Date the permit application was submitted. Cast from source TIMESTAMP to DATE.'
         data_tests:
           - not_null
       - name: issue_date
+        data_type: DATE
         description: 'Date the permit was issued. NULL for non-issued applications (Withdrawn, Denied, Under Review).'
       - name: application_year
+        data_type: SMALLINT
         description: 'Year of application_date (SMALLINT).'
       - name: issue_year
+        data_type: SMALLINT
         description: 'Year of issue_date (SMALLINT). NULL when issue_date is NULL.'
       - name: permit_type
+        data_type: VARCHAR
         description: 'Permit type. ~73% Residential Building, ~15% Commercial Building, 20+ values. **11 rows have NULL type** per the documented source data quality issue (Plan 21 honest-test precedent).'
       - name: permit_status
+        data_type: VARCHAR
         description: 'Permit status. ~97% "Issued". 21 NULL, 6 empty-string, and 3 rows carry dates as status values (source DQ issue documented in permits-static-since-2023).'
       - name: is_issued
+        data_type: BOOLEAN
         description: 'Boolean -- TRUE when permit_status = "Issued". Filter on this for analyst-clean issued-permit counts (96.68% of rows).'
       - name: permit_amount
+        data_type: VARCHAR
         description: 'Permit fee amount in USD. Source DOUBLE.'
       - name: address
+        data_type: VARCHAR
         description: 'Property address (public information for permits, by design).'
       - name: work_description
+        data_type: VARCHAR
         description: 'Freeform description of permitted work. Source-side text; no applicant names observed.'
       - name: ward
+        data_type: VARCHAR
         description: 'Somerville ward 1-7 derived via spatial join. NULL for ~3.4% of rows (geocoded outside Somerville). See permits-spatial-ward-derivation limitation.'
         data_tests:
           - relationships:
@@ -406,14 +502,19 @@ models:
               config:
                 where: "ward IS NOT NULL"
       - name: latitude
+        data_type: VARCHAR
         description: 'Geocoded latitude (WGS84). 8 rows are NULL.'
       - name: longitude
+        data_type: VARCHAR
         description: 'Geocoded longitude (WGS84). 8 rows are NULL.'
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: 'Lineage -- Socrata SODA URL the row came from.'
 
   - name: fct_somerville_kpi
@@ -429,33 +530,44 @@ models:
       latest-value-per-topic surface.
     columns:
       - name: kpi_id
+        data_type: VARCHAR
         description: "Surrogate PK -- md5(topic + '|' + year + '|' + COALESCE(description, '') + '|' + COALESCE(geography, '')). The natural primary key is (topic, year, description, geography) because (a) categorical topics have multiple rows per (topic, year) differentiated by description, AND (b) the source includes both Somerville and Massachusetts benchmark rows at the same (topic, year, description) — geography distinguishes them."
         data_tests:
           - not_null
           - unique
       - name: topic
+        data_type: VARCHAR
         description: "KPI topic name. 25 distinct values."
         data_tests:
           - not_null
       - name: year
+        data_type: SMALLINT
         description: "Year of observation (SMALLINT). Range 1850-2024."
         data_tests:
           - not_null
       - name: value
+        data_type: DOUBLE
         description: "Observed value (DOUBLE). TRY_CAST from source VARCHAR."
       - name: kpi_description
+        data_type: VARCHAR
         description: "Source-side editorial description of the KPI (source `description`)."
       - name: units
+        data_type: VARCHAR
         description: "Units for the value (USD, percent, count, etc.)."
       - name: geography
+        data_type: VARCHAR
         description: "Geographic scope (typically 'Somerville')."
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: 'Lineage -- Socrata SODA URL the row came from.'
       - name: topic
+        data_type: VARCHAR
         data_tests:
           - relationships:
               arguments:
@@ -474,31 +586,38 @@ models:
       (topic, geography, year = MAX(year)).
     columns:
       - name: topic
+        data_type: VARCHAR
         description: "KPI topic name. Natural key."
         data_tests:
           - not_null
           - unique
       - name: first_year
+        data_type: SMALLINT
         description: "Earliest year observed for this topic."
         data_tests:
           - not_null
       - name: latest_year
+        data_type: SMALLINT
         description: "Most recent year observed for this topic."
         data_tests:
           - not_null
       - name: observation_count
+        data_type: BIGINT
         description: "Total observations for this topic across all years and geographies."
         data_tests:
           - not_null
       - name: geography_count
+        data_type: BIGINT
         description: "Number of distinct geographies observed for this topic (typically 1 = Somerville-only, or 2 = Somerville + Massachusetts benchmark)."
         data_tests:
           - not_null
       - name: has_massachusetts_benchmark
+        data_type: BOOLEAN
         description: "TRUE when the topic includes Massachusetts benchmark rows."
         data_tests:
           - not_null
       - name: has_somerville_data
+        data_type: BOOLEAN
         description: "TRUE when the topic includes Somerville rows."
         data_tests:
           - not_null
@@ -524,40 +643,54 @@ models:
       citations-composite-grain-violation-suffix limitation).
     columns:
       - name: citation_id
+        data_type: VARCHAR
         description: 'Surrogate PK -- md5(citation_number).'
         data_tests:
           - not_null
           - unique
       - name: citation_number
+        data_type: VARCHAR
         description: 'Source citation number with numeric suffix. Multi-violation tickets share the root; 67,311 rows = 61,603 distinct roots + 5,708 supplementary-violation rows.'
         data_tests:
           - not_null
           - unique
       - name: citation_ts
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Full timestamp the citation was issued (source dtissued, TIMESTAMP WITH TIME ZONE).'
         data_tests:
           - not_null
       - name: citation_date
+        data_type: DATE
         description: 'Date of citation issuance (DATE).'
       - name: citation_year
+        data_type: SMALLINT
         description: 'Year of citation issuance (SMALLINT).'
       - name: police_shift
+        data_type: VARCHAR
         description: 'Police shift during which the citation was issued. Same vocabulary as crime ("Day Shift (8AM - 4PM)", "First Half (4PM - Midnight)", "Last Half (Midnight - 8AM)").'
       - name: charge_code
+        data_type: VARCHAR
         description: 'MGL chapter/section reference for the violation (source chgcode).'
       - name: charge_description
+        data_type: VARCHAR
         description: 'Source-side description of the violation (chgdesc).'
       - name: charge_category
+        data_type: VARCHAR
         description: 'Broader category for the violation (source chgcategory). 109 distinct values -- not tested for accepted_values.'
       - name: vehicle_mph
+        data_type: INTEGER
         description: 'Vehicle speed in MPH (TRY_CAST from VARCHAR; NULL when uncastable). ~82.5% NULL -- recorded only on speed-related violations. 4 rows have implausible speeds >100 (data-entry errors at source, passed through).'
       - name: posted_mph_zone
+        data_type: INTEGER
         description: 'Posted speed limit at the citation location (TRY_CAST from VARCHAR).'
       - name: latitude
+        data_type: DOUBLE
         description: 'Geocoded latitude (WGS84). 0% NULL.'
       - name: longitude
+        data_type: DOUBLE
         description: 'Geocoded longitude (WGS84). 0% NULL.'
       - name: ward
+        data_type: VARCHAR
         description: 'Somerville ward 1-7 (source-published, not spatially derived). 84 rows NULL (~0.12%).'
         data_tests:
           - relationships:
@@ -567,16 +700,23 @@ models:
               config:
                 where: "ward IS NOT NULL"
       - name: block_code
+        data_type: VARCHAR
         description: '15-character census block code (source blockcode).'
       - name: address
+        data_type: VARCHAR
         description: 'Intersection or street address where the citation was issued.'
       - name: warning_flag
+        data_type: VARCHAR
         description: 'Source "Y" / "N" indicator. 51,422 Y / 15,889 N (76% warnings, 24% fines).'
       - name: is_warning
+        data_type: BOOLEAN
         description: 'Boolean -- TRUE when warning_flag = "Y".'
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Lineage -- UTC timestamp when the most recent pipeline run touched this row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: 'Lineage -- ULID of the pipeline run that touched this row.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: 'Lineage -- Socrata SODA URL the row came from.'

@@ -119,11 +119,13 @@ models:
       are deferred to silver/gold.
     columns:
       - name: id
+        data_type: VARCHAR
         description: 'Somerville 311 request ID. Primary key from source; also the dlt merge key.'
         data_tests:
           - not_null
           - unique
       - name: classification
+        data_type: VARCHAR
         description: 'Top of the type hierarchy. One of Service, Information, Feedback.'
         data_tests:
           - not_null
@@ -131,48 +133,69 @@ models:
               arguments:
                 values: ['Service', 'Information', 'Feedback']
       - name: category
+        data_type: VARCHAR
         description: 'Mid-level grouping within classification (e.g. Parking, Trash & Recycling).'
       - name: type
+        data_type: VARCHAR
         description: 'Leaf level of the source classification/category/type hierarchy. Becomes `request_type` in gold.'
       - name: origin_of_request
+        data_type: VARCHAR
         description: 'How the request was submitted (Contact Center, Website, etc.). Becomes `origin` in gold.'
       - name: date_created
+        data_type: VARCHAR
         description: 'Timestamp the request was opened. VARCHAR at bronze; cast to TIMESTAMPTZ in gold.'
         data_tests:
           - not_null
       - name: most_recent_status
+        data_type: VARCHAR
         description: 'Latest status of the request (Open / Closed / In Progress / On Hold).'
       - name: most_recent_status_date
+        data_type: VARCHAR
         description: 'Timestamp the most recent status was last set. VARCHAR at bronze; cast in gold.'
       - name: block_code
+        data_type: VARCHAR
         description: 'Block identifier. Padded with spaces in source when unknown -- see [docs/limitations/block-code-padded.md](../../../docs/limitations/block-code-padded.md). Cleanup deferred to Silver (MVP 3).'
       - name: ward
+        data_type: VARCHAR
         description: 'Somerville ward 1-7 as VARCHAR. NULL when unknown.'
       - name: accuracy
+        data_type: VARCHAR
         description: 'Post-resolution survey field for accuracy. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: courtesy
+        data_type: VARCHAR
         description: 'Post-resolution survey field for courtesy. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: ease
+        data_type: VARCHAR
         description: 'Post-resolution survey field for ease. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: overallexperience
+        data_type: VARCHAR
         description: 'Post-resolution survey field for overall experience. Sparse (<1% of rows) -- see [docs/limitations/2024-survey-columns-sparse.md](../../../docs/limitations/2024-survey-columns-sparse.md).'
       - name: emergency_readiness_and_response_planning
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_emergency_readiness_tag`). Sparse -- only ~4,187 rows of 1.17M carry any dept tag."
       - name: green_space_care_and_maintenance
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_green_space_tag`). Sparse."
       - name: infrastructure_maintenance_and_repairs
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_infrastructure_tag`). Sparse."
       - name: noise_and_activity_disturbances
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_noise_tag`). Sparse."
       - name: reliable_service_delivery
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_reliable_service_tag`). Sparse."
       - name: navigating_city_services_and_policies
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_city_services_tag`). Sparse."
       - name: public_space_cleanliness_and_environmental_health
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_public_space_tag`). Sparse."
       - name: voting_and_election_information
+        data_type: VARCHAR
         description: "Department tag stored as VARCHAR '0' or '1'. Cast to BOOLEAN in gold (`is_voting_tag`). Sparse."
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: |
           **PIPELINE METADATA -- not for analysis.** UTC timestamp when this
           row was last extracted from the SODA endpoint. Advances on every
@@ -180,11 +203,13 @@ models:
           business questions about when an event occurred -- use
           `date_created` (gold: `opened_dt`) for the latter.
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: |
           **PIPELINE METADATA -- not for analysis.** ULID of the pipeline
           run that produced this row's current state. Joins to
           `main_admin.fct_pipeline_run_raw.run_id` for run-level diagnostics.
       - name: _first_seen_at
+        data_type: TIMESTAMP
         description: |
           **PIPELINE METADATA -- not for analysis.** UTC timestamp when this
           row was first ingested into our warehouse. Preserved across
@@ -193,13 +218,16 @@ models:
           first see it" (this column). Maintained by a post-merge UPDATE
           inside `dlt/somerville_311_pipeline.py`, not by dlt's payload.
       - name: _source_endpoint
+        data_type: VARCHAR
         description: |
           **PIPELINE METADATA -- not for analysis.** SODA endpoint URL this
           row was extracted from. Static for this project; present
           structurally to support multi-source extensions.
       - name: _dlt_load_id
+        data_type: VARCHAR
         description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
+        data_type: VARCHAR
         description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
 
   - name: raw_somerville_wards
@@ -212,29 +240,40 @@ models:
       lat/lng). Use `geometry_wkt_wgs84` for analyst-facing work.
     columns:
       - name: ward_number
+        data_type: INTEGER
         description: 'Ward number (1-7). Joins to `fct_311_requests.ward` (which stores ward as VARCHAR -- cast at the join).'
         data_tests:
           - not_null
           - unique
       - name: object_id
+        data_type: INTEGER
         description: 'ESRI internal OBJECTID. Pipeline metadata; not for analysis.'
       - name: ogc_fid
+        data_type: INTEGER
         description: 'OGC feature id assigned by the spatial reader. Pipeline metadata; not for analysis.'
       - name: shape_length_ftus
+        data_type: DOUBLE
         description: 'Polygon perimeter length in US survey feet (source projection unit). Gold layer converts to meters.'
       - name: shape_area_sqftus
+        data_type: DOUBLE
         description: 'Polygon area in square US survey feet (source projection unit). Gold layer converts to sq km.'
       - name: geometry_wkt_wgs84
+        data_type: VARCHAR
         description: 'Polygon geometry as WKT in WGS84 (EPSG:4326). Lat/lng-friendly; the analyst-facing geometry column.'
       - name: geometry_wkt_source
+        data_type: VARCHAR
         description: 'Polygon geometry as WKT in source projection (EPSG:2249). Retained for round-trip back to shapefile + projection-aware spatial joins.'
       - name: _source_srid
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source projection identifier. Static `EPSG:2249` for this dataset.'
       - name: _extracted_at
+        data_type: TIMESTAMP
         description: '**PIPELINE METADATA.** UTC timestamp when the shapefile was loaded.'
       - name: _source_url
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Canonical Socrata permalink for the source dataset.'
       - name: _source_filename
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source shapefile filename inside the Socrata ZIP blob.'
 
   - name: raw_somerville_crime
@@ -247,41 +286,58 @@ models:
       docs/limitations/crime-data-pii-unredacted-in-bronze.md.
     columns:
       - name: incnum
+        data_type: VARCHAR
         description: 'Incident number -- case identifier from SPD records management. Primary key from source; the dlt merge key.'
         data_tests:
           - not_null
           - unique
       - name: day_and_month
+        data_type: VARCHAR
         description: 'Calendar day + month (e.g. "1/9"). NULL or blank for sensitive incidents stripped of time at source.'
       - name: year
+        data_type: VARCHAR
         description: 'Year the incident was reported (VARCHAR; source values "2017"-"2026" as of 2026-05-13).'
       - name: police_shift
+        data_type: VARCHAR
         description: 'Shift during which the incident was reported (e.g. "First Half (4PM - Midnight)").'
       - name: offensecode
+        data_type: VARCHAR
         description: 'Three-character NIBRS offense code.'
       - name: offense
+        data_type: VARCHAR
         description: 'Offense type label.'
       - name: incdesc
+        data_type: VARCHAR
         description: 'NIBRS standard definition of the offense type. Generic legal text, not victim-specific narrative.'
       - name: offensetype
+        data_type: VARCHAR
         description: 'Sub-category grouping similar offense types.'
       - name: category
+        data_type: VARCHAR
         description: 'Top-level NIBRS category. One of "Crimes against Property" / "Crimes against Person" / "Crimes against Society" / "Other".'
       - name: blockcode
+        data_type: VARCHAR
         description: 'Fixed-length 15-character census block code (state + county + tract + block + suffix). Geographic granularity floor -- ~750 blocks across Somerville.'
       - name: ward
+        data_type: VARCHAR
         description: 'Ward number (1-7) -- **space-padded to length 15 in source** (e.g. "1              "). Trim at join to gold dim_ward.ward. NULL for ~13% of rows.'
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** ULID of the pipeline run.'
       - name: _first_seen_at
+        data_type: TIMESTAMP
         description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id
+        data_type: VARCHAR
         description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
+        data_type: VARCHAR
         description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
 
   - name: raw_somerville_at_a_glance
@@ -310,26 +366,32 @@ models:
       ACS microdata.
     columns:
       - name: topic
+        data_type: VARCHAR
         description: 'Top-level metric grouping (e.g. "Population", "Median Rent Overtime", "Educational Attainment"). 25 distinct values.'
         data_tests:
           - not_null
       - name: description
+        data_type: VARCHAR
         description: 'Sub-label within the topic identifying the exact metric variant (e.g. "Total Population", "30-Year Fixed Median Rent"). Use together with `topic` for human-readable axis labels.'
         data_tests:
           - not_null
       - name: year
+        data_type: VARCHAR
         description: 'Calendar year for the metric value. 1850-2024 range; most topics 2010-2023 (ACS), Population goes back to 1850.'
         data_tests:
           - not_null
       - name: value
+        data_type: VARCHAR
         description: 'Numeric metric value in the unit named by `units`. Population: people; rent / income: USD; percentages: 0-100.'
         data_tests:
           - not_null
       - name: units
+        data_type: VARCHAR
         description: 'Unit of measure for `value` (e.g. "People", "USD", "Percent"). Source-provided; not a normalized vocabulary.'
         data_tests:
           - not_null
       - name: geography
+        data_type: VARCHAR
         description: 'Comparison geography. "Somerville" for the city; "Massachusetts" for the state comparator.'
         data_tests:
           - not_null
@@ -337,14 +399,19 @@ models:
               arguments:
                 values: ['Somerville', 'Massachusetts']
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** ULID of the manual ingestion run.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id
+        data_type: VARCHAR
         description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
+        data_type: VARCHAR
         description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
 
   - name: raw_somerville_traffic_citations
@@ -374,35 +441,48 @@ models:
       deferred to silver/gold (MVP 3 work).
     columns:
       - name: citationnum
+        data_type: VARCHAR
         description: 'Citation number + violation suffix (e.g. "T2725339-1"). Primary key from source; the dlt merge key. Each row is one violation; a citation with N violations has N rows with N distinct citationnum values.'
         data_tests:
           - not_null
           - unique
       - name: dtissued
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Timestamp the citation was issued (text from source; cast to TIMESTAMP in silver).'
         data_tests:
           - not_null
       - name: police_shift
+        data_type: VARCHAR
         description: 'Shift during which the citation was issued (e.g. "Day Shift (8AM - 4PM)").'
       - name: address
+        data_type: VARCHAR
         description: 'Address of violation. Intersection-level text (e.g. "RTE 28 & RTE 38 Somerville, MA") -- not a street number. Use `lat`/`long` for precise location.'
       - name: chgcode
+        data_type: VARCHAR
         description: 'Massachusetts General Laws violation code (e.g. "90/13B" = MGL Ch 90 Sec 13B = electronic device use while driving). Source value is space-padded.'
       - name: chgdesc
+        data_type: VARCHAR
         description: 'Plain-language violation description.'
       - name: chgcategory
+        data_type: VARCHAR
         description: 'Top-level violation category (109 distinct values; high-cardinality, no accepted_values test).'
       - name: vehiclemph
+        data_type: VARCHAR
         description: 'Speed of vehicle in mph for speeding violations; NULL for non-speeding (most warnings).'
       - name: mphzone
+        data_type: VARCHAR
         description: 'Posted speed limit at the violation location, for speeding violations.'
       - name: lat
+        data_type: VARCHAR
         description: 'Geocoded latitude (text from source; cast to DOUBLE in silver). Precise enough for point-in-polygon ward joins independent of the `ward` column.'
       - name: long
+        data_type: VARCHAR
         description: 'Geocoded longitude (text from source).'
       - name: blockcode
+        data_type: VARCHAR
         description: 'Census block code at the violation location (matches the crime data convention).'
       - name: ward
+        data_type: VARCHAR
         description: 'Ward 1-7 from source. NULL for ~0.12% of rows (84 of 67,311).'
         data_tests:
           - accepted_values:
@@ -411,6 +491,7 @@ models:
               config:
                 where: "ward is not null"
       - name: warning
+        data_type: VARCHAR
         description: 'Y if the citation was issued as a written warning (no fine); N if it carries a monetary fine. ~76% warnings, ~24% fines.'
         data_tests:
           - not_null
@@ -418,16 +499,22 @@ models:
               arguments:
                 values: ['Y', 'N']
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** ULID of the pipeline run.'
       - name: _first_seen_at
+        data_type: TIMESTAMP
         description: '**PIPELINE METADATA.** UTC timestamp when this row was first ingested. Preserved across re-extractions.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id
+        data_type: VARCHAR
         description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
+        data_type: VARCHAR
         description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
 
   - name: raw_somerville_permits
@@ -459,39 +546,54 @@ models:
       docs/limitations/permits-static-since-2023.md.
     columns:
       - name: id
+        data_type: VARCHAR
         description: 'Permit ID, year-prefixed (e.g. "B14-001277" = Building 2014 #001277). Primary key from source.'
         data_tests:
           - not_null
           - unique
       - name: application_date
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Date the permit application was submitted (calendar_date from source).'
         data_tests:
           - not_null
       - name: issue_date
+        data_type: TIMESTAMP WITH TIME ZONE
         description: 'Date the permit was issued. May be NULL for non-issued applications (Withdrawn, Denied, Under Review).'
       - name: type
+        data_type: VARCHAR
         description: 'Permit type. 20+ values observed; mostly "Residential Building" (~73%) and "Commercial Building" (~15%). No `accepted_values` test -- long tail acceptable. **11 rows have NULL type** (data quality issue at source); no `not_null` test for this reason -- see limitations entry.'
       - name: status
+        data_type: VARCHAR
         description: 'Permit status. Mostly "Issued" (~97%). Known data quality issue: some rows carry dates as status values (e.g. "08/17/2022"). 21 rows have NULL status. See limitations entry.'
       - name: amount
+        data_type: VARCHAR
         description: 'Permit fee amount in USD. Numeric.'
       - name: address
+        data_type: VARCHAR
         description: 'Property address (public information for permits). Not an applicant identifier.'
       - name: latitude
+        data_type: VARCHAR
         description: 'Geocoded latitude (WGS84). Precise enough for point-in-polygon spatial join to dim_ward.'
       - name: longitude
+        data_type: VARCHAR
         description: 'Geocoded longitude (WGS84).'
       - name: work
+        data_type: VARCHAR
         description: 'Freeform description of permitted work (e.g. "Remove and replace 1500 sf of roofing"). Occasionally includes street numbers in the text; no applicant names observed.'
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** ULID of the manual ingestion run.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id
+        data_type: VARCHAR
         description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
+        data_type: VARCHAR
         description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
 
   - name: raw_somerville_happiness_survey
@@ -524,11 +626,13 @@ models:
       (MVP 3 work).
     columns:
       - name: id
+        data_type: VARCHAR
         description: 'Respondent-response ID. Primary key from source; year-prefixed integer (sample: 1100001 = 2011 respondent #00001).'
         data_tests:
           - not_null
           - unique
       - name: year
+        data_type: VARCHAR
         description: 'Survey wave year. Biennial: 2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025.'
         data_tests:
           - not_null
@@ -536,6 +640,7 @@ models:
               arguments:
                 values: [2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025]
       - name: ward
+        data_type: VARCHAR
         description: 'Ward 1-7 (text type from source). NULL for ~50% of rows (all 2011 + a few elsewhere -- the 2011 wave did not collect ward). Required join key to gold dim_ward when not NULL.'
         data_tests:
           - accepted_values:
@@ -545,62 +650,92 @@ models:
               config:
                 where: "ward is not null"
       - name: survey_method
+        data_type: VARCHAR
         description: 'Paper, Online, Phone, etc. -- channel through which the response was collected.'
       - name: survey_language
+        data_type: VARCHAR
         description: 'Language the respondent took the survey in (English, Spanish, Portuguese, Haitian Creole observed in recent waves).'
       - name: tract
+        data_type: VARCHAR
         description: 'Census tract identifier. Geographic granularity below ward when populated; sparse across waves.'
       - name: gender
+        data_type: VARCHAR
         description: 'Self-reported gender. Open-ended values bucketed at source (Man / Woman / Non-binary / Prefer not to answer / etc.).'
       - name: age
+        data_type: VARCHAR
         description: 'Self-reported age bucket (e.g. "35 to 44"). Bucketed at source to reduce quasi-identifier risk.'
       - name: race_ethnicity
+        data_type: VARCHAR
         description: 'Self-reported race / ethnicity. Open-ended.'
       - name: housing_status
+        data_type: VARCHAR
         description: 'Renter / Owner / Other. Demographic anchor for housing-affordability questions.'
       - name: highest_level_education
+        data_type: VARCHAR
         description: 'Highest education level attained.'
       - name: tenure
+        data_type: VARCHAR
         description: 'Length of Somerville residency, bucketed.'
       - name: household_income
+        data_type: VARCHAR
         description: 'Household income bucket. Bucketed at source.'
       - name: likely_low_income
+        data_type: VARCHAR
         description: 'Derived 0/1 flag: respondent is likely below the local low-income threshold based on income + household size.'
       - name: likely_cost_burdened
+        data_type: VARCHAR
         description: 'Derived 0/1 flag: respondent likely spends >30% of income on housing.'
       - name: language_spoken
+        data_type: VARCHAR
         description: 'Primary language spoken at home (separate from `survey_language` -- some respondents take an English survey but speak another language at home).'
       - name: happiness_num
+        data_type: VARCHAR
         description: 'Headline happiness score, 1-5 Likert (1 = very unhappy, 5 = very happy).'
       - name: happiness_label
+        data_type: VARCHAR
         description: 'Headline happiness label paired with `happiness_num`.'
       - name: life_satisfaction_num
+        data_type: VARCHAR
         description: 'Life-satisfaction score, 1-5 Likert.'
       - name: somerville_satisfaction_num
+        data_type: VARCHAR
         description: 'Satisfaction with Somerville as a place to live, 1-5 Likert.'
       - name: feel_safe_somerville_num
+        data_type: VARCHAR
         description: 'Sense of safety in Somerville, 1-5 Likert. Pairs with crime + traffic-citations data once joined.'
       - name: rats_mice_concern_num
+        data_type: VARCHAR
         description: 'Concern about rats / mice, 1-5 Likert. Pairs directly with the rat-complaints data app and 311 rodent requests.'
       - name: heard_by_city_num
+        data_type: VARCHAR
         description: 'Feels heard by the city, 1-5 Likert. Pairs with 311 responsiveness measures.'
       - name: emergency_response_quality_satisfaction_num
+        data_type: VARCHAR
         description: 'Satisfaction with emergency response, 1-5 Likert.'
       - name: census_year
+        data_type: VARCHAR
         description: 'ACS reference year for the per-respondent ACS-context columns below.'
       - name: acs_somerville_median_income
+        data_type: VARCHAR
         description: "ACS Somerville median household income for the respondent's census tract / `census_year`."
       - name: acs_somerville_avg_household
+        data_type: VARCHAR
         description: "ACS Somerville average household size for the respondent's tract / `census_year`."
       - name: inflation_adjustment
+        data_type: VARCHAR
         description: "Multiplier to convert this row's income figures to a common reference year (typically the latest wave)."
       - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
         description: '**PIPELINE METADATA.** UTC timestamp of the run that touched the row.'
       - name: _extracted_run_id
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** ULID of the manual ingestion run.'
       - name: _source_endpoint
+        data_type: VARCHAR
         description: '**PIPELINE METADATA.** Source SODA URL.'
       - name: _dlt_load_id
+        data_type: VARCHAR
         description: 'dlt load identifier -- retained at every layer for source-to-pipeline lineage.'
       - name: _dlt_id
+        data_type: VARCHAR
         description: 'dlt row identifier -- retained at every layer for source-to-pipeline lineage.'
