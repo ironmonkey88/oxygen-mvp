@@ -1,0 +1,71 @@
+name: happiness_survey
+description: |
+  Somerville Happiness Survey trend-only perception fact (Plan 44,
+  MVP 3). One row per (survey_wave_id, geography_level, geography_key,
+  survey_question_id). Pairs with `survey_questions` (question
+  catalog) and `survey_waves` (wave catalog).
+
+  Aggregates are UNWEIGHTED. Every measure describes respondents who
+  answered, not Somerville residents. See
+  docs/limitations/survey-gold-unweighted.md.
+
+  No demographic dimensions at this layer -- the dim absence is the
+  k-anonymity protection (PHILOSOPHY.md sec.5). See
+  docs/limitations/survey-trend-only-no-demographics.md.
+table: main_gold.fct_happiness_survey
+datasource: somerville
+
+entities:
+  - name: survey_observation
+    type: primary
+    key: survey_observation_id
+  - name: survey_wave
+    type: foreign
+    key: survey_wave_id
+  - name: survey_question
+    type: foreign
+    key: survey_question_id
+
+dimensions:
+  - name: survey_observation_id
+    type: string
+    expr: survey_observation_id
+    primary_key: true
+    description: "Surrogate PK -- md5 of the (wave, geography_level, geography_key, question) tuple."
+  - name: survey_wave_id
+    type: string
+    expr: survey_wave_id
+    description: "FK to survey_waves. Wave year as text."
+    samples: ["2011", "2013", "2015", "2017", "2019", "2021", "2023", "2025"]
+  - name: survey_question_id
+    type: string
+    expr: survey_question_id
+    description: "FK to survey_questions. Slug identifier of the question."
+  - name: geography_level
+    type: string
+    expr: geography_level
+    description: "One of `city` or `ward`."
+    samples: ["city", "ward"]
+  - name: geography_key
+    type: string
+    expr: geography_key
+    description: "Ward number 1-7 when geography_level=`ward`; NULL when geography_level=`city`. Deliberately NOT relationship-joined to dim_ward at this layer; the grain mixes city + ward and a relationships test would fail on city rows."
+    samples: ["1", "2", "3", "4", "5", "6", "7"]
+
+measures:
+  - name: total_respondents
+    type: sum
+    expr: respondent_count
+    description: "Total respondents across the queried grain. Note: at the city+wave+question grain this is the wave's respondent count for the question; at the city+wave grain (no question filter) it sums across questions and over-counts respondents."
+  - name: mean_score_overall
+    type: average
+    expr: mean_score
+    description: "Mean-of-means at the grain. Mathematically correct for trend-tracking when grouped by wave / geography / question, but NOT a respondent-level grand mean -- the per-respondent average score would require querying silver. Document this in trust-contract receipts when the analyst asks for a 'true average'."
+  - name: pct_top_two_box
+    type: custom
+    sql: "SUM(score_4_count + score_5_count) * 1.0 / NULLIF(SUM(respondent_count), 0)"
+    description: "Standard survey 'top-two-box' -- share of respondents who rated 4 or 5 on the Likert scale, across the queried grain. Returns 0-1 (multiply by 100 for percent display)."
+  - name: pct_bottom_two_box
+    type: custom
+    sql: "SUM(score_1_count + score_2_count) * 1.0 / NULLIF(SUM(respondent_count), 0)"
+    description: "Standard survey 'bottom-two-box' -- share of respondents who rated 1 or 2. Returns 0-1."

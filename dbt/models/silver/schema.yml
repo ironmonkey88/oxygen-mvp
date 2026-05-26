@@ -1,0 +1,140 @@
+version: 2
+
+models:
+  - name: stg_happiness_survey
+    description: |
+      Silver per-respondent view of the Somerville Happiness Survey
+      (the project's first silver model -- lands in Plan 44, MVP 3).
+      One row per (respondent_id, year). 12,583 rows; 8 waves 2011-2025.
+      Carries the 8 satisfaction Likert columns that survived the
+      Plan 23 Phase D cross-wave-presence filter (>=5 of 8 waves with
+      <50% NULL) -- the analyst-usable trend set. Source: bronze view
+      raw_somerville_happiness_survey.
+
+      Curation summary:
+        * 8 of 50 `_num` satisfaction columns surface here. The other
+          42 stay in bronze (asked in <5 waves OR >=50% NULL when
+          asked) -- see Phase D matrix in
+          docs/limitations/happiness-survey-self-selection-and-coverage.md.
+        * VARCHAR -> analytical types: `year` -> INTEGER, each `_num`
+          column -> DOUBLE via TRY_CAST.
+        * Ward NULL preserved (all 2011 + ~58 residual). Gold layer
+          excludes 2011 from ward-level aggregation per the documented
+          ward coverage gap; silver keeps the full row set so a
+          count(*) reconciles to bronze.
+        * `weight` reserved but NULL on every row today. A future
+          weighting plan populates this; gold then propagates and
+          stamps `fct_happiness_survey.weight_strategy`. See
+          docs/limitations/survey-gold-unweighted.md.
+        * Demographic columns deliberately not surfaced -- k-anonymity
+          protection is structural (PHILOSOPHY.md sec.5). See
+          docs/limitations/survey-trend-only-no-demographics.md.
+
+      PII redaction discipline: this silver model has nothing to redact
+      (bronze carries no direct identifiers; the demographic columns
+      that could form quasi-identifiers are intentionally excluded).
+      Future silver models that touch PII-carrying datasets must
+      apply redaction here -- this model is a redaction no-op by
+      construction, not by oversight.
+    columns:
+      - name: respondent_id
+        data_type: VARCHAR
+        description: 'Respondent-response identifier (source `id`). Globally unique across all 8 waves: a respondent who responded in multiple waves gets distinct ids each time.'
+        data_tests:
+          - not_null
+          - unique
+      - name: year
+        data_type: INTEGER
+        description: 'Survey wave year. Cast from VARCHAR via TRY_CAST. Joins to dim_survey_wave on year.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025]
+      - name: ward
+        data_type: VARCHAR
+        description: 'Somerville ward 1-7 as VARCHAR; NULL preserved. ~49.5% NULL overall (all 6,167 rows from 2011 + ~58 residual). Gold ward-level aggregation excludes NULL rows by filtering `year >= 2013 AND ward IS NOT NULL`. See happiness-survey-self-selection-and-coverage limitation.'
+      - name: happiness_num
+        data_type: DOUBLE
+        description: 'Headline happiness Likert 1-5 (1=very unhappy, 5=very happy). Coverage: 8/8 waves -- the analyst-clean column. Cast from VARCHAR via TRY_CAST.'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "happiness_num is not null"
+      - name: life_satisfaction_num
+        data_type: DOUBLE
+        description: 'Life satisfaction Likert 1-5. Coverage: 8/8 waves.'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "life_satisfaction_num is not null"
+      - name: somerville_satisfaction_num
+        data_type: DOUBLE
+        description: 'Satisfaction with Somerville as a place to live, Likert 1-5. Coverage: 8/8 waves.'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "somerville_satisfaction_num is not null"
+      - name: beauty_neighborhood_satisfaction_num
+        data_type: DOUBLE
+        description: 'Satisfaction with neighborhood beauty / aesthetics, Likert 1-5. Coverage: 7/8 waves (not asked in 2011).'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "beauty_neighborhood_satisfaction_num is not null"
+      - name: streets_maintenance_satisfaction_num
+        data_type: DOUBLE
+        description: 'Satisfaction with street maintenance, Likert 1-5. Coverage: 7/8 waves (not asked in 2011).'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "streets_maintenance_satisfaction_num is not null"
+      - name: education_quality_satisfaction_num
+        data_type: DOUBLE
+        description: 'Satisfaction with education quality, Likert 1-5. Coverage: 6/8 waves -- the column was not asked in 2023; coverage in 2025 is partial (~44%) per the Phase D matrix.'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "education_quality_satisfaction_num is not null"
+      - name: social_community_events_satisfaction_num
+        data_type: DOUBLE
+        description: 'Satisfaction with social / community events, Likert 1-5. Coverage: 6/8 waves (not asked in 2011 or 2017).'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "social_community_events_satisfaction_num is not null"
+      - name: city_services_information_availability_satisfaction_num
+        data_type: DOUBLE
+        description: 'Satisfaction with availability of information about city services, Likert 1-5. Coverage: 6/8 waves (not asked in 2011 or 2013).'
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+              config:
+                where: "city_services_information_availability_satisfaction_num is not null"
+      - name: weight
+        data_type: DOUBLE
+        description: '**RESERVED, NULL TODAY.** Per-respondent weight for population-projected aggregates. Populated by a future weighting plan that names a defensible strategy (e.g. raking to ACS age x ward). See docs/limitations/survey-gold-unweighted.md.'
+      - name: _extracted_at
+        data_type: TIMESTAMP WITH TIME ZONE
+        description: '**PIPELINE METADATA.** UTC timestamp of the most recent bronze ingestion run.'
+      - name: _dlt_load_id
+        data_type: VARCHAR
+        description: 'dlt load identifier -- retained for source-to-pipeline lineage.'
+      - name: _dlt_id
+        data_type: VARCHAR
+        description: 'dlt row identifier -- retained for source-to-pipeline lineage.'

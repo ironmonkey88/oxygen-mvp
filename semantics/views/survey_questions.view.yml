@@ -1,0 +1,60 @@
+name: survey_questions
+description: |
+  Happiness Survey question catalog (Plan 44, MVP 3). 8 rows -- the
+  satisfaction Likert columns that survived Plan 23 Phase D's
+  cross-wave-presence filter. `question_label` values are short
+  paraphrases prefixed `[paraphrase]` -- bronze does not carry
+  per-question wording. Lets the semantic layer answer "what
+  questions are in the survey?" without joining through the fact.
+table: main_gold.dim_survey_question
+datasource: somerville
+
+entities:
+  - name: survey_question
+    type: primary
+    key: survey_question_id
+
+dimensions:
+  - name: survey_question_id
+    type: string
+    expr: survey_question_id
+    primary_key: true
+    description: "Slug identifier (e.g. `happiness`, `life_satisfaction`)."
+  - name: column_name
+    type: string
+    expr: column_name
+    description: "Source bronze column name (e.g. `happiness_num`)."
+  - name: question_label
+    type: string
+    expr: question_label
+    description: "Short paraphrase of the question, prefixed `[paraphrase]`."
+  - name: topic
+    type: string
+    expr: topic
+    description: "Thematic grouping. 5 buckets."
+    samples: ["core_wellbeing", "neighborhood", "city_services", "community_education", "civic_information"]
+  - name: scale_min
+    type: number
+    expr: scale_min
+    description: "Lower bound of the Likert scale (always 1)."
+  - name: scale_max
+    type: number
+    expr: scale_max
+    description: "Upper bound of the Likert scale (always 5)."
+  - name: first_wave_asked
+    type: number
+    expr: first_wave_asked
+    description: "Earliest survey wave year where this question cleared the >50% non-NULL filter."
+  - name: last_wave_asked
+    type: number
+    expr: last_wave_asked
+    description: "Latest survey wave year where this question cleared the >50% non-NULL filter."
+  - name: waves_asked_count
+    type: number
+    expr: waves_asked_count
+    description: "Count of waves where this question cleared the threshold (6-8)."
+
+measures:
+  - name: question_count
+    type: count
+    description: "Total surviving questions (always 8 today)."

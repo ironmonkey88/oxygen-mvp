@@ -1,0 +1,48 @@
+name: survey_waves
+description: |
+  Happiness Survey wave catalog (Plan 44, MVP 3). 8 rows -- one per
+  biennial wave 2011-2025. Data-driven from silver; respondent_count
+  and ward_coverage_pct reflect the current state of the source.
+  The 2011 wave's `notes` flags it as the analytical odd-one-out
+  (0% ward coverage; fct_happiness_survey excludes 2011 from
+  ward-level aggregation).
+table: main_gold.dim_survey_wave
+datasource: somerville
+
+entities:
+  - name: survey_wave
+    type: primary
+    key: survey_wave_id
+
+dimensions:
+  - name: survey_wave_id
+    type: string
+    expr: survey_wave_id
+    primary_key: true
+    description: "Wave year as text (e.g. `2011`)."
+    samples: ["2011", "2013", "2015", "2017", "2019", "2021", "2023", "2025"]
+  - name: wave_year
+    type: number
+    expr: wave_year
+    description: "Wave year as integer."
+  - name: respondent_count
+    type: number
+    expr: respondent_count
+    description: "Distinct respondents in this wave."
+  - name: ward_coverage_pct
+    type: number
+    expr: ward_coverage_pct
+    description: "Share of respondents in this wave with a non-NULL ward (0-100). 0.0 for 2011; 96-99.5 for 2013-2025."
+  - name: notes
+    type: string
+    expr: notes
+    description: "Wave-specific analytical note (especially the 2011 ward-coverage carve-out)."
+
+measures:
+  - name: wave_count
+    type: count
+    description: "Total waves in the survey (always 8 today)."
+  - name: total_respondents_all_waves
+    type: sum
+    expr: respondent_count
+    description: "Sum of respondent_count across waves (12,583 today)."
