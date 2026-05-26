@@ -10,6 +10,10 @@ context:
     type: file
     src:
       - "semantics/topics/service_requests.topic.yml"
+      - "semantics/topics/public_safety.topic.yml"
+      - "semantics/topics/built_environment.topic.yml"
+      - "semantics/topics/city_context.topic.yml"
+      - "semantics/topics/perception.topic.yml"
       - "semantics/views/*.view.yml"
   - name: ddl
     type: file

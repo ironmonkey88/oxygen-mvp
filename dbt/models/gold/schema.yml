@@ -720,3 +720,201 @@ models:
       - name: _source_endpoint
         data_type: VARCHAR
         description: 'Lineage -- Socrata SODA URL the row came from.'
+
+  - name: dim_survey_question
+    description: |
+      Happiness Survey question dimension (Plan 44, MVP 3). 8 rows --
+      the satisfaction Likert columns that survived Plan 23 Phase D's
+      cross-wave-presence filter (>=5 of 8 waves with <50% NULL).
+      Hand-rolled VALUES table because the source bronze documents
+      column names mechanically without per-question wording.
+      question_label values are short paraphrases prefixed [paraphrase]
+      -- a future plan that recovers exact wording from the survey
+      instrument can rewrite them. Topic taxonomy: 5 buckets
+      (core_wellbeing / neighborhood / city_services /
+      community_education / civic_information).
+    columns:
+      - name: survey_question_id
+        data_type: VARCHAR
+        description: 'Slug form of the question (e.g. `happiness`, `life_satisfaction`). Surrogate primary key.'
+        data_tests:
+          - not_null
+          - unique
+      - name: column_name
+        data_type: VARCHAR
+        description: 'Original source column name on bronze (e.g. `happiness_num`).'
+        data_tests:
+          - not_null
+          - unique
+      - name: question_label
+        data_type: VARCHAR
+        description: 'Human-readable label for the question. Prefixed `[paraphrase]` -- the bronze source does not carry per-question wording, so these are short paraphrases from the column-name semantics. A future plan with access to the survey instrument can supply verbatim wording.'
+        data_tests:
+          - not_null
+      - name: topic
+        data_type: VARCHAR
+        description: 'Thematic grouping of the question. 5 buckets cover the 8 columns.'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['core_wellbeing', 'neighborhood', 'city_services', 'community_education', 'civic_information']
+      - name: scale_min
+        data_type: INTEGER
+        description: 'Lower bound of the Likert scale (always 1 for the 8 surviving columns).'
+        data_tests:
+          - not_null
+      - name: scale_max
+        data_type: INTEGER
+        description: 'Upper bound of the Likert scale (always 5 for the 8 surviving columns).'
+        data_tests:
+          - not_null
+      - name: first_wave_asked
+        data_type: INTEGER
+        description: 'Earliest survey wave year where this question cleared the >50% non-NULL filter. Per the Phase D matrix.'
+        data_tests:
+          - not_null
+      - name: last_wave_asked
+        data_type: INTEGER
+        description: 'Latest survey wave year where this question cleared the >50% non-NULL filter. Note: `education_quality` last_wave_asked = 2021 because the column was not asked in 2023 and was only partially populated in 2025.'
+        data_tests:
+          - not_null
+      - name: waves_asked_count
+        data_type: INTEGER
+        description: 'Count of waves where this question cleared the threshold. Ranges 6-8 for the surviving columns. Non-contiguous for `social_community_events` (skipped 2011 and 2017) and `education_quality` (last full wave was 2021).'
+        data_tests:
+          - not_null
+
+  - name: dim_survey_wave
+    description: |
+      Happiness Survey wave dimension (Plan 44, MVP 3). 8 rows -- one
+      per biennial wave 2011-2025. Data-driven from
+      `stg_happiness_survey` so respondent_count + ward_coverage_pct
+      stay in sync with the source on every refresh. The 2011 wave's
+      notes column flags it as the analytical odd-one-out (0% ward
+      coverage; gold fact excludes 2011 from ward-level aggregation
+      but keeps it at city level for the 3 questions that wave asked).
+    columns:
+      - name: survey_wave_id
+        data_type: VARCHAR
+        description: 'Wave year as VARCHAR (e.g. `2011`). Surrogate primary key. Joins to fct_happiness_survey.survey_wave_id.'
+        data_tests:
+          - not_null
+          - unique
+      - name: wave_year
+        data_type: INTEGER
+        description: 'Wave year as INTEGER (1850-style sort-friendly form).'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [2011, 2013, 2015, 2017, 2019, 2021, 2023, 2025]
+      - name: respondent_count
+        data_type: INTEGER
+        description: 'Count of distinct respondents in this wave. 2011 has 6,167 (49% of total dataset); other waves range 186-1,496.'
+        data_tests:
+          - not_null
+      - name: ward_coverage_pct
+        data_type: DOUBLE
+        description: 'Share of respondents in this wave with a non-NULL ward (0-100). 0.0 for 2011; 96-99.5 for 2013-2025.'
+        data_tests:
+          - not_null
+      - name: notes
+        data_type: VARCHAR
+        description: 'Wave-specific analytical notes. The 2011 wave row flags the ward coverage gap and the city-only handling in fct_happiness_survey.'
+
+  - name: fct_happiness_survey
+    description: |
+      Happiness Survey trend fact (Plan 44, MVP 3) -- the first
+      analyst-facing perception surface in the warehouse. Pre-
+      aggregated; grain is one row per (survey_wave_id,
+      geography_level, geography_key, survey_question_id):
+        * `geography_level='city'` rows -- one per wave per asked
+          question; 8 waves including 2011.
+        * `geography_level='ward'` rows -- one per wave per ward per
+          asked question; 2013-2025 only (2011 ward coverage is 0%
+          and ward-level aggregation would produce a misleading
+          all-NULL-ward row).
+      Likert distribution columns (score_1_count..score_5_count)
+      enable top-two-box / bottom-two-box measures at the semantic
+      layer without re-querying silver.
+
+      Ships UNWEIGHTED. The `weight_strategy` column is NULL on every
+      row today; a future weighting plan populates it. Aggregates
+      describe respondents who answered, not Somerville residents.
+      See docs/limitations/survey-gold-unweighted.md and
+      docs/limitations/survey-trend-only-no-demographics.md.
+
+      Deliberate absence of a `relationships` test from
+      `geography_key -> dim_ward.ward`: the grain mixes city
+      (NULL geography_key) and ward (numeric geography_key); a
+      relationships test would fail on city rows. A future plan
+      that needs to join to dim_ward can split the fact into per-
+      geography views.
+    columns:
+      - name: survey_observation_id
+        data_type: VARCHAR
+        description: "Surrogate PK -- md5(survey_wave_id || '|' || geography_level || '|' || coalesce(geography_key, 'NULL') || '|' || survey_question_id)."
+        data_tests:
+          - not_null
+          - unique
+      - name: survey_wave_id
+        data_type: VARCHAR
+        description: 'FK to dim_survey_wave.survey_wave_id (the wave year as text).'
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_survey_wave')
+                field: survey_wave_id
+      - name: survey_question_id
+        data_type: VARCHAR
+        description: 'FK to dim_survey_question.survey_question_id.'
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_survey_question')
+                field: survey_question_id
+      - name: geography_level
+        data_type: VARCHAR
+        description: 'One of `city` (city-wide aggregation across all respondents in the wave with a non-NULL score) or `ward` (per-ward aggregation, 2013+).'
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['city', 'ward']
+      - name: geography_key
+        data_type: VARCHAR
+        description: 'Ward number 1-7 when geography_level=`ward`; NULL when geography_level=`city`. Deliberately NOT relationship-tested against dim_ward -- the city rows would fail. A future plan that splits the fact into per-geography views can wire the relationships test on the ward-only view.'
+      - name: respondent_count
+        data_type: INTEGER
+        description: 'Count of respondents at this grain who returned a non-NULL score for this question. Surfaces as the denominator for top/bottom-two-box measures.'
+        data_tests:
+          - not_null
+      - name: mean_score
+        data_type: DOUBLE
+        description: 'Arithmetic mean of the Likert scores at this grain. Unweighted.'
+        data_tests:
+          - not_null
+      - name: median_score
+        data_type: DOUBLE
+        description: 'Median Likert score at this grain. Robust to outliers; usually integer-valued for Likert 1-5 distributions.'
+      - name: score_1_count
+        data_type: INTEGER
+        description: 'Count of respondents who scored 1 (lowest Likert value -- "very dissatisfied" / "very unhappy").'
+      - name: score_2_count
+        data_type: INTEGER
+        description: 'Count of respondents who scored 2.'
+      - name: score_3_count
+        data_type: INTEGER
+        description: 'Count of respondents who scored 3 (neutral).'
+      - name: score_4_count
+        data_type: INTEGER
+        description: 'Count of respondents who scored 4.'
+      - name: score_5_count
+        data_type: INTEGER
+        description: 'Count of respondents who scored 5 (highest -- "very satisfied" / "very happy").'
+      - name: weight_strategy
+        data_type: VARCHAR
+        description: '**RESERVED, NULL TODAY.** Names the weighting strategy applied to the row when populated (e.g. `raked_age_ward_2020_acs`). Companion to silver.stg_happiness_survey.weight. See docs/limitations/survey-gold-unweighted.md.'

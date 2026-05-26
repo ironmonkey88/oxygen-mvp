@@ -1,0 +1,22 @@
+name: perception
+description: |
+  Somerville resident perception signal -- the Happiness Survey
+  curated for analyst use (Plan 44, MVP 3). The first non-operational
+  topic in the warehouse: opinion data rather than counts of events.
+
+  **Read the caveats before using these views.** Respondents are
+  self-selected (not a random sample of residents); the 2011 wave has
+  0% ward coverage and is excluded from ward-level aggregation; only
+  8 of 50 satisfaction Likert columns surface in gold (the ones that
+  cleared the >=5-wave / <50%-NULL filter in Plan 23 Phase D);
+  aggregates are unweighted. Every analyst-facing surface that uses
+  these measures must say "respondents who answered" rather than
+  "Somerville residents."
+
+  - happiness_survey   -- the trend fact (8 waves x city/ward x 8 questions)
+  - survey_questions   -- the 8-question catalog with topic + coverage
+  - survey_waves       -- the 8-wave catalog with respondent count + ward %
+views:
+  - happiness_survey
+  - survey_questions
+  - survey_waves

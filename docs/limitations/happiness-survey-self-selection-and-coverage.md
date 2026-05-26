@@ -99,17 +99,50 @@ slices.
 
 - Bronze: as-is. Caveats live here and are surfaced by the Answer
   Agent's trust contract when survey-affecting queries are asked.
-- **Gold: deferred (Plan 23 Phase D halted 2026-05-15).** Pre-flight
-  applied the prompt's cross-wave-presence filter (a `{topic}_num`
-  column must have <50% NULL in ≥5 of the 8 waves to be analyst-
-  usable). Only **8 of 50 `_num` columns survived** the filter —
-  below the threshold of 12 the prompt set as the floor for a usable
-  gold layer. Thin gold isn't worth jamming in. See Phase D halt
-  matrix below.
-- Silver / gold: MVP 3 work. Curation will resolve the column-drift
-  issue (year-aware filtering, harmonized question keys), apply
-  k-anonymity on demographic combinations, and document the
-  weighting strategy if joined aggregates are surfaced.
+- **Silver: shipped (Plan 44).** `main_silver.stg_happiness_survey`
+  -- 12,583 rows, per-respondent grain, 8 curated `_num` columns
+  cast to DOUBLE, ward NULL preserved, `weight` reserved-NULL.
+- **Gold: shipped (Plan 44) -- aggregate-only, no demographic dims,
+  unweighted with weight column reserved for future plan.** Three
+  models: `dim_survey_question` (8 rows, question catalog with
+  coverage profile), `dim_survey_wave` (8 rows, wave catalog with
+  ward coverage %), `fct_happiness_survey` (trend fact at
+  wave × geography_level × geography_key × question grain; city +
+  ward levels; 2011 excluded from ward aggregation). Reachable via
+  the `perception` semantic topic. See companion limitations
+  [`survey-gold-unweighted`](survey-gold-unweighted.md) and
+  [`survey-trend-only-no-demographics`](survey-trend-only-no-demographics.md).
+
+## What MVP 3 silver/gold did and did not do
+
+Plan 44 locked three decisions before building:
+
+1. **Scope: trend over time, not the operational-pairing fact.**
+   Gold answers "how has feeling about X trended across waves in
+   Somerville / Ward N?" -- not "did satisfaction track outcomes?"
+   The operational-pairing surface (survey × 311 × crime × permits
+   joined by ward × year) is deliberately deferred to a future plan;
+   it's likely best built as a dashboard or analyst notebook rather
+   than a fact.
+2. **No demographic dimensions in silver or gold.** Demographics
+   (age, gender, race, identity flags, household composition,
+   income) stay in bronze. The k-anonymity protection is structural
+   (PHILOSOPHY.md sec.5): with no demographic dims surfaced, there
+   are no thin slices to suppress. A future plan with explicit
+   suppression machinery (e.g. k=5 floor on joined demographic
+   combinations) can expand the surface.
+3. **Designed for weighting, ships unweighted.** Silver reserves a
+   `weight` column on every respondent row; gold reserves a
+   `weight_strategy` column on every observation row. Both are
+   NULL today. A follow-up plan that names a defensible weighting
+   strategy (e.g. raking to ACS age x ward 2020) populates these and
+   re-renders the aggregates weighted.
+
+The Phase D coverage matrix below is the canonical source for which
+8 of 50 satisfaction Likert columns surface in silver / gold. It
+travels with the data into `dim_survey_question`:
+`first_wave_asked` / `last_wave_asked` / `waves_asked_count` carry
+the relevant per-question numbers from the matrix.
 
 ## Phase D pre-flight cross-wave-presence matrix (2026-05-15)
 
