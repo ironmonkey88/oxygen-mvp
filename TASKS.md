@@ -5,16 +5,25 @@
 
 ---
 
-## Next Focus — Survey weighting + perception-trend dashboard + operational-pairing analysis + Plans 18/19 Builder-CLI dashboards
+## Next Focus — Stack-in-a-Box follow-ups + survey weighting + perception-trend dashboard
 
-Plan 44 closed the original Plan 24 reservation (Happiness Survey silver + gold). Natural follow-ups surfaced by that work:
+**Plan 46 done 2026-05-27** — [x] Stack-in-a-Box handoff digest and new-repo initialization. Both repos shipped. **`oxygen-mvp`:** Plan 46 prompt+report files at `docs/prompts/plan-46-stack-in-a-box-handoff-and-init.{md,report.md}` per Plan 43 convention; this LOG/TASKS row; session file at [`session-68-2026-05-27-plan-46-...`](docs/sessions/session-68-2026-05-27-plan-46-stack-in-a-box-handoff-and-init.md). **New repo [`ironmonkey88/stack-in-a-box`](https://github.com/ironmonkey88/stack-in-a-box):** public, MIT license, default branch `main`. 7 sequential commits covering initial structure + README + 5 discipline docs (adapted, not copy-pasted — CLAUDE.md gains "orient before executing" §1 + "closing ritual" §9 not in oxygen-mvp) + LOG.md/TASKS.md + 13 v4 setup scripts (all pass `bash -n`) + 3 design docs + handoff history. 5 open decisions surface as [`OPEN_DECISIONS.md`](https://github.com/ironmonkey88/stack-in-a-box/blob/main/docs/design/OPEN_DECISIONS.md) in the new repo. Pragmatic compromise: prompt file in `oxygen-mvp/docs/prompts/` contains the prompt header + clear honest pointer to where embedded handoff material landed (the substantive content is in stack-in-a-box per Phase D), rather than duplicating all ~50KB of embedded content in two places. Surfaced honestly in the file + the report-back. Out of scope: shellcheck (future), EC2 install (future), the 16 missing artifacts from handoff §9 (future), resolving the 5 open decisions (future Chat-side), repo rename (future after decision #5).
+
+Natural follow-ups when Plan 46 completes:
+
+- **Shellcheck pass + first real install** in the new `stack-in-a-box` repo (Plan 1 in that repo's own ledger).
+- **5 open decisions resolution** (Tailscale required vs. optional; smoke source; smoke in main path vs. `examples/`; Oxygen version pinning; repo name) — Chat-side decision session.
+- **The second batch** — run.sh + the 16 missing artifacts per handoff §9.
+
+Plan 44 closed the original Plan 24 reservation (Happiness Survey silver + gold). Natural follow-ups still queued:
 
 - **Survey weighting computation plan** — populates the reserved `weight` (silver) + `weight_strategy` (gold) slots with a defensible strategy (e.g. raking to ACS age × ward 2020).
 - **Perception-trend dashboard** — first dashboard built on the new `fct_happiness_survey`; likely a Verdict-First Trend family member per `docs/dashboard-family-design-2026-05-22.md`.
-- **Operational-pairing analysis** — "did satisfaction track outcomes?" joining `fct_happiness_survey` × `fct_311_requests` / `fct_crime_incidents` / `fct_permits` by ward × year. Likely a dashboard or analyst notebook rather than a fact table per Plan 44 Out-of-Scope.
+- **Operational-pairing analysis** — "did satisfaction track outcomes?" joining `fct_happiness_survey` × `fct_311_requests` / `fct_crime_incidents` / `fct_permits` by ward × year.
 - **Plan 41** (DBA v1.2 calibration) — best after a few weeks of v1.1 data.
 - **Plan 42** (memory-to-file migrations) — needs the placement conversation.
 - **Plans 18/19** (Builder-CLI dashboards) — still queued.
+- **Plan 45** (perception trend dashboard) — in-flight on its own branch.
 
 **Plan 36 done 2026-05-23** — [x] Allowlist audit (information request, PROMPTS.md §2). Report at [`docs/audits/allowlist-audit-2026-05-22.md`](docs/audits/allowlist-audit-2026-05-22.md). Bottom line: 3-tier user-configurable allowlist (Tier 1 `settings.json` / Tier 2 `settings.local.json` / Tier 3 worktree `settings.local.json`) exists exactly as CLAUDE.md "Allowlist policy" documents; two additional surfaces (bash safety hook + Claude Code built-in auto-allow) flagged as not-tiers-but-affect-what-reaches-matcher. Scanned 15 transcripts / 2,514 Bash calls / 200 errored results / **55 denial events**: 52 are hook denials catching Code's own forbidden shell shapes (31 `;`, 21 `&&`/`||`, 2 `$()`), only 3 are real allowlist permission denials and all 3 are `git branch -d` destructive ops correctly caught by the existing deny list. Recommendations: 2 Tier-1 additions (`Bash(gh pr create *)` + `Bash(gh pr merge *)` — every PR cycle prompts despite autonomous-execution policy endorsing them); 5 memory-to-file migrations per Plan 29 durability lesson (boot-audit checklist → CLAUDE.md, git+SSH gotchas → CLAUDE.md "Known gotchas", no-SSH-heredocs → CLAUDE.md "Bash Safety", chat-code handoff format → PROMPTS.md, settings.json editing freedom → CLAUDE.md "Allowlist policy" sub-bullet). Code's read on Plan 37 timing: the 2 `gh` additions are obvious one-line edits; the memory-to-file migrations need a real conversation about placement and wording. Split suggested: Plan 37 = gh additions (small, immediate); Plan 38 = memory-to-file migrations (deliberate). Halt conditions did not fire.
 
