@@ -1,5 +1,12 @@
 # CLAUDE.md — Instructions for Claude Code
 
+> **⚠️ Which repo is this? Read before you get confused by recent history.**
+> This is **`oxygen-mvp`** — the **Somerville** civic-analytics build (GitHub `ironmonkey88/oxygen-mvp`, live EC2 at `oxygen-mvp.taildee698.ts.net`, the 4-MVP sequence, MVP 2 active).
+>
+> There is a **separate sibling repo** at `/Users/gordonwong/claude-projects/stack-in-a-box` (GitHub `ironmonkey88/stack-in-a-box`): a **generic, dataset-agnostic analytics-stack template** *extracted from* this project's proven patterns. It is **not** a rename, fork, or pivot of oxygen-mvp — both projects continue independently. stack-in-a-box uses **NYC 311 smoke data** (not Somerville 311), has **its own CLAUDE.md + discipline docs + plan ledger** (its Plan 1, Plan 2, … are unrelated to oxygen-mvp's plans), and has **no EC2 yet** (its Plan 3 provisions the first one).
+>
+> If recent conversation/session history mentions "stack-in-a-box," "the second batch," NYC 311, or PRs against `ironmonkey88/stack-in-a-box`, **that work belongs to the sibling repo, not here.** Do not import its plan numbers, TASKS/LOG entries, NYC 311 models, or commits into oxygen-mvp. When you're working in `stack-in-a-box`, follow *its* CLAUDE.md; when you're here, follow this one. Don't conflate the two ledgers, MVP/plan sequences, smoke datasets, or EC2 hosts.
+
 This file is instructions for Claude Code. The project has a hierarchy of documents — read in this order:
 
 **Foundational (not project-specific):**
