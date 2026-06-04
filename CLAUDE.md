@@ -52,6 +52,10 @@ Gordon is an experienced Snowflake/dbt/Looker architect who is new to Oxygen.
 - DO explain how Oxygen implements these concepts differently
 - Lead with the dbt/Looker analogy, then explain the Oxygen difference
 
+### Bookending longer responses
+
+For a long or multi-part response (an evaluation, a recommendation with tiers, a comparison, a non-trivial report-back), **lead with a one-line `TL;DR:`** that states the bottom-line recommendation, **and end with a short `Summary:`** that restates the decision and any open ask. Use judgement: skip both for short, direct answers — a one-line reply or a single-topic question doesn't need bookends, and adding them is just noise. The test is whether a reader skimming only the first and last lines would come away with the right takeaway.
+
 ---
 
 ## Stack at a Glance
