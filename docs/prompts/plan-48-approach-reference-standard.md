@@ -160,10 +160,18 @@ The verbatim prompt above is reproduced as received. Three things were resolved
 in-session and are recorded here so this lineage file is self-contained.
 
 1. **Plan numbers.** Resolved against each repo's Plans Registry at fire time:
-   - `oxygen-mvp` → **Plan 47** (41/42/45 reserved-active, 46 highest used).
+   - `oxygen-mvp` → **Plan 48**. (Initially landed as "Plan 47" — branch
+     `claude/plan-47-approach-reference-standard`, merged PR #78. A plan-number
+     collision was then found with the older, still-open PR #76 ("Plan 47: tech
+     + test debt assessment"), which had the prior claim on 47. Per Gordon's
+     call this work yielded and was renumbered 47 → 48 — the next genuinely-free
+     slot — in a follow-up PR. Root cause: `gh pr list` was not run at session
+     start, so the open-PR claim on 47 was missed; the registry on `main` showed
+     46 as the highest.)
    - `stack-in-a-box` → **Plan 5** (Plans 1–3 done; **Plan 4 is already
      reserved** for the retroactive Oxygen-version pin, so 4 was not free).
-   Neither was ambiguous, so the plan-number halt condition did not fire.
+   Neither slot was ambiguous *on `main`*; the collision was an unmerged-PR
+   claim the registry didn't yet show.
 
 2. **Canonical body delivery.** The "Canonical content" section above is a
    placeholder — the attachment it points to was not delivered with the prompt.

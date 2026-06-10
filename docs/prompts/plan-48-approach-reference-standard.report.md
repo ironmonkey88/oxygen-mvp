@@ -1,12 +1,19 @@
-# Report — Plan 47: APPROACH.md as the cross-repo reference standard
+# Report — Plan 48: APPROACH.md as the cross-repo reference standard
 
 **Status:** complete
 **Date:** 2026-06-10
 **Session:** 69
-**Repo:** `oxygen-mvp` (Plan 47) · sibling `stack-in-a-box` (Plan 5)
-**Prompt:** [`plan-47-approach-reference-standard.md`](plan-47-approach-reference-standard.md)
-**PR (this repo):** https://github.com/ironmonkey88/oxygen-mvp/pull/78
-**PR (sibling):** see `stack-in-a-box` Plan 5 PR (linked in that repo's report)
+**Repo:** `oxygen-mvp` (Plan 48) · sibling `stack-in-a-box` (Plan 5)
+**Prompt:** [`plan-48-approach-reference-standard.md`](plan-48-approach-reference-standard.md)
+**PR (this repo):** https://github.com/ironmonkey88/oxygen-mvp/pull/78 (original landing, titled "Plan 47") + renumber follow-up PR (47 → 48)
+**PR (sibling):** https://github.com/ironmonkey88/stack-in-a-box/pull/8 (Plan 5)
+
+> **Plan-number note.** This work first merged as **Plan 47** (PR #78) before a
+> collision was found with the older still-open PR #76 ("Plan 47: tech + test
+> debt assessment"). Per Gordon's call it was renumbered **47 → 48** (the next
+> free slot) in a follow-up PR; #76 keeps Plan 47. The branch name
+> `claude/plan-47-approach-reference-standard` and PR #78's title are historical
+> and unchanged.
 
 ---
 
@@ -27,17 +34,18 @@ specific instance that specializes the standard.
   rule.
 - `session-starter.md` — parallel APPROACH.md bullet above the PHILOSOPHY.md
   bullet in "How We Work Together".
-- `LOG.md` — Plans Registry Plan 47 row + Last Updated bump.
-- `TASKS.md` — Plan 47 done entry in Next Focus.
-- `docs/prompts/plan-47-approach-reference-standard.{md,report.md}` — prompt
+- `LOG.md` — Plans Registry Plan 48 row + Last Updated bump.
+- `TASKS.md` — Plan 48 done entry in Next Focus.
+- `docs/prompts/plan-48-approach-reference-standard.{md,report.md}` — prompt
   (Phase 0) + this report.
 
 ## Decisions
 
-- **Plan numbers** — oxygen-mvp **47** (41/42/45 reserved, 46 highest used);
-  stack-in-a-box **5**, not 4 — Plan 4 there was already reserved for the
-  retroactive Oxygen-version pin. Neither ambiguous; plan-number halt did not
-  fire.
+- **Plan numbers** — oxygen-mvp **48** (first landed as 47, then renumbered —
+  see the Plan-number note above; 41/42/45 reserved, 47 taken by the older open
+  PR #76); stack-in-a-box **5**, not 4 — Plan 4 there was already reserved for
+  the retroactive Oxygen-version pin. Neither slot was ambiguous on `main`; the
+  47 collision was an unmerged-PR claim the registry didn't yet show.
 - **Canonical body delivery** — the prompt's "Canonical content" section was a
   placeholder; the attachment it referenced was not delivered. The body arrived
   separately in Chat, alongside an aligned Google Doc ("How-We-Build-Summary").
