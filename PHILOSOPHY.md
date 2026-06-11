@@ -139,11 +139,20 @@ moves inside it:
    surface it. **Surfacing progress is not editorializing. It is correcting a
    bias the platform would otherwise inherit silently.**
 
-3. **The resident is the measure.** Per system humanism: the platform is
-   judged by whether it widens a resident's understanding and agency. Every
-   feature answers to that. A dashboard that impresses but does not help a
-   resident see their city more truly has failed the test, however elegant it
-   is.
+3. **The resident is the measure** — the Somerville-specific form of the
+   reference standard's general principle that *the people the work is about
+   are the measure*. Per system humanism: the platform is judged by whether it
+   widens a resident's understanding and agency. Every feature answers to that.
+   A dashboard that impresses but does not help a resident see their city more
+   truly has failed the test, however elegant it is.
+
+Named in three words, these moves are the project's creed: **empathy, honesty,
+optimism** — the same creed the reference standard carries, read here in
+Somerville's terms. Each word names one of the moves above. *Honesty* is move 1:
+the non-negotiable, the rule the other two answer to. *Optimism* is move 2:
+never a mood, but the earned conclusion that surfacing progress makes visible.
+*Empathy* is move 3: the insistence that an answer is judged by whether it
+serves and fits the resident it is for.
 
 A one-line form, for when the full statement is too long to carry:
 
@@ -320,6 +329,8 @@ rule.
 
 Every feature is judged by whether it widens a resident's understanding and
 agency. Cleverness, completeness, and elegance are not goals in themselves.
+(§3 frames "resident" here as the Somerville form of the reference standard's
+general measure — *the people the work is about*.)
 
 *Lives in:* the resident-effort framing carried across the portal, the
 plain-language Outcome requirement in PROMPTS.md, and the design instinct that
