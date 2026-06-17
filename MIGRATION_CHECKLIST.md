@@ -3,11 +3,12 @@
 > Tracker for the full migration. `[x]` = done, `[ ]` = to do.
 > Detailed runbook: **`PROJECT_MIGRATION_2026-06-07.md`** (§9 = fresh-laptop setup, §3 = memory, §5–6 = EC2/access, §9d = allowlist). Cold-start handoff: **`docs/MIGRATION_SUMMARY.md`** (Plan 8 / oxygen Plan 50). Committed to both repos.
 > **Last updated: 2026-06-17.**
+> **Re-verified 2026-06-17 17:16 ET:** working tree clean; `main` == `origin/main` (`4ef4483`). One local-only commit was found and **pushed to preserve it** — `claude/approach-provenance-footer` (`7adfc72`, a 2-line APPROACH.md provenance-footer mirror; unmerged feature branch, safe on origin now). oxygen **PR #76** (Plan 47 tech-debt assessment) still the only open PR.
 
 ---
 
 ## A. Preserve everything before the move (old laptop) — ✅ DONE
-- [x] **All git work pushed** — verified *no* unpushed commits in either repo (2026-06-17). Nothing git-tracked is laptop-only.
+- [x] **All git work pushed** — re-checked 2026-06-17 17:16 ET. One local-only commit surfaced (`claude/approach-provenance-footer` `7adfc72`) and was **pushed**; now nothing git-tracked is laptop-only. (`docs/quick-dives/builder-agent.md` remains untracked/local — a minor quick-dive note; commit it if you want it to travel.)
 - [x] **Migration reference docs written + committed + pushed** — `PROJECT_MIGRATION_2026-06-07.md` (root) + `docs/MIGRATION_SUMMARY.md` (Plan 8), both repos.
 - [x] **Auto-memory captured** — `~/.claude` memory won't travel; all 16 facts reproduced in `PROJECT_MIGRATION §3`.
 - [x] **Allowlist preserved** — the big `.claude/settings.json` (oxygen 342 / stack 235 lines) + `block-dangerous.sh` hook are **git-tracked** (clone restores them); gitignored `settings.local.json` snapshot captured in `PROJECT_MIGRATION` Appendix.
@@ -60,6 +61,7 @@
 - [ ] **stack-in-a-box:** finish **Plan 4** (Phases 4/5/7 on the existing box; Phase 6 needs a fresh box) — branch `claude/plan-04-pin-gates-lockaware`, spec at its `docs/prompts/`
 - [ ] **oxygen-mvp:** merge / iterate **PR #76** (Plan 47 tech-debt assessment)
 - [ ] **oxygen-mvp:** start the **tech-debt decision register** — assign the real next plan # (~50; verify against the live LOG.md registry, don't guess) from `docs/prompts/_pending-tech-debt-decision-register.md`
+- [ ] **oxygen-mvp: decide on OSS dbt tooling** (chat-only recommendation from 2026-06-03 — **not yet in any git doc, would otherwise be lost in the move**). Verdict: **install now** `dbt-project-evaluator` (graph/governance linter — would auto-catch the admin-models-bypass-`ref()` seam + silver-skip edges Plan 47 found by hand; DuckDB-supported, needs a `dispatch` config) + `dbt_utils` (you have **0 project macros**; foundation for the §7 "macros" step). **Treat as an MVP-3 replace-vs-duplicate decision, its own plan:** `elementary` (overlaps the hand-built `fct_data_profile` / `fct_test_run` / `/trust` / `/profile` — adopt only by *retiring* that, not bolting on). **Skip for now:** `dbt_expectations`. Fold the two Tier-1 tools into the Plan 47 §7 sequence once ratified.
 
 ## I. Optional cleanup (not blocking)
 - [ ] Reconcile the two overlapping migration docs (`PROJECT_MIGRATION_2026-06-07.md` + `docs/MIGRATION_SUMMARY.md`) — pick one canonical or cross-link them
