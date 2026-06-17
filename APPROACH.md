@@ -223,3 +223,5 @@ implementation detail this document deliberately omits. When this document and a
 more detailed doc disagree on a **principle**, this one wins and the detailed doc
 is reconciled to it; when they disagree on **how something is currently done**,
 the operational doc wins. They answer different questions.*
+
+*Provenance: for the reasoning behind these choices — why each was made and what was rejected — see `docs/design/APPROACH_DESIGN_REASONING.md` in the `stack-in-a-box` repo.*
