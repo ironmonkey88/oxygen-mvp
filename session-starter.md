@@ -104,6 +104,7 @@ All of these live in the `oxygen-mvp` repo and are **searchable in project knowl
 | ARCHITECTURE.md | Stack decisions, component map, data flow, run order |
 | STANDARDS.md | "Done done" gates by layer; per-MVP sign-off checklists |
 | config.yml | Global Oxygen configuration |
+| docs/MIGRATION_SUMMARY.md | Cold-start handoff — read if restarting the project in a new account / fresh context (cross-repo, byte-identical to the sibling repo's copy) |
 
 Also searchable and worth pulling on demand: files under `docs/plans/` (canonical plan documents per Rule 9), `docs/prompts/` (Chat-issued prompts + Code-issued reports, per-work-item — see [`docs/prompts/README.md`](docs/prompts/README.md)), `docs/sessions/` (full session narratives — the bronze layer behind LOG.md), `docs/handoffs/` (end-of-thread Code → Chat summaries), `docs/limitations/` (the limitations registry), and `docs/transcripts/` (Builder Agent + similar interactive sessions).
 
