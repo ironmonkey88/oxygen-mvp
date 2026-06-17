@@ -183,6 +183,98 @@ just `gh auth login` under the new account. If moving to a **new machine**, copy
 
 ---
 
+## 9. Fresh sibling setup — from zero (NEW LAPTOP + new account)
+
+This move is **both a new Claude account and a new Mac.** Nothing local carries over
+automatically — but most of what matters is in GitHub. Steps:
+
+### 9a. Install tooling on the new Mac
+- **Claude Code** (the CLI harness) + sign in to the new Claude account.
+- **git**, **gh** (GitHub CLI), **Tailscale** client. (Python 3.12 optional — the
+  local dir is docs-only per the EC2-first workflow; pipelines run on EC2.)
+- Optional: **shellcheck** (used to lint the stack-in-a-box setup scripts).
+
+### 9b. Clone both repos to the exact expected paths
+Paths are load-bearing — the auto-memory key and various docs assume `~/claude-projects/<repo>`:
+```
+mkdir -p ~/claude-projects
+git clone https://github.com/ironmonkey88/oxygen-mvp.git      ~/claude-projects/oxygen-mvp
+git clone https://github.com/ironmonkey88/stack-in-a-box.git  ~/claude-projects/stack-in-a-box
+```
+
+### 9c. Authenticate & reconnect
+- `gh auth login` — access to **`ironmonkey88`**.
+- **Tailscale:** log into the `gordon@` tailnet; `tailscale status` must show both EC2 nodes (`oxygen-mvp`, `stack-in-a-box`), else the hostnames won't resolve.
+- **SSH keys → `~/.ssh/`:** copy `stackinaboxdemo.pem` (stack box) + the oxygen-mvp box key from the old Mac; `chmod 400` each.
+- **Secrets → `~/.config/sib/`:** copy `anthropic.key` + `tailscale.key` if continuing stack-in-a-box installs.
+- **Large-push gotcha:** on fresh clones, if a `git push` fails with HTTP 400 / "remote end hung up" on a binary-heavy commit, set once per repo: `git -C <repo> config http.postBuffer 524288000`.
+
+### 9d. The allowlist — what migrates, what to recreate ⭐ (the thing not to lose)
+**The bulk is already safe — it is git-tracked and arrives with `git clone`, zero manual work:**
+- `<repo>/.claude/settings.json` — the universal allowlist (**oxygen 342 lines, stack 235 lines**).
+- `<repo>/.claude/hooks/block-dangerous.sh` — the bash-safety hook.
+
+These are committed in BOTH repos. Cloning restores them verbatim. **This is ~95% of the painstaking work and needs nothing.**
+
+**Recreate only if you want them (per-machine, gitignored, NOT cloned):**
+- `<repo>/.claude/settings.local.json` — per-machine scratch (SSH-key Read path, one-off
+  commands, local MCP tool names). Policy: load-bearing patterns belong in the committed
+  `settings.json`, so this file is mostly disposable. Its one durable entry —
+  `Read(//Users/gordonwong/.ssh/**)` — has the **same path** on the new Mac (same username),
+  so even that copies cleanly. stack-in-a-box has no local file. The oxygen-mvp local file's
+  full contents are snapshotted in the **Appendix** below so nothing is lost; most entries are
+  one-off session commands you can ignore. The useful patterns to re-add as you go:
+  `Read(//Users/gordonwong/.ssh/**)`, `Bash(gh repo *)`, `Bash(gh api *)`, `Bash(brew *)`,
+  `Bash(pip3 install *)`, `Bash(tailscale ping *)`, `WebSearch`.
+- `~/.claude/settings.json` (user-global) — **UI prefs only** (theme, notifications). No
+  allowlist content; nothing to migrate. (For reference it was: `theme: dark`,
+  `remoteControlAtStartup: true`, `agentPushNotifEnabled: true`, `inputNeededNotifEnabled: true`.)
+
+**Verify the allowlist survived:** open Code in each repo and (1) run an allowlisted command
+(e.g. `git -C <repo> status`) — should NOT prompt; (2) try a chained command (`echo a && echo b`)
+— should be **hook-denied** (proves `block-dangerous.sh` is active). If both hold, the allowlist
+is fully restored.
+
+### 9e. You're ready when…
+- Both repos cloned under `~/claude-projects/`; `git status` clean; local `main` == `origin/main`.
+- `gh pr list` works on both (oxygen PR #76 visible).
+- `tailscale status` shows both EC2 nodes; `ssh -i ~/.ssh/stackinaboxdemo.pem ubuntu@stack-in-a-box.taildee698.ts.net 'echo ok'` returns `ok`.
+- In Code: allowlisted commands don't prompt; chained commands are hook-denied.
+- The §3 memory facts are recreated in the new account's memory (new `~/.claude`).
+
+---
+
+## Appendix — `oxygen-mvp/.claude/settings.local.json` snapshot (2026-06-07)
+
+Verbatim copy of the gitignored per-machine allowlist, preserved so nothing is lost.
+**Most entries are one-off session commands** (SSH to the stack box during Plan 3/4) and
+are safe to ignore; the reusable patterns are listed in §9d. No secrets — paths + command
+patterns only.
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/gordonwong/.ssh/**)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "Bash(brew list *)",
+      "Bash(brew install *)",
+      "Bash(pip3 install *)",
+      "Bash(tailscale ping *)",
+      "WebSearch",
+      "Bash(command -v aws)",
+      "Bash(env)",
+      "mcp__2da45f02-7adc-4c48-a12b-fcbef7788140__get_file_metadata",
+      "mcp__2da45f02-7adc-4c48-a12b-fcbef7788140__read_file_content"
+    ],
+    "_note": "Curated to the reusable patterns. The live file also held ~35 one-off, fully-qualified session commands (ssh ... ubuntu@stack-in-a-box ... 'bash launch_bootstrap.sh --only NN', specific mkdir/cp/grep/find/shellcheck invocations against absolute stack-in-a-box paths) — all disposable scratch from the Plan 3/4 install work; do not migrate. The committed .claude/settings.json is the durable allowlist."
+  }
+}
+```
+
+---
+
 *Authored by Claude Code on 2026-06-07 from live repo + memory + EC2 state. Identical
 copy committed to both repos at root. If anything here disagrees with a repo's live
 `LOG.md`/`CLAUDE.md`, the live repo files win — this is a point-in-time snapshot.*
