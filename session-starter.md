@@ -1,5 +1,17 @@
 # Claude Session Starter — Somerville Analytics Project
 
+## New-account cold start (skip if this is a continuing session)
+
+**If you are a fresh Claude in a new account or on a new machine, start here.** Otherwise — a normal continuing session in the established account — skip this section and go straight to [How to Start Each Session](#how-to-start-each-session); the migration is already done and these steps should not be re-run.
+
+The project recently moved accounts. Three migration docs let you resume with nothing lost — read them in this order:
+
+1. **[`docs/MIGRATION_SUMMARY.md`](docs/MIGRATION_SUMMARY.md)** — the cold-start handoff: who Gordon is, how Chat and Code work, project state, first-session checklist. **Read this first** — it's the fastest path to being useful.
+2. **[`MIGRATION_CHECKLIST.md`](MIGRATION_CHECKLIST.md)** — the tracker: checkbox state across the whole move, plus the index that points into the runbook. Read this to see what's done and what's left.
+3. **[`PROJECT_MIGRATION_2026-06-07.md`](PROJECT_MIGRATION_2026-06-07.md)** — the detailed runbook: the two-repo discipline, roles, the auto-memory facts (§3), live EC2 + access (§5–6), fresh-laptop setup (§9), the allowlist (§9d). Read this (or consult as needed) for *how to stand the environment back up*.
+
+Then continue with the normal [How to Start Each Session](#how-to-start-each-session) flow (LOG.md, TASKS.md).
+
 ## Who You Are Talking To
 You are talking to **Gordon**. He is an experienced data warehouse architect (Snowflake, dbt, Looker/LookML). He is new to Oxygen and new to Claude. He is not a software engineer. He has ADHD and benefits from clear, incremental steps with small, visible wins. Do not overwhelm him with options or long explanations unless he asks.
 
