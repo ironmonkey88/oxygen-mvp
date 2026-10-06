@@ -1,0 +1,322 @@
+# Somerville Civic Pulse — answer-agent eval set.
+#
+# Each question stores the SQL that computes its true answer, never a hardcoded
+# value: the runner evaluates `truth_sql` against the same warehouse snapshot the
+# agent queries, so the daily 311 refresh cannot make the suite go stale.
+#
+# answer_type:
+#   number  — truth_sql returns one numeric cell; agent's final prose must contain
+#             a number within tolerance (rel_tol, or abs_tol if given).
+#   percent — like number, but the truth is a percentage (0-100); abs_tol in points.
+#   items   — truth_sql returns one column; every value must appear in the prose
+#             (case-insensitive). Optional `match_prefix` (e.g. "ward ") is
+#             prepended when matching, so "3" must appear as "ward 3".
+#   judge   — open-ended; graded by an LLM judge against `rubric` plus the
+#             truth_sql result. Kept to a handful on purpose.
+#
+# REVIEW STATUS: every truth_sql below needs a human read before the first full
+# sweep (an LLM-written truth graded by an LLM can share a misunderstanding).
+# Mark `reviewed: true` per question as it is checked.
+
+questions:
+  # ---------------------------------------------------------------- simple
+  - id: s01
+    tier: simple
+    question: How many 311 requests were opened in 2024?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_311_requests where year(date_created_dt) = 2024
+    notes: May 2026 bench Q1; verified 113,961 then.
+    reviewed: false
+
+  - id: s02
+    tier: simple
+    question: How many 311 requests were opened in Ward 3 in 2023?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_311_requests where ward = '3' and year(date_created_dt) = 2023
+    reviewed: false
+
+  - id: s03
+    tier: simple
+    question: How many crime incidents were recorded in Somerville in 2024?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_crime_incidents where incident_year = 2024
+    reviewed: false
+
+  - id: s04
+    tier: simple
+    question: How many traffic citations, including warnings, were recorded in 2022?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_citations where citation_year = 2022
+    reviewed: false
+
+  - id: s05
+    tier: simple
+    question: How many 311 requests came in through the 311 Mobile App in 2025?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_311_requests where origin = '311 Mobile App' and year(date_created_dt) = 2025
+    reviewed: false
+
+  - id: s06
+    tier: simple
+    question: How many building permits were issued in 2021?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_permits where issue_year = 2021
+    reviewed: false
+
+  - id: s07
+    tier: simple
+    question: How many 311 requests in the Trash & Recycling category were opened in 2024?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_311_requests where category = 'Trash & Recycling' and year(date_created_dt) = 2024
+    reviewed: false
+
+  - id: s08
+    tier: simple
+    question: How many crimes against persons were recorded in 2023?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_crime_incidents where offense_category = 'Crimes against Person' and incident_year = 2023
+    reviewed: false
+
+  - id: s09
+    tier: simple
+    question: How many people responded to the 2025 Somerville happiness survey?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select respondent_count from main_gold.dim_survey_wave where wave_year = 2025
+    reviewed: false
+
+  - id: s10
+    tier: simple
+    question: How many 311 requests created in 2020 have a status of Closed?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: select count(*) from main_gold.fct_311_requests where status = 'Closed' and year(date_created_dt) = 2020
+    reviewed: false
+
+  # ---------------------------------------------------------------- medium
+  - id: m01
+    tier: medium
+    question: Which ward had the most 311 requests in 2024?
+    answer_type: items
+    match_prefix: "ward "
+    truth_sql: |
+      select ward from main_gold.fct_311_requests
+      where year(date_created_dt) = 2024 and ward is not null
+      group by ward order by count(*) desc limit 1
+    reviewed: false
+
+  - id: m02
+    tier: medium
+    question: What were the three most common 311 request types in 2025?
+    answer_type: items
+    truth_sql: |
+      select request_type from main_gold.fct_311_requests
+      where year(date_created_dt) = 2025
+      group by request_type order by count(*) desc limit 3
+    reviewed: false
+
+  - id: m03
+    tier: medium
+    question: Which month of 2024 had the most 311 requests?
+    answer_type: items
+    truth_sql: |
+      select monthname(date_created_dt) from main_gold.fct_311_requests
+      where year(date_created_dt) = 2024
+      group by 1 order by count(*) desc limit 1
+    reviewed: false
+
+  - id: m04
+    tier: medium
+    question: By what percentage did crime incidents change from 2023 to 2024?
+    answer_type: percent
+    abs_tol: 0.5
+    truth_sql: |
+      select 100.0 * (sum(case when incident_year = 2024 then 1 end) - sum(case when incident_year = 2023 then 1 end))
+             / sum(case when incident_year = 2023 then 1 end)
+      from main_gold.fct_crime_incidents
+    reviewed: false
+
+  - id: m05
+    tier: medium
+    question: Of the 311 requests created in 2024 that have an overall-experience rating, what percentage were rated Very Satisfied?
+    answer_type: percent
+    abs_tol: 0.5
+    truth_sql: |
+      select 100.0 * avg(case when overallexperience = 'Very Satisfied' then 1 else 0 end)
+      from main_gold.fct_311_requests
+      where year(date_created_dt) = 2024 and overallexperience is not null and overallexperience <> 'N/A'
+    notes: overallexperience is a text label (Very Satisfied ... Very Dissatisfied, plus N/A), not a number, so the original 'average rating' question was undefined. Denominator excludes NULL and 'N/A' — confirm that is the reading Gordon wants.
+    reviewed: false
+
+  - id: m06
+    tier: medium
+    question: What share of 2024 311 requests came through the Contact Center?
+    answer_type: percent
+    abs_tol: 0.5
+    truth_sql: select 100.0 * avg(case when origin = 'Contact Center' then 1 else 0 end) from main_gold.fct_311_requests where year(date_created_dt) = 2024
+    reviewed: false
+
+  - id: m07
+    tier: medium
+    question: Which ward had the most crime incidents in 2025?
+    answer_type: items
+    match_prefix: "ward "
+    truth_sql: |
+      select ward from main_gold.fct_crime_incidents
+      where incident_year = 2025 and ward is not null
+      group by ward order by count(*) desc limit 1
+    reviewed: false
+
+  - id: m08
+    tier: medium
+    question: What was the total permit amount for Commercial Building permits issued in 2021?
+    answer_type: number
+    rel_tol: 0.01
+    truth_sql: select sum(try_cast(permit_amount as double)) from main_gold.fct_permits where permit_type = 'Commercial Building' and issue_year = 2021
+    notes: permit_amount is stored as text (all 1,122 rows cast cleanly). Values like 1087.50 look like fees, not construction value — wording says "permit amount" to avoid claiming either; confirm what the column means.
+    reviewed: false
+
+  - id: m09
+    tier: medium
+    question: What was the most common offense in 2024?
+    answer_type: items
+    truth_sql: |
+      select offense from main_gold.fct_crime_incidents
+      where incident_year = 2024
+      group by offense order by count(*) desc limit 1
+    reviewed: false
+
+  - id: m10
+    tier: medium
+    question: What percentage of 2024 traffic citations were warnings?
+    answer_type: percent
+    abs_tol: 0.5
+    truth_sql: select 100.0 * avg(case when is_warning then 1 else 0 end) from main_gold.fct_citations where citation_year = 2024
+    reviewed: false
+
+  - id: m11
+    tier: medium
+    question: In the 2025 happiness survey, which question had the highest citywide average score?
+    answer_type: judge
+    rubric: The answer must name the survey question whose citywide mean score was highest in the 2025 wave (the truth result gives its id and score). Paraphrased labels are fine.
+    truth_sql: |
+      select q.survey_question_id, q.question_label, s.mean_score
+      from main_gold.fct_happiness_survey s
+      join main_gold.dim_survey_question q using (survey_question_id)
+      join main_gold.dim_survey_wave w using (survey_wave_id)
+      where w.wave_year = 2025 and s.geography_level = 'city'
+      order by s.mean_score desc limit 1
+    reviewed: false
+
+  - id: m12
+    tier: medium
+    question: How many 311 requests per square kilometre did Ward 7 have in 2024?
+    answer_type: number
+    rel_tol: 0.01
+    truth_sql: |
+      select count(*) / any_value(w.area_sqkm)
+      from main_gold.fct_311_requests r join main_gold.dim_ward w on r.ward = w.ward
+      where r.ward = '7' and year(r.date_created_dt) = 2024
+    reviewed: false
+
+  # ---------------------------------------------------------------- hard
+  - id: h01
+    tier: hard
+    question: How many 311 requests are currently open?
+    answer_type: number
+    rel_tol: 0.001
+    truth_sql: |
+      select count(*) from main_gold.fct_311_requests r
+      join main_gold.dim_status s on r.status_id = s.status_id
+      where s.is_open
+    notes: Ambiguity trap. Truth uses dim_status.is_open (Open + In Progress + On Hold). An answer counting only status='Open' is wrong unless it states the narrower definition — consider accepting either if Gordon prefers.
+    reviewed: false
+
+  - id: h02
+    tier: hard
+    question: Which ward has the most 311 requests overall?
+    answer_type: items
+    match_prefix: "ward "
+    truth_sql: |
+      select ward from main_gold.fct_311_requests where ward is not null
+      group by ward order by count(*) desc limit 1
+    notes: Null-ward trap — the largest group (~38% of rows) has no ward. Naming 'unknown' or 'no ward' as the top ward is wrong.
+    reviewed: false
+
+  - id: h03
+    tier: hard
+    question: How did the number of building permits issued change from 2022 to 2023?
+    answer_type: judge
+    rubric: Permit data ends partway through 2023 (the truth result shows the latest issue date). A correct answer must say 2023 is incomplete/partial or that the comparison is not like-for-like. Reporting a large drop as a real trend without that caveat is wrong.
+    truth_sql: |
+      select (select count(*) from main_gold.fct_permits where issue_year = 2022) as y2022,
+             (select count(*) from main_gold.fct_permits where issue_year = 2023) as y2023,
+             (select max(issue_date) from main_gold.fct_permits) as latest_issue_date
+    reviewed: false
+
+  - id: h04
+    tier: hard
+    question: Was there more crime in 2026 than in 2025?
+    answer_type: judge
+    rubric: 2026 is a partial year (the truth result shows the latest incident date). A correct answer must flag that 2026 is year-to-date and not compare raw totals as if both years were complete; a rate or same-period comparison is ideal.
+    truth_sql: |
+      select (select count(*) from main_gold.fct_crime_incidents where incident_year = 2025) as y2025,
+             (select count(*) from main_gold.fct_crime_incidents where incident_year = 2026) as y2026,
+             (select max(incident_dt) from main_gold.fct_crime_incidents) as latest_incident
+    reviewed: false
+
+  - id: h05
+    tier: hard
+    question: What was the median number of days to close a Service-type 311 request (not an information request) created in 2024?
+    answer_type: number
+    abs_tol: 0.5
+    truth_sql: |
+      select median(date_diff('day', date_created_dt, most_recent_status_dt))
+      from main_gold.fct_311_requests
+      where status = 'Closed' and classification = 'Service' and year(date_created_dt) = 2024
+    notes: Uses most_recent_status_dt as the close date for Closed requests — confirm that is what the semantic layer means. Restricted to classification='Service' because across all requests the median is 0 days (information requests close instantly), which made the question trivial.
+    reviewed: false
+
+  - id: h06
+    tier: hard
+    question: Which ward had the largest increase in 311 requests from 2023 to 2024?
+    answer_type: items
+    match_prefix: "ward "
+    truth_sql: |
+      select ward from main_gold.fct_311_requests
+      where ward is not null and year(date_created_dt) in (2023, 2024)
+      group by ward
+      order by sum(case when year(date_created_dt) = 2024 then 1 else 0 end)
+             - sum(case when year(date_created_dt) = 2023 then 1 else 0 end) desc
+      limit 1
+    notes: Absolute increase, not percentage. Change the truth if Gordon means percentage.
+    reviewed: false
+
+  - id: h07
+    tier: hard
+    question: What share of 311 requests opened in 2024 have no ward recorded?
+    answer_type: percent
+    abs_tol: 0.5
+    truth_sql: select 100.0 * avg(case when ward is null then 1 else 0 end) from main_gold.fct_311_requests where year(date_created_dt) = 2024
+    reviewed: false
+
+  - id: h08
+    tier: hard
+    question: In the 2025 happiness survey, how satisfied were residents with Somerville as a place to live, and how does that compare with 2023?
+    answer_type: judge
+    rubric: Must give the 2025 citywide mean score for satisfaction with Somerville as a place to live and the 2023 score (both in the truth result), on the survey's scale, and state the direction of change. Small rounding is fine.
+    truth_sql: |
+      select w.wave_year, s.mean_score
+      from main_gold.fct_happiness_survey s
+      join main_gold.dim_survey_wave w using (survey_wave_id)
+      where s.survey_question_id = 'somerville_satisfaction' and s.geography_level = 'city' and w.wave_year in (2023, 2025)
+      order by 1
+    reviewed: false
