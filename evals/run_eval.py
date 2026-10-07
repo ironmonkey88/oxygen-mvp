@@ -174,10 +174,12 @@ def judge(key: str, q: dict[str, Any], rows: list[tuple], answer: str) -> tuple[
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             text = json.load(r)["choices"][0]["message"].get("content") or ""
-        match = re.search(r"\{.*\}", text, re.S)
-        if not match:
+        start = text.find("{")
+        if start < 0:
             return False, f"JUDGE_ERROR: no JSON in {text[:80]!r}"
-        verdict = json.loads(match.group(0))
+        # raw_decode reads the first JSON object and ignores anything after it
+        # (the judge occasionally appends a second object or prose).
+        verdict, _ = json.JSONDecoder().raw_decode(text[start:])
         return bool(verdict["pass"]), str(verdict.get("reason", ""))
     except (urllib.error.URLError, KeyError, ValueError, TimeoutError) as e:
         # A judge failure is recorded as a fail with the reason, never silently passed.
