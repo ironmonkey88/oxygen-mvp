@@ -4,7 +4,11 @@ Description=Weekly Somerville profile regeneration
 # pipeline-refresh.service. Profile generation is read-only on the
 # schemas being profiled (one brief write at the end to INSERT new
 # rows); Oxygen's lazy DuckDB connections coexist fine.
-After=network-online.target
+# 2026-10-06: also order after the daily refresh when both are queued in the
+# same boot transaction (persistent timers firing missed runs). The script
+# retries on the DuckDB lock for runs outside that transaction. Type=oneshot
+# has no start timeout by default, so the retry wait is not cut short.
+After=network-online.target pipeline-refresh.service
 Wants=network-online.target
 
 [Service]

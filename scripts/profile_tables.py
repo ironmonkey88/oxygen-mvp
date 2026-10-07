@@ -19,6 +19,7 @@ back to a pipeline run (`main_admin.fct_pipeline_run_raw.run_id`).
 import argparse
 import json
 import sys
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -28,6 +29,12 @@ from ulid import ULID
 DUCKDB_PATH = "/home/ubuntu/oxygen-mvp/data/somerville.duckdb"
 PROFILED_SCHEMAS = ["main_bronze", "main_gold"]
 TOP_N_VALUES = 5
+
+# pipeline-refresh holds the DuckDB write lock for ~16 min. Persistent timers fire
+# missed runs together at boot, so this job can start mid-refresh (2026-09-09:
+# "Could not set lock on file ... Conflicting lock is held"). Wait it out.
+LOCK_RETRY_SECONDS = 30
+LOCK_RETRY_MAX_WAIT = 60 * 60
 
 NUMERIC_TYPES = {"INTEGER", "BIGINT", "DOUBLE", "DECIMAL", "FLOAT", "REAL", "HUGEINT", "SMALLINT", "TINYINT"}
 DATE_TYPES = {"TIMESTAMP", "DATE", "TIMESTAMP_NS", "TIMESTAMP_MS", "TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE"}
@@ -223,6 +230,21 @@ def get_columns_to_profile(conn: duckdb.DuckDBPyConnection) -> list:
     """, PROFILED_SCHEMAS).fetchall()
 
 
+def connect_with_retry(read_only: bool) -> duckdb.DuckDBPyConnection:
+    """Open the warehouse, retrying while another process holds the lock."""
+    waited = 0
+    while True:
+        try:
+            return duckdb.connect(DUCKDB_PATH, read_only=read_only)
+        except duckdb.IOException as e:
+            if "lock" not in str(e).lower() or waited >= LOCK_RETRY_MAX_WAIT:
+                raise
+            print(f"  warehouse locked by another process; retrying in {LOCK_RETRY_SECONDS}s "
+                  f"(waited {waited}s of {LOCK_RETRY_MAX_WAIT}s)")
+            time.sleep(LOCK_RETRY_SECONDS)
+            waited += LOCK_RETRY_SECONDS
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-id", default=None)
@@ -234,7 +256,7 @@ def main() -> None:
         print(f"  associated run_id: {args.run_id}")
 
     profiles: list[dict] = []
-    with duckdb.connect(DUCKDB_PATH, read_only=True) as conn:
+    with connect_with_retry(read_only=True) as conn:
         columns = get_columns_to_profile(conn)
         print(f"  profiling {len(columns)} columns across {len(PROFILED_SCHEMAS)} schemas")
         for schema, table, column, col_type in columns:
@@ -244,7 +266,7 @@ def main() -> None:
             except Exception as e:
                 print(f"  ERROR: {schema}.{table}.{column}: {e}", file=sys.stderr)
 
-    with duckdb.connect(DUCKDB_PATH) as conn:
+    with connect_with_retry(read_only=False) as conn:
         conn.execute(DDL)
         for p in profiles:
             conn.execute("""
