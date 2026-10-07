@@ -66,8 +66,11 @@ questions:
     question: How many building permits were issued in 2021?
     answer_type: number
     rel_tol: 0.001
-    truth_sql: select count(*) from main_gold.fct_permits where issue_year = 2021
-    reviewed: false
+    truth_sql: |
+      select count(*) from main_gold.fct_permits
+      where permit_type ilike '%building%' and permit_status = 'Issued' and issue_year = 2021
+    notes: Gordon 2026-10-07 — "building permits" means Building permit types only (Residential, Commercial, Education Building); "issued" means permit_status = 'Issued'.
+    reviewed: true
 
   - id: s07
     tier: simple
@@ -180,8 +183,10 @@ questions:
     question: What was the total permit amount for Commercial Building permits issued in 2021?
     answer_type: number
     rel_tol: 0.01
-    truth_sql: select sum(try_cast(permit_amount as double)) from main_gold.fct_permits where permit_type = 'Commercial Building' and issue_year = 2021
-    notes: permit_amount is stored as text (all 1,122 rows cast cleanly). Values like 1087.50 look like fees, not construction value — wording says "permit amount" to avoid claiming either; confirm what the column means.
+    truth_sql: |
+      select sum(try_cast(permit_amount as double)) from main_gold.fct_permits
+      where permit_type = 'Commercial Building' and permit_status = 'Issued' and issue_year = 2021
+    notes: permit_amount is stored as text (all rows cast cleanly). Values like 1087.50 look like fees, not construction value — wording says "permit amount" to avoid claiming either. "Issued" = permit_status 'Issued' per Gordon 2026-10-07.
     reviewed: false
 
   - id: m09
@@ -237,8 +242,8 @@ questions:
       select count(*) from main_gold.fct_311_requests r
       join main_gold.dim_status s on r.status_id = s.status_id
       where s.is_open
-    notes: Ambiguity trap. Truth uses dim_status.is_open (Open + In Progress + On Hold). An answer counting only status='Open' is wrong unless it states the narrower definition — consider accepting either if Gordon prefers.
-    reviewed: false
+    notes: Gordon 2026-10-07 — "currently open" includes Open, In Progress and On Hold (dim_status.is_open). An answer counting only status='Open' is wrong.
+    reviewed: true
 
   - id: h02
     tier: hard
@@ -255,12 +260,13 @@ questions:
     tier: hard
     question: How did the number of building permits issued change from 2022 to 2023?
     answer_type: judge
-    rubric: Permit data ends partway through 2023 (the truth result shows the latest issue date). A correct answer must say 2023 is incomplete/partial or that the comparison is not like-for-like. Reporting a large drop as a real trend without that caveat is wrong.
+    rubric: Building permits = Building permit types with status Issued (the truth result gives both year counts). Permit data ends partway through 2023 (the truth result shows the latest issue date). A correct answer must give counts within ~1% of the truth AND say 2023 is incomplete/partial or that the comparison is not like-for-like. Reporting the drop as a real trend without that caveat is wrong; wrong counts are wrong.
     truth_sql: |
-      select (select count(*) from main_gold.fct_permits where issue_year = 2022) as y2022,
-             (select count(*) from main_gold.fct_permits where issue_year = 2023) as y2023,
+      select (select count(*) from main_gold.fct_permits where permit_type ilike '%building%' and permit_status = 'Issued' and issue_year = 2022) as y2022,
+             (select count(*) from main_gold.fct_permits where permit_type ilike '%building%' and permit_status = 'Issued' and issue_year = 2023) as y2023,
              (select max(issue_date) from main_gold.fct_permits) as latest_issue_date
-    reviewed: false
+    notes: Gordon 2026-10-07 — building permits = Building types only; issued = status Issued. Rubric now also checks the numbers (pilot judge passed an answer on the caveat alone).
+    reviewed: true
 
   - id: h04
     tier: hard
