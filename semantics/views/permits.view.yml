@@ -8,6 +8,12 @@ description: |
   geocoded outside Somerville's 7 ward polygons and have NULL ward).
   Joins to wards and dates for cross-topic comparison with 311 and
   crime.
+  **Terminology (Gordon, 2026-10-07):** the dataset holds all permit types.
+  A "building permit" means a Building permit type only -- permit_type
+  ILIKE '%Building%' (Residential, Commercial, Education Building) -- and
+  "issued" means permit_status = 'Issued'. When a question says "building
+  permits", use issued_building_permit_count, not issued_permit_count.
+  permit_amount is the permit fee, not construction value.
 table: main_gold.fct_permits
 datasource: somerville
 
@@ -94,6 +100,10 @@ measures:
     type: count
     description: "Count of permits actually issued (permit_status = 'Issued', 96.68% of rows)."
     expr: case when is_issued then permit_id end
+  - name: issued_building_permit_count
+    type: count
+    description: "Count of issued building permits: permit_type ILIKE '%Building%' and permit_status = 'Issued'. Use this when a question says 'building permits'."
+    expr: case when is_issued and permit_type ilike '%building%' then permit_id end
   - name: total_issued_permit_value
     type: sum
     description: "Sum of permit_amount across issued permits, in USD."
