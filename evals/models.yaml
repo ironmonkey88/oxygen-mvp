@@ -1,0 +1,55 @@
+# Candidate models for the answer-agent eval, all reached through OpenRouter's
+# Anthropic-compatible endpoint (oxy's `anthropic` vendor + `api_url`), so every
+# candidate runs through the same, mature tool-calling path in oxy.
+#
+# Prices are OpenRouter list prices per million tokens, checked 2026-10-06
+# (input / output). The runner measures real spend from OpenRouter's credit
+# balance; these are only for planning.
+#
+# `reps`: default repeats per question. Override with --reps.
+# `pilot`: included in the first, cheap pilot run (`--pilot`).
+
+api_url: https://openrouter.ai/api/v1
+key_var: OPENROUTER_API_KEY
+
+models:
+  - name: opus-4-7            # current production model; reference only
+    slug: anthropic/claude-opus-4.7
+    price: [5.00, 25.00]
+    reps: 1
+    pilot: false
+  - name: sonnet-5-5
+    slug: anthropic/claude-sonnet-5.5
+    price: [2.00, 10.00]
+    reps: 3
+    pilot: false
+  - name: haiku-4-5
+    slug: anthropic/claude-haiku-4.5
+    price: [1.00, 5.00]
+    reps: 3
+    pilot: true
+  - name: gemini-3-8-flash
+    slug: google/gemini-3.8-flash
+    price: [0.75, 3.75]
+    reps: 3
+    pilot: true
+  - name: gemini-2-5-flash
+    slug: google/gemini-2.5-flash
+    price: [0.30, 2.50]
+    reps: 3
+    pilot: true
+  - name: deepseek-v4-pro
+    slug: deepseek/deepseek-v4-pro
+    price: [0.21, 0.42]
+    reps: 3
+    pilot: true
+  - name: qwen3-8-flash
+    slug: qwen/qwen3.8-flash
+    price: [0.15, 0.47]
+    reps: 3
+    pilot: true
+  - name: gpt-oss-120b
+    slug: openai/gpt-oss-120b
+    price: [0.04, 0.17]
+    reps: 3
+    pilot: true
