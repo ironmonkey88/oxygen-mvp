@@ -10,10 +10,19 @@
 -- are seeded exactly once and stay frozen. Re-certifying a baseline
 -- requires a manual update (out of scope for MVP 1).
 --
--- Three sources of test_ids:
---   1. baseline.raw_311_requests.year_<YYYY>.row_count   -- bronze yearly
---   2. baseline.<table>.all.row_count                    -- total per table
---   3. dbt_test.<node_name>                              -- every dbt test
+-- Four sources of test_ids:
+--   1. baseline.raw_311_requests.year_<YYYY>.row_count   -- bronze yearly, frozen
+--   2. rolling.<table>.all.row_count                     -- total per table vs
+--      rolling average of recent runs (computed in fct_test_run)
+--   3. fixed.<table>.<slice>.row_count                   -- closed-period slice
+--      that must keep its first recorded value (computed in fct_test_run)
+--   4. dbt_test.<node_name>                              -- every dbt test
+--
+-- 2026-10-08: the frozen per-table totals (baseline.<table>.all.row_count)
+-- are no longer emitted. They compared a growing dataset against
+-- 2026-05-08 counts and failed every run from 2026-06-23. Rows already in
+-- this append-only table stay as history; fct_test_run no longer
+-- evaluates them.
 
 with baselines_yearly as (
     -- Per-year row-count baselines. **Active baselines exclude the
@@ -47,34 +56,51 @@ with baselines_yearly as (
     group by year
 ),
 
-baselines_total as (
-    select 'baseline.raw_311_requests.all.row_count' as test_id,
-           'baseline' as test_type, 'raw_311_requests' as table_name,
-           cast(null as varchar) as column_name, 'row_count' as metric,
-           'all' as grain, count(*)::varchar as expected_value,
-           0.01 as tolerance_pct, true as is_active,
-           now() as certified_at, 'system' as certified_by
-    from main_bronze.raw_311_requests
+rolling_checks as (
+    -- expected_value is computed per run in fct_test_run (rolling average),
+    -- so it is NULL here. tolerance_pct documents the default; the live
+    -- value is the dq_rolling_tolerance var.
+    select
+        'rolling.' || t || '.all.row_count'   as test_id,
+        'rolling'                             as test_type,
+        t                                     as table_name,
+        cast(null as varchar)                 as column_name,
+        'row_count'                           as metric,
+        'all'                                 as grain,
+        cast(null as varchar)                 as expected_value,
+        0.05                                  as tolerance_pct,
+        true                                  as is_active,
+        now()                                 as certified_at,
+        'system'                              as certified_by
+    from (values ('raw_311_requests'), ('dim_date'), ('dim_request_type'),
+                 ('dim_status'), ('fct_311_requests')) as v(t)
+),
+
+fixed_checks as (
+    -- expected_value is each slice's first recorded actual, held in
+    -- fct_test_run history, so it is NULL here. Closed years are added
+    -- as each calendar year ends.
+    select
+        'fixed.fct_311_requests.year_' || y::varchar || '.row_count' as test_id,
+        'fixed' as test_type, 'fct_311_requests' as table_name,
+        cast(null as varchar) as column_name, 'row_count' as metric,
+        'year=' || y::varchar as grain, cast(null as varchar) as expected_value,
+        0.0 as tolerance_pct, true as is_active, now() as certified_at, 'system' as certified_by
+    from (
+        select distinct year(date_created_dt) as y
+        from main_gold.fct_311_requests
+        where date_created_dt >= date '2015-01-01'
+          and year(date_created_dt) < year(current_date)
+    ) years
     union all
-    select 'baseline.dim_date.all.row_count', 'baseline', 'dim_date',
-           cast(null as varchar), 'row_count', 'all', count(*)::varchar,
-           0.01, true, now(), 'system'
-    from main_gold.dim_date
-    union all
-    select 'baseline.dim_request_type.all.row_count', 'baseline', 'dim_request_type',
-           cast(null as varchar), 'row_count', 'all', count(*)::varchar,
-           0.01, true, now(), 'system'
-    from main_gold.dim_request_type
-    union all
-    select 'baseline.dim_status.all.row_count', 'baseline', 'dim_status',
-           cast(null as varchar), 'row_count', 'all', count(*)::varchar,
-           0.01, true, now(), 'system'
-    from main_gold.dim_status
-    union all
-    select 'baseline.fct_311_requests.all.row_count', 'baseline', 'fct_311_requests',
-           cast(null as varchar), 'row_count', 'all', count(*)::varchar,
-           0.01, true, now(), 'system'
-    from main_gold.fct_311_requests
+    select s.test_id, 'fixed', s.table_name, cast(null as varchar), 'row_count', s.grain,
+           cast(null as varchar), 0.0, true, now(), 'system'
+    from (values
+        ('fixed.fct_311_requests.year_2024.ward_3.row_count',          'fct_311_requests',    'year=2024,ward=3'),
+        ('fixed.fct_crime_incidents.year_2024.row_count',              'fct_crime_incidents', 'year=2024'),
+        ('fixed.fct_citations.year_2024.row_count',                    'fct_citations',       'year=2024'),
+        ('fixed.fct_permits.issue_year_2021.building_issued.row_count', 'fct_permits',        'issue_year=2021,building,issued')
+    ) as s(test_id, table_name, grain)
 ),
 
 dbt_tests as (
@@ -100,7 +126,9 @@ dbt_tests as (
 all_tests as (
     select * from baselines_yearly
     union all
-    select * from baselines_total
+    select * from rolling_checks
+    union all
+    select * from fixed_checks
     union all
     select * from dbt_tests
 )
