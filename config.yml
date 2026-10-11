@@ -1,8 +1,13 @@
 models:
-  - name: claude-opus-4-7
+  # Gemini 3.8 Flash via OpenRouter's Anthropic-compatible endpoint, billed to
+  # Gordon's OpenRouter key. Chosen 2026-10-07 from the evals/ sweep (83/84,
+  # ~$0.03/answer). oxy's anthropic vendor + api_url is the tested path; oxy's
+  # native gemini vendor has not been evaluated.
+  - name: gemini-3-8-flash
     vendor: anthropic
-    model_ref: claude-opus-4-7
-    key_var: ANTHROPIC_API_KEY
+    model_ref: google/gemini-3.8-flash
+    key_var: OPENROUTER_API_KEY
+    api_url: https://openrouter.ai/api/v1
 
 databases:
   - name: somerville
