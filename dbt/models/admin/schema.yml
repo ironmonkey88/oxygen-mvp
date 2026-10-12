@@ -60,12 +60,12 @@ models:
           - not_null
           - unique
       - name: test_type
-        description: 'baseline | dbt_generic | dbt_singular.'
+        description: 'baseline | rolling | fixed | dbt_generic | dbt_singular. rolling and fixed (2026-10-08) are evaluated in fct_test_run against run history.'
         data_tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ['baseline', 'dbt_generic', 'dbt_singular']
+                values: ['baseline', 'rolling', 'fixed', 'dbt_generic', 'dbt_singular']
       - name: table_name
         description: 'Table this test applies to (NULL for dbt tests, where the node_id captures it).'
       - name: column_name
@@ -75,9 +75,11 @@ models:
       - name: grain
         description: "Slice the test applies at: e.g. `year=2016`, `all`."
       - name: expected_value
-        description: 'Certified known-good value as varchar. For baselines: row count at certification time. For dbt tests: `0` (zero failures expected).'
+        description: 'Certified known-good value as varchar. For baselines: row count at certification time. For dbt tests: `0` (zero failures expected). NULL for rolling and fixed checks, whose expected value is computed per run in fct_test_run (rolling average / first recorded value).'
         data_tests:
-          - not_null
+          - not_null:
+              config:
+                where: "test_type not in ('rolling', 'fixed')"
       - name: tolerance_pct
         description: 'Acceptable drift before fail. e.g. 0.01 = 1%. Zero for dbt tests (must match exactly).'
       - name: is_active
