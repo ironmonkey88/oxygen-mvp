@@ -1,9 +1,11 @@
 [Unit]
-Description=Somerville wards hourly source-health check schedule
+Description=Somerville wards four-times-daily source-health check schedule
 Requires=source-health-wards.service
 
 [Timer]
-OnCalendar=*-*-* *:20:00
+# 4x/day (was hourly until 2026-10-12): the sources refresh daily, and these
+# hours stay clear of the 06:00 ET pipeline run.
+OnCalendar=*-*-* 03,09,15,21:20:00 America/New_York
 Persistent=true
 
 [Install]

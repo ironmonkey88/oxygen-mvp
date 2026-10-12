@@ -12,13 +12,18 @@ After=network-online.target pipeline-refresh.service
 Wants=network-online.target
 
 [Service]
+# Warehouse lock (2026-10-12): DuckDB allows one writer and no concurrent
+# readers in other processes, and the daily pipeline collided with the hourly
+# and 15-minute jobs on 6 of 90 days. Every job that opens
+# data/somerville.duckdb takes /home/ubuntu/oxygen-mvp/data/.warehouse.lock via flock: writers exclusive, readers
+# shared. Weekly; waits rather than skips.
 Type=oneshot
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
 EnvironmentFile=/etc/environment
-ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/profile_tables.py
+ExecStart=/usr/bin/flock -x -w 3600 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/profile_tables.py
 # After regen, refresh the /profile page so the portal shows the new shape.
-ExecStartPost=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/generate_profile_page.py
+ExecStartPost=/usr/bin/flock -s -w 3600 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/generate_profile_page.py
 ExecStartPost=/bin/sh -c 'cp /home/ubuntu/oxygen-mvp/portal/profile.html /var/www/somerville/profile.html'
 StandardOutput=journal
 StandardError=journal

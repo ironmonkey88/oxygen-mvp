@@ -51,3 +51,6 @@ portal/trust.html
 portal/about.html
 portal/erd-warehouse.mmd
 portal/erd-semantic-layer.mmd
+
+# flock coordination file for the warehouse (see systemd/*.service)
+data/.warehouse.lock

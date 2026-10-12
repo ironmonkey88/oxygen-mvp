@@ -1,9 +1,10 @@
 [Unit]
-Description=Run DBA dashboard refresh every 15 minutes (Plan 38)
+Description=Run DBA dashboard refresh hourly at :45 (Plan 38; was every 15 min until 2026-10-12)
 
 [Timer]
+# Hourly at :45 keeps it clear of the 06:00 ET pipeline window (2026-10-12).
 OnBootSec=2min
-OnUnitActiveSec=15min
+OnCalendar=*-*-* *:45:00
 Unit=dashboard-refresh.service
 
 [Install]
