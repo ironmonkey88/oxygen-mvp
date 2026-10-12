@@ -4,13 +4,15 @@ Description=Rebuild the read-only Civic Pulse snapshot for the MCP server
 # pipeline-refresh.service.d/), so it runs only after a green refresh. A failure
 # here leaves the previous snapshot serving and does not mark the refresh failed.
 # Never opens the production DuckDB: it file-copies it, then builds from the copy.
+# Warehouse lock (oxygen-mvp #92): shared, and it waits, so the copy is never
+# taken while a writer holds data/.warehouse.lock.
 After=pipeline-refresh.service
 
 [Service]
 Type=oneshot
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
-ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/build_ro_snapshot.py
+ExecStart=/usr/bin/flock -s -w 1800 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/build_ro_snapshot.py
 Nice=10
 IOSchedulingClass=idle
 StandardOutput=journal

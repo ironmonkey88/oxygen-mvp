@@ -4,10 +4,11 @@ The MCP server (mcp/server.py) never touches the production warehouse. This
 script, run by civic-pulse-snapshot.service after each successful
 pipeline-refresh, produces /srv/civic-pulse/somerville_ro.duckdb:
 
-1. Copy the production file with a plain file copy. No DuckDB connection, so no
-   lock is taken and the hourly source-health writers are never blocked. The copy
+1. Copy the production file with a plain file copy, never a DuckDB connection.
+   The unit holds a shared flock on data/.warehouse.lock, so no writer runs
+   during the copy. As a second guard (and for runs outside the unit) the copy
    is retried until the source's size and mtime are unchanged across it and no
-   .wal file sits beside it (a writer was mid-transaction).
+   .wal file sits beside it.
 2. Open that private copy read-only and CREATE TABLE ... AS SELECT only the
    columns in ALLOWED below into a fresh database. Anything not listed (a new
    table, a new column) stays out until someone adds it here.
