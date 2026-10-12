@@ -1,9 +1,11 @@
 [Unit]
-Description=Somerville permits hourly source-health check schedule
+Description=Somerville permits four-times-daily source-health check schedule
 Requires=source-health-permits.service
 
 [Timer]
-OnCalendar=*-*-* *:10:00
+# 4x/day (was hourly until 2026-10-12): the sources refresh daily, and these
+# hours stay clear of the 06:00 ET pipeline run.
+OnCalendar=*-*-* 03,09,15,21:10:00 America/New_York
 Persistent=true
 
 [Install]
