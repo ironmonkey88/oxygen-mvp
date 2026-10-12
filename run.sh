@@ -32,6 +32,12 @@ set -euo pipefail
 REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$REPO_ROOT"
 
+# dlt keeps every completed load package under ~/.dlt/pipelines/*/load/loaded
+# unless told otherwise (~38 MB/day for somerville_311; 4.7 GB by 2026-10-12).
+# Delete each package's completed job files after a successful load. Packages
+# with failed jobs are kept for debugging (dlt skips them).
+export LOAD__DELETE_COMPLETED_JOBS=true
+
 # Activate venv (dbt, dlt, duckdb live here)
 # shellcheck disable=SC1091
 source "$REPO_ROOT/.venv/bin/activate"

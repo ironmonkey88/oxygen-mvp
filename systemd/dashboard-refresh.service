@@ -9,10 +9,18 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+# Warehouse lock (2026-10-12): DuckDB allows one writer and no concurrent
+# readers in other processes, and the daily pipeline collided with the hourly
+# and 15-minute jobs on 6 of 90 days. Every job that opens
+# data/somerville.duckdb takes /home/ubuntu/oxygen-mvp/data/.warehouse.lock via flock: writers exclusive, readers
+# shared. Read-only: shared lock. If the
+# pipeline is writing, skip (exit 75, counted as success) and refresh on the
+# next 15-minute tick.
+SuccessExitStatus=75
 Type=oneshot
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
 EnvironmentFile=/etc/environment
-ExecStart=/home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/generate_admin_dashboard.py
+ExecStart=/usr/bin/flock -s -n -E 75 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/generate_admin_dashboard.py
 StandardOutput=journal
 StandardError=journal
