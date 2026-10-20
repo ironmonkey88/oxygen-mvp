@@ -239,6 +239,37 @@ if [ -d /var/www/somerville ] && [ -f portal/about.html ]; then
     echo "    deployed to /var/www/somerville/about.html"
 fi
 
+# Step 8e: render dbt Charts boards (charts/*.yml) to static HTML
+# Boards read the warehouse read-only, and this stage runs after dbt, so
+# there is no DuckDB lock contention. dct lives in its own isolated tool
+# install (`uv tool install dbt-charts`), NOT in .venv: dbt-charts pins
+# its own dbt-core and must not move the pipeline's dbt version.
+# Presentation only, so a failure here warns and never fails the run
+# (commands inside an `if` condition do not fire the ERR trap).
+# Served by nginx's catch-all `location /` at /boards/<board>/.
+ERROR_STAGE="dbt_charts_boards"
+echo "==> 8e/10 render dbt Charts boards"
+DCT="${DCT:-$HOME/.local/bin/dct}"
+if [ -x "$DCT" ]; then
+    for board in charts/*.yml; do
+        name=$(basename "$board" .yml)
+        [ "$name" = "meta" ] && continue
+        out="data/boards/${name}.html"
+        mkdir -p data/boards
+        if DO_NOT_TRACK=1 "$DCT" render "$board" --format html --output "$out"; then
+            if [ -d /var/www/somerville ]; then
+                mkdir -p "/var/www/somerville/boards/${name}"
+                deploy_html "$out" "/var/www/somerville/boards/${name}/index.html"
+                echo "    deployed /boards/${name}/"
+            fi
+        else
+            echo "    WARN: dct render failed for $board; previous board left in place" >&2
+        fi
+    done
+else
+    echo "    WARN: dct not found at $DCT; skipping boards (install: uv tool install dbt-charts)" >&2
+fi
+
 # Step 9: build limitations index
 ERROR_STAGE="limitations_index"
 echo "==> 9/10 build limitations index"

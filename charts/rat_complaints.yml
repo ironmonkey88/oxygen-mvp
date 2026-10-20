@@ -1,0 +1,357 @@
+# Rat complaints by ward: dbt Charts port of apps/rat_complaints_by_ward.app.yml.
+#
+# Same question, audience and SQL logic as the Oxygen Data App, laid out to the
+# DASHBOARDS.md standard: recent-situation layer, then Tier 1-4 base, then the
+# trust footer. One deliberate change: the "last 90 days" windows are anchored
+# to the newest request in the warehouse, not CURRENT_DATE, which closes the
+# "recent window is relative to data freshness" limitation the Oxygen app
+# documented.
+#
+# Rat complaints = four 311 request types: Rats, Rodent Assistance Program
+# request, Rodent Assistance Program inquiry, School Rodent Control.
+
+title: Rat complaints in Somerville
+notes: >-
+  Are rat complaints handled equitably across wards, is the problem growing,
+  and what is happening right now? Built on main_gold.fct_311_requests.
+tags: [service_requests, rats, "311"]
+
+queries:
+  data_edge:
+    notes: Newest 311 request in the warehouse; every recent window ends here.
+    sql: |
+      SELECT MAX(date_created_dt) AS data_through
+      FROM main_gold.fct_311_requests
+
+  recent_headline:
+    notes: Rat complaints in the last 90 days vs the 90 days before, ending at the data edge.
+    sql: |
+      WITH edge AS (SELECT MAX(date_created_dt) AS d FROM main_gold.fct_311_requests),
+      rats AS (
+        SELECT date_created_dt
+        FROM main_gold.fct_311_requests
+        WHERE TRIM(request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                     'Rodent Assistance Program inquiry', 'School Rodent Control')
+      ),
+      w AS (
+        SELECT
+          COUNT(*) FILTER (WHERE r.date_created_dt >  e.d - INTERVAL 90 DAY) AS last_90,
+          COUNT(*) FILTER (WHERE r.date_created_dt >  e.d - INTERVAL 180 DAY
+                             AND r.date_created_dt <= e.d - INTERVAL 90 DAY) AS prior_90
+        FROM rats r, edge e
+      )
+      SELECT last_90, prior_90, (last_90 - prior_90) * 1.0 / NULLIF(prior_90, 0) AS change_vs_prior
+      FROM w
+
+  recent_weekly:
+    notes: Rat complaints per full week (Monday start) inside the last 90 days.
+    sql: |
+      WITH edge AS (SELECT MAX(date_created_dt) AS d FROM main_gold.fct_311_requests)
+      SELECT DATE_TRUNC('week', f.date_created_dt) AS week_start, COUNT(*) AS complaints
+      FROM main_gold.fct_311_requests f, edge e
+      WHERE TRIM(f.request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                     'Rodent Assistance Program inquiry', 'School Rodent Control')
+        AND f.date_created_dt > e.d - INTERVAL 90 DAY
+        AND DATE_TRUNC('week', f.date_created_dt) > e.d - INTERVAL 90 DAY
+        AND DATE_TRUNC('week', f.date_created_dt) + INTERVAL 6 DAY <= e.d
+      GROUP BY 1
+      ORDER BY 1
+
+  ward_overrepresentation:
+    notes: >-
+      Each ward's share of last-90-day rat complaints minus its share since 2015,
+      in percentage points. Positive = running hotter than its historical norm.
+    sql: |
+      WITH edge AS (SELECT MAX(date_created_dt) AS d FROM main_gold.fct_311_requests),
+      rats AS (
+        SELECT ward, date_created_dt
+        FROM main_gold.fct_311_requests
+        WHERE TRIM(request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                     'Rodent Assistance Program inquiry', 'School Rodent Control')
+          AND ward IS NOT NULL
+      ),
+      all_time AS (
+        SELECT ward, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS share_all
+        FROM rats GROUP BY ward
+      ),
+      recent AS (
+        SELECT r.ward, COUNT(*) AS n, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS share_recent
+        FROM rats r, edge e
+        WHERE r.date_created_dt > e.d - INTERVAL 90 DAY
+        GROUP BY r.ward
+      )
+      SELECT
+        w.ward_name,
+        r.n AS recent_complaints,
+        ROUND((r.share_recent - a.share_all) * 100, 1) AS overrepresentation_pts,
+        CASE WHEN r.share_recent >= a.share_all THEN 'Above its usual share' ELSE 'Below its usual share' END AS direction
+      FROM recent r
+      JOIN all_time a USING (ward)
+      JOIN main_gold.dim_ward w ON r.ward = w.ward
+      ORDER BY overrepresentation_pts DESC
+
+  total:
+    notes: All rat complaints since July 2015.
+    sql: |
+      SELECT COUNT(*) AS total_complaints, MIN(date_created_dt) AS first_complaint
+      FROM main_gold.fct_311_requests
+      WHERE TRIM(request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                   'Rodent Assistance Program inquiry', 'School Rodent Control')
+
+  by_year:
+    notes: Rat complaints per calendar year. The current year is partial; 2015 starts in July.
+    sql: |
+      WITH edge AS (SELECT MAX(date_created_dt) AS d FROM main_gold.fct_311_requests)
+      SELECT
+        d.year,
+        COUNT(*) AS complaints,
+        CASE WHEN d.year = EXTRACT(year FROM e.d) OR d.year = 2015 THEN 'Partial' ELSE 'Full' END AS coverage
+      FROM main_gold.fct_311_requests f
+      JOIN main_gold.dim_date d ON f.date_created_dt = d.date_dt
+      CROSS JOIN edge e
+      WHERE TRIM(f.request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                     'Rodent Assistance Program inquiry', 'School Rodent Control')
+      GROUP BY d.year, coverage
+      ORDER BY d.year
+    formats:
+      year: year
+
+  by_ward:
+    notes: Rat complaints since 2015 by ward, raw and per square kilometre. Excludes complaints with no ward.
+    sql: |
+      SELECT
+        w.ward_name,
+        COUNT(*) AS complaints,
+        COUNT(*) / w.area_sqkm AS complaints_per_sqkm
+      FROM main_gold.fct_311_requests f
+      JOIN main_gold.dim_ward w ON f.ward = w.ward
+      WHERE TRIM(f.request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                     'Rodent Assistance Program inquiry', 'School Rodent Control')
+      GROUP BY w.ward_name, w.area_sqkm
+      ORDER BY w.ward_name
+    formats:
+      complaints: integer
+      complaints_per_sqkm: integer
+
+  resolution:
+    notes: >-
+      Closed rat complaints by days from creation to latest status change.
+      Open, In Progress and On Hold complaints are not included.
+    sql: |
+      WITH closed AS (
+        SELECT most_recent_status_dt - date_created_dt AS days_to_close
+        FROM main_gold.fct_311_requests
+        WHERE TRIM(request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                     'Rodent Assistance Program inquiry', 'School Rodent Control')
+          AND status = 'Closed'
+          AND most_recent_status_dt IS NOT NULL
+      )
+      SELECT
+        CASE
+          WHEN days_to_close < 1   THEN 'Same day'
+          WHEN days_to_close < 4   THEN '1-3 days'
+          WHEN days_to_close < 8   THEN '4-7 days'
+          WHEN days_to_close < 31  THEN '8-30 days'
+          WHEN days_to_close < 91  THEN '31-90 days'
+          WHEN days_to_close < 366 THEN '91-365 days'
+          ELSE 'Over a year'
+        END AS time_to_close,
+        MIN(days_to_close) AS bucket_order,
+        COUNT(*) AS complaints
+      FROM closed
+      GROUP BY 1
+      ORDER BY bucket_order
+
+  trust:
+    notes: Pipeline freshness and the rows this board leaves out.
+    sql: |
+      SELECT
+        (SELECT STRFTIME(MAX(run_completed_at), '%Y-%m-%d %H:%M')
+           FROM main_admin.fct_pipeline_run_raw
+          WHERE run_status IN ('success', 'partial')) AS last_refreshed_utc,
+        COUNT(*) FILTER (WHERE ward IS NULL) AS no_ward,
+        COUNT(*) FILTER (WHERE status <> 'Closed') AS not_closed
+      FROM main_gold.fct_311_requests
+      WHERE TRIM(request_type) IN ('Rats', 'Rodent Assistance Program request',
+                                   'Rodent Assistance Program inquiry', 'School Rodent Control')
+
+charts:
+  kpi_last_90:
+    query: recent_headline
+    type: kpi
+    value: last_90
+    label: Complaints, last 90 days
+    support:
+      value: change_vs_prior
+      label: vs the 90 days before
+    style:
+      value:
+        format: integer
+      support:
+        format: percent_delta
+
+  kpi_data_through:
+    query: data_edge
+    type: kpi
+    value: data_through
+    label: Data through
+    style:
+      value:
+        format: date_short
+
+  weekly:
+    query: recent_weekly
+    type: bar
+    title: Complaints per week, last 90 days
+    subtitle: Full weeks only, starting Monday
+    x: week_start
+    y: complaints
+    x_label: Week starting
+    y_label: Complaints
+    style:
+      orientation: vertical
+
+  overrepresentation:
+    query: ward_overrepresentation
+    type: bar
+    title: Which wards are running hot
+    subtitle: Share of the last 90 days' complaints minus the ward's share since 2015, in percentage points
+    x: ward_name
+    y: overrepresentation_pts
+    color: direction
+    x_label: Ward
+    y_label: Percentage points
+    sort: { by: overrepresentation_pts, order: desc }
+    style:
+      orientation: horizontal
+
+  kpi_total:
+    query: total
+    type: kpi
+    value: total_complaints
+    label: Rat complaints since July 2015
+    style:
+      value:
+        format: integer
+
+  volume_by_year:
+    query: by_year
+    type: bar
+    title: Complaints per year
+    subtitle: 2015 starts in July and the current year is partial (lighter bars)
+    x: year
+    y: complaints
+    color: coverage
+    x_label: Year
+    y_label: Complaints
+    style:
+      orientation: vertical
+
+  ward_raw:
+    query: by_ward
+    type: bar
+    title: Complaints by ward since 2015
+    subtitle: Wards hold roughly equal populations, so raw counts compare fairly
+    x: ward_name
+    y: complaints
+    x_label: Ward
+    y_label: Complaints
+    sort: { by: ward_name, order: asc }
+    style:
+      orientation: vertical
+
+  ward_density:
+    query: by_ward
+    type: bar
+    title: Complaints per square kilometre
+    subtitle: Corrects for ward size; Ward 1 is about twice the area of the others
+    x: ward_name
+    y: complaints_per_sqkm
+    x_label: Ward
+    y_label: Complaints per sq km
+    sort: { by: ward_name, order: asc }
+    style:
+      orientation: vertical
+
+  resolution_speed:
+    query: resolution
+    type: bar
+    title: How long closed complaints took
+    subtitle: Days from request to its latest status change; complaints still open are not shown
+    x: time_to_close
+    y: complaints
+    x_label: Time to close
+    y_label: Complaints
+    sort: { by: bucket_order, order: asc }
+    style:
+      orientation: vertical
+
+  kpi_refreshed:
+    query: trust
+    type: kpi
+    value: last_refreshed_utc
+    label: Last pipeline refresh (UTC)
+
+  kpi_no_ward:
+    query: trust
+    type: kpi
+    value: no_ward
+    label: Complaints with no ward (left out of ward charts)
+    style:
+      value:
+        format: integer
+
+  kpi_not_closed:
+    query: trust
+    type: kpi
+    value: not_closed
+    label: Complaints not closed (left out of time to close)
+    style:
+      value:
+        format: integer
+
+rows:
+  - title: Recent situation
+    text: |
+      The operational present: the 90 days ending at the newest request in the
+      warehouse. The sections below carry the long-run picture.
+    rows:
+      - cols: [kpi_last_90, kpi_data_through]
+      - cols: [weekly, overrepresentation]
+
+  - title: The headline
+    rows:
+      - kpi_total
+      - volume_by_year
+
+  - title: Is it equitable across wards?
+    text: |
+      Raw volume and volume adjusted for ward size answer different questions.
+      Raw counts show where residents are calling from; density shows where the
+      pressure is highest relative to the ground each ward covers.
+    rows:
+      - cols: [ward_raw, ward_density]
+
+  - title: How fast complaints close
+    text: |
+      Most closed complaints resolve within a week. The long tail past a year
+      mostly reflects structural infestations that do not close on a 311
+      cadence, not slow first response.
+    rows:
+      - resolution_speed
+
+  - title: Trust
+    rows:
+      - cols: [kpi_refreshed, kpi_no_ward, kpi_not_closed]
+      - text: |
+          **Sources.** `main_gold.fct_311_requests` (bronze from Somerville
+          Open Data, Socrata dataset `4pyi-uqq6`), `main_gold.dim_ward` (ward
+          names and areas, dataset `ym5n-phxd`), `main_gold.dim_date`, and
+          `main_admin.fct_pipeline_run_raw` for freshness.
+
+          **Known limitations.**
+          [`location-ward-block-only`](https://github.com/ironmonkey88/oxygen-mvp/blob/main/docs/limitations/location-ward-block-only.md):
+          311 carries a ward but no finer location, and complaints with no ward
+          are left out of the ward charts. Time to close uses the latest status
+          change, so a complaint reopened and closed again counts from its final
+          close. The current year's bar is partial.

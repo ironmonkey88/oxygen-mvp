@@ -1,0 +1,10 @@
+# Defaults for every board under charts/.
+source: somerville
+theme: paper
+
+style:
+  frame:
+    max_width: 1100
+  text:
+    column:
+      max_number: 1

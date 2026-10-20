@@ -54,3 +54,6 @@ portal/erd-semantic-layer.mmd
 
 # flock coordination file for the warehouse (see systemd/*.service)
 data/.warehouse.lock
+
+# dbt Charts render output (run.sh step 8e)
+data/boards/

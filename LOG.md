@@ -89,6 +89,15 @@
 
 ## Recent Sessions
 
+### Session 73 — 2026-10-20 15:51 ET — plan-52-dbt-charts-rats-board
+[full narrative](docs/sessions/session-73-2026-10-20-plan-52-dbt-charts-rats-board.md)
+
+- **Goal:** Port the rat-complaints Oxygen Data App to dbt Charts, first step in replacing Oxygen's dashboard layer.
+- **Shipped:** `dbt_charts.yml`, `charts/rat_complaints.yml`, `run.sh` step 8e (render to `/boards/<name>/`); validated and rendered against a local warehouse.
+- **Decisions:** 5 decisions — see session file
+- **Status:** partial
+- **Next:** Install `dct` on the box, run step 8e, confirm `/boards/rat_complaints/` live.
+
 ### Session 67 — 2026-05-25 21:29 ET — plan-44-happiness-survey-silver-gold
 [full narrative](docs/sessions/session-67-2026-05-25-plan-44-happiness-survey-silver-gold.md)
 

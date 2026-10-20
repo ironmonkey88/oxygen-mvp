@@ -1,0 +1,11 @@
+# dbt Charts project configuration (https://docs.dbtcharts.com).
+#
+# Boards live in charts/. They read the same DuckDB warehouse that dlt, dbt
+# and Oxygen share. DuckDB file locking still applies: run `dct render` as a
+# sequential stage of run.sh (after dbt), never alongside the pipeline.
+# dct opens the file read-only by default.
+
+sources:
+  somerville:
+    type: duckdb
+    path: ./data/somerville.duckdb
