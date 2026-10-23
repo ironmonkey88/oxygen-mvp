@@ -7,6 +7,8 @@
 
 ## Next Focus — Stack-in-a-Box follow-ups + survey weighting + perception-trend dashboard
 
+**Plan 52 (2026-10-20, live 2026-10-23)** — [x] Rat-complaints dashboard ported to dbt Charts (first step replacing Oxygen Data Apps; Gordon 2026-10-20). `dbt_charts.yml`, `charts/rat_complaints.yml`, `scripts/render_boards.sh`, `systemd/dbt-charts-boards.{service,timer}` (daily 06:45 ET, shared warehouse lock). Live: `curl -s -o /dev/null -w '%{http_code}' https://somerville.thewongway.co/boards/rat_complaints/` → 200 (2026-10-23). **Follow-ups:** point `/dashboards` at it instead of the Oxygen app; box working tree is on `50ca146` + local edits, not main. Session [73](docs/sessions/session-73-2026-10-20-plan-52-dbt-charts-rats-board.md).
+
 **EC2 cross-account migration (walkthrough, not yet a numbered plan)** — [~] Gordon-driven move of the live EC2 instance to a new standalone AWS account (`103444675041`), staying in **us-east-2**, via AMI clone. Runbook [`docs/ec2-account-migration-checklist.md`](docs/ec2-account-migration-checklist.md); **live-state handoff [`docs/ec2-migration-handoff-2026-07-09.md`](docs/ec2-migration-handoff-2026-07-09.md)**. **Paused 2026-07-09 15:23 ET to continue in Gordon's new Claude account.** Done through Phase 3B: source box quiesced (`oxy` + 3 timers stopped) + reconciled to clean `main` (`50ca146`); AMI `oxygen-mvp-migration-2026-07-09` created + shared (snap `snap-077c89280c426b63f`, EBS-volume-creation allowed); copied to dest-owned **`ami-0ef4ca592a4bf8ce3`** (Available, us-east-2). **Next: Phase 4 launch → Phase 5 Tailscale re-auth + env verify → Phase 6 services-up + verification gate → Phase 7 cutover/decommission.** ⚠️ Somerville portal is DOWN until the new box is up (Phase 6). Started 2026-07-09.
 
 
