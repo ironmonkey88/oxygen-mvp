@@ -98,14 +98,14 @@ Two env vars are required at runtime:
 
 | Var | Value | Used by |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | your Anthropic API key | Oxygen Answer Agent |
+| `OPENROUTER_API_KEY` | your OpenRouter API key (since 2026-10-07; was `ANTHROPIC_API_KEY`) | Oxygen Answer Agent (`config.yml`) |
 | `OXY_DATABASE_URL` | `postgresql://postgres:postgres@localhost:15432/oxy` | `oxy build`, `oxy serve` (the Postgres container `oxy start` brings up) |
 
 **Put them in `/etc/environment`, not `~/.bashrc` or `~/.profile`.** sshd reads `/etc/environment` via PAM at session setup, so plain `ssh ec2 'cmd'` sees the vars without needing a login-shell wrapper. `~/.bashrc` doesn't work (early-returns for non-interactive shells); `~/.profile` doesn't work (login-shell only). Format is literal `KEY=VALUE` — no `export`, no shell expansion.
 
 ```bash
 sudo tee -a /etc/environment <<'EOF'
-ANTHROPIC_API_KEY=your_key_here
+OPENROUTER_API_KEY=your_key_here
 OXY_DATABASE_URL=postgresql://postgres:postgres@localhost:15432/oxy
 EOF
 
@@ -117,7 +117,7 @@ sudo sed -i 's|/snap/bin"|/snap/bin:/home/ubuntu/.local/bin"|' /etc/environment
 Verify in a fresh ssh session (NOT the one you used to set them — env loads at session start):
 
 ```bash
-ssh ec2 'echo $ANTHROPIC_API_KEY | head -c 14'   # should print sk-ant-api03-E
+ssh ec2 'echo $OPENROUTER_API_KEY | head -c 6'     # should print sk-or-
 ssh ec2 'echo $OXY_DATABASE_URL'                   # should print the postgres URL
 ssh ec2 'oxy --version'                            # should resolve oxy on PATH
 ```
@@ -239,7 +239,7 @@ Host oxygen-mvp
     StrictHostKeyChecking no
 ```
 
-**Tailscale SSH (`--ssh` flag) is intentionally OFF** on the EC2 node. It bypasses OpenSSH's PAM stack, which silently breaks `/etc/environment` env-var loading (PATH/`ANTHROPIC_API_KEY`/`OXY_DATABASE_URL` all missing in non-interactive SSH). Re-enable only when there's a real driver (multi-device, teammate) and rebuild the env-var path properly at the same time.
+**Tailscale SSH (`--ssh` flag) is intentionally OFF** on the EC2 node. It bypasses OpenSSH's PAM stack, which silently breaks `/etc/environment` env-var loading (PATH/`OPENROUTER_API_KEY`/`OXY_DATABASE_URL` all missing in non-interactive SSH). Re-enable only when there's a real driver (multi-device, teammate) and rebuild the env-var path properly at the same time.
 
 `:3000` (Oxygen chat) is reachable from any Tailnet peer at `http://oxygen-mvp.taildee698.ts.net:3000/`. Public portal at port 80 is intentionally public (`http://18.224.151.49/`).
 

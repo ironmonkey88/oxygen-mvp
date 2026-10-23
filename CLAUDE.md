@@ -72,7 +72,7 @@ For a long or multi-part response (an evaluation, a recommendation with tiers, a
 | Q&A Agent | Answer Agent (`.agent.yml`) |
 | Builder Agent | Build mode in Oxygen chat panel (workspace-wide AI copilot, MVP 2+) |
 | Routing | Routing Agent (`.agent.yml` `type: routing`) — MVP 4 only |
-| Dashboards | Data Apps (`.app.yml`) |
+| Dashboards | dbt Charts boards (`charts/*.yml`, rendered to `/boards/<name>/`) — replacing Data Apps (`.app.yml`) one at a time since 2026-10-20 |
 
 See [STACK.md](STACK.md) for full self-contained definitions of each Oxygen component and external tool. See [ARCHITECTURE.md](ARCHITECTURE.md) for system flow and design decisions.
 
@@ -154,8 +154,10 @@ oxygen-mvp/
 │   └── topics/                     ← service_requests, public_safety, built_environment, city_context
 ├── agents/
 │   └── answer_agent.agent.yml      ← Routing Agent lands in MVP 4
-└── apps/
-    └── rat_complaints_by_ward.app.yml   ← first Builder-CLI dashboard
+├── apps/
+│   └── rat_complaints_by_ward.app.yml   ← Oxygen Data App (superseded by charts/rat_complaints.yml)
+├── charts/                         ← dbt Charts boards (dbt_charts.yml at repo root)
+│   └── rat_complaints.yml          ← rendered daily by systemd/dbt-charts-boards.timer
 ```
 
 ---
@@ -168,8 +170,6 @@ The four nested MVPs are defined in [BUILD.md §5](BUILD.md) with analyst outcom
 2. **MVP 2 — Visual Knowledge Products. (active)** The analyst describes a dashboard in chat; Builder Agent assembles it. Iterates by conversation, not by writing YAML.
 3. **MVP 3 — Governance and Trust.** The analyst trusts the underlying data without having to verify it themselves. Verified Queries, full medallion, native agent testing.
 4. **MVP 4 — Semantic Depth and Sharing.** The analyst's findings move from personal to shared via Slack, MCP, A2A, BI tools, and public chat. Also returns the deployment to multi-workspace mode + Magic Link auth + HTTPS.
-
-Complete each MVP fully before starting the next.
 
 Complete each MVP fully before starting the next.
 
@@ -315,7 +315,7 @@ Never assume column names from API documentation. Always derive from actual data
 
 ## Session Start on EC2
 
-EC2 is reached over Tailscale at the alias `oxygen-mvp` (HostName `oxygen-mvp.taildee698.ts.net`). Public SSH and `:3000` are closed at the AWS security group; only port 80 (portal) is publicly reachable. **Tailscale SSH (`--ssh`) is intentionally OFF** — it preempts OpenSSH and silently breaks `/etc/environment` env-var loading. See [SETUP.md §12](SETUP.md) for full Tailnet access setup.
+EC2 is reached over Tailscale at the alias `oxygen-mvp` (HostName `oxygen-mvp.taildee698.ts.net`). Public SSH and `:3000` are closed at the AWS security group. Since 2026-10-07 the portal is public only through Caddy (`ironmonkey88/wong-way-server`) at `https://somerville.thewongway.co`, with nginx listening on `127.0.0.1:8080` behind it; the chat paths sit behind Google sign-in. **Tailscale SSH (`--ssh`) is intentionally OFF** — it preempts OpenSSH and silently breaks `/etc/environment` env-var loading. See [SETUP.md §12](SETUP.md) for full Tailnet access setup.
 
 First command on EC2 every session, before any work:
 
@@ -406,19 +406,20 @@ See `ARCHITECTURE.md` for full table designs.
 ```yaml
 # config.yml
 models:
-  - name: claude-opus-4-7
-    vendor: anthropic
-    model_ref: claude-opus-4-7
-    key_var: ANTHROPIC_API_KEY
+  - name: gemini-3-8-flash
+    vendor: anthropic                 # OpenRouter's Anthropic-compatible endpoint
+    model_ref: google/gemini-3.8-flash
+    key_var: OPENROUTER_API_KEY
+    api_url: https://openrouter.ai/api/v1
 ```
 
-The Answer Agent migrated from Sonnet 4.6 to Opus 4.7 on 2026-05-11 (TASKS.md MVP 1.5 row, commit `a5853d0`). The driver was SPA rate-limit headroom — Opus 4.7 carries a much larger tokens/min ceiling, which the multi-turn SPA chat path was tripping under Sonnet. Trust contract behavior and the 5-question CLI bench were re-verified post-migration.
+The Answer Agent runs on **Gemini 3.8 Flash via OpenRouter** since 2026-10-07 (PR #88), billed to Gordon's OpenRouter key: chosen from the `evals/` sweep (83/84, about $0.03 per answer) after Gordon took over the bill from Oxygen. History: Sonnet 4.6 → Opus 4.7 on 2026-05-11 (rate-limit headroom) → Gemini 3.8 Flash. `config.yml` is the source of truth; update this block when it changes.
 
 Two env vars must be set on EC2 before running Oxygen:
 
 | Var | Used for |
 |---|---|
-| `ANTHROPIC_API_KEY` | Answer Agent's LLM calls |
+| `OPENROUTER_API_KEY` | Answer Agent's LLM calls |
 | `OXY_DATABASE_URL` | `oxy build` / `oxy serve` connection to the Postgres container that `oxy start` manages (typically `postgresql://postgres:postgres@localhost:15432/oxy`) |
 
 Both live in `/etc/environment` — see SETUP.md §7 for why (`~/.bashrc` and `~/.profile` aren't read by plain non-interactive `ssh ec2 'cmd'`). If either is missing, stop and ask Gordon.

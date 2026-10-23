@@ -659,16 +659,19 @@ data volume grows materially.
 Builder Agent when MVP 2 lands). Configured in `config.yml` and
 referenced from `.agent.yml`.
 
-**Current model:** `claude-opus-4-7` (since 2026-05-11 — MVP 1.5).
-Migrated from `claude-sonnet-4-6` because Sonnet's 30K input
-tokens/min Tier 1 rate limit was hit on SPA multi-turn conversations;
-Opus has 500K/min on the same tier (16× headroom).
+**Current model:** Gemini 3.8 Flash via OpenRouter (since 2026-10-07,
+PR #88), through oxy's `anthropic` vendor pointed at OpenRouter's
+Anthropic-compatible endpoint (`OPENROUTER_API_KEY`). Chosen from the
+`evals/` sweep (83/84, about $0.03 per answer) once Gordon took over the
+bill. Earlier: `claude-opus-4-7` (2026-05-11 → 2026-10-07), migrated
+from `claude-sonnet-4-6` for rate-limit headroom. `config.yml` is the
+source of truth.
 
 **Cost:** ~$5–6/month current spend at MVP 1 load; projected $25–30/month
 under MVP 2 usage. Trivial relative to the project's value.
 
 **Two env vars on EC2 (per CLAUDE.md):**
-- `ANTHROPIC_API_KEY` — agent LLM calls
+- `OPENROUTER_API_KEY` — agent LLM calls (was `ANTHROPIC_API_KEY` before 2026-10-07)
 - `OXY_DATABASE_URL` — `oxy build`/`oxy serve` connection to the
   Postgres container Oxy manages
 
