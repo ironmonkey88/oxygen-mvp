@@ -33,6 +33,9 @@ from _nav import nav_html  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 APPS_DIR = REPO_ROOT / "apps"
 HTML_PATH = REPO_ROOT / "portal" / "dashboards.html"
+# The template is never written; the patched page goes to the gitignored build
+# folder so a pipeline run leaves the git tree clean (Plan 53).
+OUT_PATH = REPO_ROOT / "portal" / "build" / "dashboards.html"
 SPA_BASE = "http://oxygen-mvp.taildee698.ts.net:3000"
 
 _META_RE = re.compile(
@@ -233,8 +236,9 @@ def main() -> None:
         raise SystemExit(
             f"Expected exactly 1 BEGIN_NAV block, found {nav_subs}"
         )
-    HTML_PATH.write_text(new_html)
-    print(f"refreshed {HTML_PATH.relative_to(REPO_ROOT)} with {len(cards)} dashboards + nav")
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUT_PATH.write_text(new_html)
+    print(f"refreshed {OUT_PATH.relative_to(REPO_ROOT)} with {len(cards)} dashboards + nav")
 
 
 if __name__ == "__main__":

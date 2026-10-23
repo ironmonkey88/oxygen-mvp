@@ -1,9 +1,8 @@
 [Unit]
 Description=Render dbt Charts boards (charts/*.yml) to the portal at /boards/
-# Started by dbt-charts-boards.timer after the daily pipeline window. Not tied
-# to pipeline-refresh's OnSuccess=: that unit exits 1 on a "partial" run
-# (failing dbt tests), and the boards should still refresh with the data that
-# landed. Each board carries its own freshness KPI.
+# Started by dbt-charts-boards.timer after the daily pipeline window. Each
+# board carries its own freshness KPI. (Before Plan 53 a "partial" pipeline run
+# exited 1, which is why this is a timer and not an OnSuccess= job.)
 # Warehouse lock (PR #92): shared, waits up to an hour for a running writer.
 
 [Service]
@@ -13,5 +12,6 @@ WorkingDirectory=/home/ubuntu/oxygen-mvp
 ExecStart=/usr/bin/flock -s -w 3600 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/scripts/render_boards.sh
 Nice=10
 IOSchedulingClass=idle
+ExecStopPost=-/home/ubuntu/oxygen-mvp/scripts/hc_ping.sh DBT_CHARTS_BOARDS dbt-charts-boards.service
 StandardOutput=journal
 StandardError=journal

@@ -11,8 +11,9 @@ marker-bounded sections in `portal/index.html`:
 The rest of `portal/index.html` is hand-edited. The generator only
 rewrites between markers, so the rest of the page is safe.
 
-Output: `portal/index.html` (in-place).
-run.sh deploys to /var/www/somerville/index.html via deploy_html.
+Output: `portal/build/index.html` (gitignored). `portal/index.html` is the
+template and is never written, so a pipeline run leaves the git tree clean
+(Plan 53). run.sh deploys the build copy to /var/www/somerville/index.html.
 """
 from __future__ import annotations
 
@@ -36,6 +37,7 @@ from _nav import nav_html  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = REPO_ROOT / "data" / "somerville.duckdb"
 HTML_PATH = REPO_ROOT / "portal" / "index.html"
+OUT_PATH = REPO_ROOT / "portal" / "build" / "index.html"
 LIMITATIONS_DIR = REPO_ROOT / "docs" / "limitations"
 
 
@@ -368,8 +370,9 @@ def main() -> None:
             f"Expected exactly 1 BEGIN_NAV block, found {nav_subs}"
         )
 
-    HTML_PATH.write_text(new_html)
-    print(f"refreshed portal/index.html:")
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUT_PATH.write_text(new_html)
+    print(f"refreshed portal/build/index.html:")
     print(f"  311:   {stats['311_rows']:>10,} rows, {stats['311_wards']} wards, "
           f"{stats['311_request_types']} request types")
     print(f"  crime: {stats['crime_rows']:>10,} rows, {stats['crime_wards']} wards, "
