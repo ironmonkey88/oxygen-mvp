@@ -93,10 +93,10 @@
 [full narrative](docs/sessions/session-73-2026-10-20-plan-52-dbt-charts-rats-board.md)
 
 - **Goal:** Port the rat-complaints Oxygen Data App to dbt Charts, first step in replacing Oxygen's dashboard layer.
-- **Shipped:** `dbt_charts.yml`, `charts/rat_complaints.yml`, `run.sh` step 8e (render to `/boards/<name>/`); validated and rendered against a local warehouse.
+- **Shipped:** `charts/rat_complaints.yml` + `dbt-charts-boards` timer; live at `/boards/rat_complaints/` (200, 2026-10-23).
 - **Decisions:** 5 decisions — see session file
-- **Status:** partial
-- **Next:** Install `dct` on the box, run step 8e, confirm `/boards/rat_complaints/` live.
+- **Status:** complete
+- **Next:** Point `/dashboards` at the new board; reconcile the box's working tree with main.
 
 ### Session 67 — 2026-05-25 21:29 ET — plan-44-happiness-survey-silver-gold
 [full narrative](docs/sessions/session-67-2026-05-25-plan-44-happiness-survey-silver-gold.md)
