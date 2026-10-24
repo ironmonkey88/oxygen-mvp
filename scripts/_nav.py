@@ -13,7 +13,7 @@ portal surface. Imported by:
 
 The hand-written pages (portal/index.html, portal/dashboards.html) carry
 BEGIN_NAV / END_NAV marker comments; the homepage + dashboards generators
-replace the marker-bounded region on every pipeline run, the same way they
+replace the marker-bounded region in a copy under portal/build/ on every pipeline run, the same way they
 already refresh stats + dataset cards + the dashboards listing.
 
 NAV_CSS is an optional CSS-string constant that generators which don't

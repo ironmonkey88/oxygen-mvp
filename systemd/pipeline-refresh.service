@@ -19,6 +19,12 @@ Type=oneshot
 User=ubuntu
 WorkingDirectory=/home/ubuntu/oxygen-mvp
 EnvironmentFile=/etc/environment
+# Plan 53: fast-forward to origin/main first (same lock). A failed
+# fast-forward leaves the tree alone and is reported, not fatal ("-").
+ExecStartPre=-/usr/bin/flock -x -w 1800 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/scripts/deploy_from_git.sh
 ExecStart=/usr/bin/flock -x -w 1800 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/run.sh daily
+# run.sh exits 0 on success and on partial (failing tests, data loaded), so
+# OnSuccess= jobs still run; the status files make a partial run alert.
+ExecStopPost=-/home/ubuntu/oxygen-mvp/scripts/hc_ping.sh PIPELINE_REFRESH pipeline-refresh.service /home/ubuntu/oxygen-mvp/data/deploy_status.txt /home/ubuntu/oxygen-mvp/data/run_status.txt
 StandardOutput=journal
 StandardError=journal

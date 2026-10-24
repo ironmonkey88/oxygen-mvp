@@ -57,3 +57,13 @@ data/.warehouse.lock
 
 # dbt Charts render output (run.sh step 8e)
 data/boards/
+
+# Regenerated on every pipeline run (Plan 53): tracking them left the box's
+# tree dirty, which blocks the fast-forward deploy. portal/index.html and
+# portal/dashboards.html stay tracked as templates; their patched copies go to
+# portal/build/.
+portal/build/
+portal/erd-tier-*.mmd
+docs/limitations/_index.yaml
+data/run_status.txt
+data/deploy_status.txt

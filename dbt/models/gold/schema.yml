@@ -303,12 +303,24 @@ models:
         data_type: VARCHAR
         description: 'NIBRS offense code from source. Atomic 3-char code for single-offense rows (37 distinct values); also includes 2 multi-code grouping strings used by the source for "Other Criminal MV Offenses" (`991, 998, 999`, 2,500 rows) and "Sex Offenses" (`11A - 11D, 36A, 36B`, 375 rows). See docs/limitations/crime-multi-offense-rows.md.'
         data_tests:
-          - not_null
+          - not_null:
+              config:
+                # Source sends a handful of incidents with no offense fields
+                # (docs/limitations/crime-incidents-missing-offense.md). Warn
+                # on a few; more than 10 is a real regression and fails.
+                warn_if: ">0"
+                error_if: ">10"
       - name: multi_offense_flag
         data_type: BOOLEAN
         description: 'TRUE when offense_code is a multi-code grouping string. 2,875 rows (12.9%); filter `WHERE NOT multi_offense_flag` for single-NIBRS-code analysis.'
         data_tests:
-          - not_null
+          - not_null:
+              config:
+                # Source sends a handful of incidents with no offense fields
+                # (docs/limitations/crime-incidents-missing-offense.md). Warn
+                # on a few; more than 10 is a real regression and fails.
+                warn_if: ">0"
+                error_if: ">10"
       - name: offense
         data_type: VARCHAR
         description: 'NIBRS offense name (denormalized from dim_offense_code for query convenience). E.g. "Motor Vehicle Theft".'
@@ -319,7 +331,13 @@ models:
         data_type: VARCHAR
         description: 'NIBRS top-level category (denormalized from dim_offense_category). One of "Crimes against Property" / "Crimes against Person" / "Crimes against Society" / "Other".'
         data_tests:
-          - not_null
+          - not_null:
+              config:
+                # Source sends a handful of incidents with no offense fields
+                # (docs/limitations/crime-incidents-missing-offense.md). Warn
+                # on a few; more than 10 is a real regression and fails.
+                warn_if: ">0"
+                error_if: ">10"
           - accepted_values:
               arguments:
                 values: ['Crimes against Property', 'Crimes against Person', 'Crimes against Society', 'Other']

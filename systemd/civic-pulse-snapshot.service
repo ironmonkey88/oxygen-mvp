@@ -15,5 +15,6 @@ WorkingDirectory=/home/ubuntu/oxygen-mvp
 ExecStart=/usr/bin/flock -s -w 1800 /home/ubuntu/oxygen-mvp/data/.warehouse.lock /home/ubuntu/oxygen-mvp/.venv/bin/python /home/ubuntu/oxygen-mvp/scripts/build_ro_snapshot.py
 Nice=10
 IOSchedulingClass=idle
+ExecStopPost=-/home/ubuntu/oxygen-mvp/scripts/hc_ping.sh CIVIC_PULSE_SNAPSHOT civic-pulse-snapshot.service
 StandardOutput=journal
 StandardError=journal

@@ -23,9 +23,11 @@
 #   9. limitations index — regenerate docs/limitations/_index.yaml from .md frontmatter
 #  10. record run end    — UPDATE fct_pipeline_run_raw with status + stage outcomes
 #
-# Exit code: max(bronze/gold-test exit, admin-test exit). Tests can fail
-# without losing admin tables or the trust page (which is the whole point
-# of capturing run_results before failing).
+# Exit code (Plan 53, Gordon 2026-10-23): 0 on success AND on partial (failing
+# tests, data loaded), so pipeline-refresh's OnSuccess= jobs still run. Only a
+# halted stage exits non-zero. The run is still recorded as `partial` in
+# fct_pipeline_run_raw, and data/run_status.txt carries the status plus the
+# failing tests for scripts/hc_ping.sh, which alerts on anything but success.
 
 set -euo pipefail
 
@@ -89,6 +91,10 @@ ADMIN_STATUS="not_run"
 DBT_TEST_EXIT=0
 DBT_ADMIN_TEST_EXIT=0
 ERROR_STAGE="setup"
+RUN_STATUS_FILE="$REPO_ROOT/data/run_status.txt"
+FAILED_TESTS=""
+# Overwritten at the end; if the run dies first, "running" makes hc_ping alert.
+printf 'running\nrun %s\n' "$RUN_ID" > "$RUN_STATUS_FILE"
 
 # Trap: any unhandled non-zero exit records the failure and bubbles up.
 on_error() {
@@ -102,6 +108,7 @@ on_error() {
         --bronze-status="$BRONZE_STATUS" \
         --gold-status="$GOLD_STATUS" \
         --admin-status="$ADMIN_STATUS"
+    printf 'failed\nrun %s halted at stage %s with exit %s\n' "$RUN_ID" "$ERROR_STAGE" "$code" > "$RUN_STATUS_FILE"
     exit $code
 }
 trap on_error ERR
@@ -141,6 +148,9 @@ echo "==> 3/10 dbt test --select bronze gold (captured)"
 DBT_TEST_EXIT=0
 ( cd dbt && dbt test --select bronze gold ) || DBT_TEST_EXIT=$?
 echo "    dbt test exit code: $DBT_TEST_EXIT"
+if [ "$DBT_TEST_EXIT" -ne 0 ]; then
+    FAILED_TESTS+="$(python scripts/failing_tests.py dbt/target/run_results.json)"$'\n'
+fi
 
 # Step 4: load dbt run_results into raw_dbt_results_raw
 ERROR_STAGE="load_dbt_results"
@@ -159,6 +169,9 @@ echo "==> 5b/10 dbt test --select admin (captured)"
 DBT_ADMIN_TEST_EXIT=0
 ( cd dbt && dbt test --select admin ) || DBT_ADMIN_TEST_EXIT=$?
 echo "    dbt admin-test exit code: $DBT_ADMIN_TEST_EXIT"
+if [ "$DBT_ADMIN_TEST_EXIT" -ne 0 ]; then
+    FAILED_TESTS+="$(python scripts/failing_tests.py dbt/target/run_results.json)"$'\n'
+fi
 
 # Step 6: dbt docs generate
 ERROR_STAGE="dbt_docs"
@@ -184,7 +197,8 @@ if [ -d /var/www/somerville ] && [ -f portal/trust.html ]; then
 fi
 
 # Step 8b: refresh portal homepage dynamic content (Plan 15)
-# Patches marker-bounded sections in portal/index.html with current
+# Patches marker-bounded sections of the portal/index.html template into
+# portal/build/index.html (the template itself is never written) with current
 # row counts, date ranges, ward coverage, limitation count, and last
 # pipeline run. Cheap (~200ms).
 ERROR_STAGE="homepage_summary"
@@ -193,21 +207,21 @@ python scripts/generate_homepage_summary.py
 
 # Step 8c: refresh /dashboards listing from apps/*.app.yml metadata (Plan 17)
 # Reads each app's `# === DASHBOARD METADATA ===` comment block, builds
-# the listing HTML, patches portal/dashboards.html between markers.
+# the listing HTML, writes portal/build/dashboards.html from the template.
 ERROR_STAGE="dashboards_listing"
 echo "==> 8c/10 refresh /dashboards listing"
 python scripts/generate_dashboards_listing.py
 
 # Sync the static portal index too — so nav changes land without a manual scp.
-if [ -d /var/www/somerville ] && [ -f portal/index.html ]; then
-    deploy_html portal/index.html /var/www/somerville/index.html
-    echo "    synced portal/index.html → /var/www/somerville/index.html"
+if [ -d /var/www/somerville ] && [ -f portal/build/index.html ]; then
+    deploy_html portal/build/index.html /var/www/somerville/index.html
+    echo "    synced portal/build/index.html → /var/www/somerville/index.html"
 fi
 
 # Deploy the regenerated dashboards listing.
-if [ -d /var/www/somerville ] && [ -f portal/dashboards.html ]; then
-    deploy_html portal/dashboards.html /var/www/somerville/dashboards.html
-    echo "    synced portal/dashboards.html → /var/www/somerville/dashboards.html"
+if [ -d /var/www/somerville ] && [ -f portal/build/dashboards.html ]; then
+    deploy_html portal/build/dashboards.html /var/www/somerville/dashboards.html
+    echo "    synced portal/build/dashboards.html → /var/www/somerville/dashboards.html"
 fi
 
 # Deploy the ward-map background SVG (referenced by portal/index.html CSS).
@@ -292,9 +306,10 @@ python scripts/pipeline_run_end.py \
     --gold-status="$GOLD_STATUS" \
     --admin-status="$ADMIN_STATUS"
 
-# Final exit code = larger of the two captured test exits
-FINAL_EXIT=$DBT_TEST_EXIT
-if [ "$DBT_ADMIN_TEST_EXIT" -gt "$FINAL_EXIT" ]; then FINAL_EXIT=$DBT_ADMIN_TEST_EXIT; fi
+# Exit 0 on success and on partial; see the header. The status file is what
+# raises the alert for a partial run.
+printf '%s\nrun %s\n%s' "$FINAL_STATUS" "$RUN_ID" "$FAILED_TESTS" > "$RUN_STATUS_FILE"
+FINAL_EXIT=0
 
 echo
 echo "===== run complete ====="
