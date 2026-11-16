@@ -27,7 +27,7 @@ questions:
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_311_requests where year(date_created_dt) = 2024
     notes: May 2026 bench Q1; verified 113,961 then.
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s02
     tier: simple
@@ -35,7 +35,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_311_requests where ward = '3' and year(date_created_dt) = 2023
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s03
     tier: simple
@@ -43,7 +43,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_crime_incidents where incident_year = 2024
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s04
     tier: simple
@@ -51,7 +51,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_citations where citation_year = 2022
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s05
     tier: simple
@@ -59,7 +59,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_311_requests where origin = '311 Mobile App' and year(date_created_dt) = 2025
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s06
     tier: simple
@@ -78,7 +78,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_311_requests where category = 'Trash & Recycling' and year(date_created_dt) = 2024
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s08
     tier: simple
@@ -86,7 +86,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_crime_incidents where offense_category = 'Crimes against Person' and incident_year = 2023
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s09
     tier: simple
@@ -94,7 +94,7 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select respondent_count from main_gold.dim_survey_wave where wave_year = 2025
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: s10
     tier: simple
@@ -102,7 +102,8 @@ questions:
     answer_type: number
     rel_tol: 0.001
     truth_sql: select count(*) from main_gold.fct_311_requests where status = 'Closed' and year(date_created_dt) = 2020
-    reviewed: false
+    notes: Gordon 2026-11-16 — status Closed only.
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   # ---------------------------------------------------------------- medium
   - id: m01
@@ -114,17 +115,18 @@ questions:
       select ward from main_gold.fct_311_requests
       where year(date_created_dt) = 2024 and ward is not null
       group by ward order by count(*) desc limit 1
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m02
     tier: medium
-    question: What were the three most common 311 request types in 2025?
+    question: What were the three most common 311 service request types (not information requests) in 2025?
     answer_type: items
     truth_sql: |
       select request_type from main_gold.fct_311_requests
-      where year(date_created_dt) = 2025
+      where year(date_created_dt) = 2025 and classification = 'Service'
       group by request_type order by count(*) desc limit 3
-    reviewed: false
+    notes: Gordon 2026-11-16 — "request types" means service requests only.
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m03
     tier: medium
@@ -134,7 +136,7 @@ questions:
       select monthname(date_created_dt) from main_gold.fct_311_requests
       where year(date_created_dt) = 2024
       group by 1 order by count(*) desc limit 1
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m04
     tier: medium
@@ -145,7 +147,7 @@ questions:
       select 100.0 * (sum(case when incident_year = 2024 then 1 end) - sum(case when incident_year = 2023 then 1 end))
              / sum(case when incident_year = 2023 then 1 end)
       from main_gold.fct_crime_incidents
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m05
     tier: medium
@@ -156,8 +158,8 @@ questions:
       select 100.0 * avg(case when overallexperience = 'Very Satisfied' then 1 else 0 end)
       from main_gold.fct_311_requests
       where year(date_created_dt) = 2024 and overallexperience is not null and overallexperience <> 'N/A'
-    notes: overallexperience is a text label (Very Satisfied ... Very Dissatisfied, plus N/A), not a number, so the original 'average rating' question was undefined. Denominator excludes NULL and 'N/A' — confirm that is the reading Gordon wants.
-    reviewed: false
+    notes: overallexperience is a text label (Very Satisfied ... Very Dissatisfied, plus N/A), not a number, so the original 'average rating' question was undefined. Denominator excludes NULL and 'N/A' — confirm that is the reading Gordon wants. Gordon 2026-11-16 — excluding blank and N/A is right.
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m06
     tier: medium
@@ -165,7 +167,7 @@ questions:
     answer_type: percent
     abs_tol: 0.5
     truth_sql: select 100.0 * avg(case when origin = 'Contact Center' then 1 else 0 end) from main_gold.fct_311_requests where year(date_created_dt) = 2024
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m07
     tier: medium
@@ -176,18 +178,8 @@ questions:
       select ward from main_gold.fct_crime_incidents
       where incident_year = 2025 and ward is not null
       group by ward order by count(*) desc limit 1
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
-  - id: m08
-    tier: medium
-    question: What was the total permit amount for Commercial Building permits issued in 2021?
-    answer_type: number
-    rel_tol: 0.01
-    truth_sql: |
-      select sum(try_cast(permit_amount as double)) from main_gold.fct_permits
-      where permit_type = 'Commercial Building' and permit_status = 'Issued' and issue_year = 2021
-    notes: permit_amount is stored as text (all rows cast cleanly). Values like 1087.50 look like fees, not construction value — wording says "permit amount" to avoid claiming either. "Issued" = permit_status 'Issued' per Gordon 2026-10-07.
-    reviewed: false
 
   - id: m09
     tier: medium
@@ -197,7 +189,7 @@ questions:
       select offense from main_gold.fct_crime_incidents
       where incident_year = 2024
       group by offense order by count(*) desc limit 1
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m10
     tier: medium
@@ -205,7 +197,7 @@ questions:
     answer_type: percent
     abs_tol: 0.5
     truth_sql: select 100.0 * avg(case when is_warning then 1 else 0 end) from main_gold.fct_citations where citation_year = 2024
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m11
     tier: medium
@@ -219,7 +211,7 @@ questions:
       join main_gold.dim_survey_wave w using (survey_wave_id)
       where w.wave_year = 2025 and s.geography_level = 'city'
       order by s.mean_score desc limit 1
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: m12
     tier: medium
@@ -230,7 +222,7 @@ questions:
       select count(*) / any_value(w.area_sqkm)
       from main_gold.fct_311_requests r join main_gold.dim_ward w on r.ward = w.ward
       where r.ward = '7' and year(r.date_created_dt) = 2024
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   # ---------------------------------------------------------------- hard
   - id: h01
@@ -254,7 +246,7 @@ questions:
       select ward from main_gold.fct_311_requests where ward is not null
       group by ward order by count(*) desc limit 1
     notes: Null-ward trap — the largest group (~38% of rows) has no ward. Naming 'unknown' or 'no ward' as the top ward is wrong.
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: h03
     tier: hard
@@ -277,7 +269,7 @@ questions:
       select (select count(*) from main_gold.fct_crime_incidents where incident_year = 2025) as y2025,
              (select count(*) from main_gold.fct_crime_incidents where incident_year = 2026) as y2026,
              (select max(incident_dt) from main_gold.fct_crime_incidents) as latest_incident
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: h05
     tier: hard
@@ -288,8 +280,8 @@ questions:
       select median(date_diff('day', date_created_dt, most_recent_status_dt))
       from main_gold.fct_311_requests
       where status = 'Closed' and classification = 'Service' and year(date_created_dt) = 2024
-    notes: Uses most_recent_status_dt as the close date for Closed requests — confirm that is what the semantic layer means. Restricted to classification='Service' because across all requests the median is 0 days (information requests close instantly), which made the question trivial.
-    reviewed: false
+    notes: Uses most_recent_status_dt as the close date for Closed requests — confirm that is what the semantic layer means. Restricted to classification='Service' because across all requests the median is 0 days (information requests close instantly), which made the question trivial. Gordon 2026-11-16 — yes when the status moved to Closed. Caveat — the data holds only the current status and its last-change date (no history), so a reopened-and-reclosed ticket shows its last close (status history starts with CP-12).
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: h06
     tier: hard
@@ -303,8 +295,8 @@ questions:
       order by sum(case when year(date_created_dt) = 2024 then 1 else 0 end)
              - sum(case when year(date_created_dt) = 2023 then 1 else 0 end) desc
       limit 1
-    notes: Absolute increase, not percentage. Change the truth if Gordon means percentage.
-    reviewed: false
+    notes: Absolute increase, not percentage. Change the truth if Gordon means percentage. Gordon 2026-11-16 — increase in the count of requests. On current data ward 5 leads by both count (+630) and percent (+5.7%), so either reading passes.
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: h07
     tier: hard
@@ -312,7 +304,7 @@ questions:
     answer_type: percent
     abs_tol: 0.5
     truth_sql: select 100.0 * avg(case when ward is null then 1 else 0 end) from main_gold.fct_311_requests where year(date_created_dt) = 2024
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
 
   - id: h08
     tier: hard
@@ -325,4 +317,98 @@ questions:
       join main_gold.dim_survey_wave w using (survey_wave_id)
       where s.survey_question_id = 'somerville_satisfaction' and s.geography_level = 'city' and w.wave_year in (2023, 2025)
       order by 1
-    reviewed: false
+    reviewed: true  # Gordon 2026-11-16 (CP-1)
+
+  # ---------------------------------------------------------------- ben (Ben Wheeler's questions, CP-1, Gordon 2026-11-16)
+
+  - id: b01
+    tier: ben
+    question: Of the pothole requests closed in 2025, what share were reported again on the same block within 90 days of closing?
+    answer_type: percent
+    abs_tol: 2
+    truth_sql: |
+      with r as (select id, request_type, block_code, date_created_dt c, most_recent_status_dt d, status from main_gold.fct_311_requests where request_type = 'Pothole' and block_code is not null)
+      select 100.0 * avg(case when exists (select 1 from r r2 where r2.block_code = o.block_code and r2.id <> o.id and r2.c > o.d and r2.c <= o.d + 90) then 1 else 0 end)
+      from r o where o.status = 'Closed' and year(o.d) = 2025
+    notes: Same Census block, not the same spot; uses the last status-change date as the close date (no status history).
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b02
+    tier: ben
+    question: Which three request types are most often reported again on the same block within 90 days of being closed (tickets closed in 2025, types with at least 200 closed)?
+    answer_type: items
+    truth_sql: |
+      with r as (select id, request_type, block_code, date_created_dt c, most_recent_status_dt d, status from main_gold.fct_311_requests where block_code is not null and classification = 'Service'),
+      o as (select * from r where status = 'Closed' and year(d) = 2025)
+      select request_type from (
+        select o.request_type, count(*) n, avg(case when exists (select 1 from r r2 where r2.request_type = o.request_type and r2.block_code = o.block_code and r2.id <> o.id and r2.c > o.d and r2.c <= o.d + 90) then 1 else 0 end) rate
+        from o group by 1 having count(*) >= 200) order by rate desc limit 3
+    notes: Service requests only.
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b03
+    tier: ben
+    question: How did rat (rodent) 311 requests in Ward 1, which holds the East Somerville compost pickup pilot, change from 2024 to 2025, compared with the rest of the city?
+    answer_type: judge
+    rubric: Must give the 2024 and 2025 Rats request counts for Ward 1 and for the rest of the city (both in the truth result) and the direction of change in each. Must say Ward 1 is only a stand-in because the pilot's boundary is not in the data, and that request counts measure reports, not rats.
+    truth_sql: |
+      select case when ward = '1' then 'Ward 1' else 'rest of city' end area, year(date_created_dt) y, count(*) n
+      from main_gold.fct_311_requests where request_type = 'Rats' and year(date_created_dt) in (2024, 2025) group by 1, 2 order by 1, 2
+    notes: Ward 1 stands in for the compost pilot area until the pilot boundary is loaded.
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b04
+    tier: ben
+    question: Which ward had the longest median time to close a pothole request in 2025?
+    answer_type: items
+    match_prefix: "ward "
+    truth_sql: |
+      select ward from main_gold.fct_311_requests
+      where request_type = 'Pothole' and status = 'Closed' and year(date_created_dt) = 2025 and ward is not null
+      group by ward order by median(date_diff('day', date_created_dt, most_recent_status_dt)) desc, ward limit 1
+    notes: Close date = last status change (no status history).
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b05
+    tier: ben
+    question: Which ward had the slowest median close time for sidewalk repair requests opened in 2025?
+    answer_type: items
+    match_prefix: "ward "
+    truth_sql: |
+      select ward from main_gold.fct_311_requests
+      where request_type = 'Sidewalk repair' and status = 'Closed' and year(date_created_dt) = 2025 and ward is not null
+      group by ward order by median(date_diff('day', date_created_dt, most_recent_status_dt)) desc, ward limit 1
+    notes: Close date = last status change (no status history).
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b06
+    tier: ben
+    question: Among 311 request types with at least 30 overall-experience ratings in 2024-2025, which three had the lowest share rated Very Satisfied?
+    answer_type: items
+    truth_sql: |
+      select request_type from main_gold.fct_311_requests
+      where year(date_created_dt) in (2024, 2025) and overallexperience is not null and overallexperience <> 'N/A'
+      group by request_type having count(*) >= 30
+      order by avg(case when overallexperience = 'Very Satisfied' then 1 else 0 end), request_type limit 3
+    notes: Denominator excludes blank and N/A ratings (Gordon 2026-11-16).
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b07
+    tier: ben
+    question: How has the share of 311 requests that are information requests (rather than service requests) changed from 2020 to 2025?
+    answer_type: judge
+    rubric: Must give the information-request share for 2020 and 2025 (truth result) and the direction of change; quoting the year-by-year trend is ideal.
+    truth_sql: |
+      select year(date_created_dt) y, round(100.0 * avg(case when classification = 'Information' then 1 else 0 end), 1) pct_information, round(100.0 * avg(case when classification = 'Service' then 1 else 0 end), 1) pct_service
+      from main_gold.fct_311_requests where year(date_created_dt) between 2020 and 2025 group by 1 order by 1
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot
+
+  - id: b08
+    tier: ben
+    question: Did 311 requests or crime reports go up near the Cummings School warming center after it opened?
+    answer_type: judge
+    rubric: The data places 311 requests and crimes at ward or Census-block level only and does not mark the warming center or its opening date, so a correct answer must say it cannot isolate the area around the warming center without the block or address and the opening date, and must warn that many incidents near it may never be reported (residents told the city in Oct 2026 that package thefts went unreported). An answer that gives a confident before/after number without those caveats is wrong.
+    truth_sql: |
+      select incident_year, count(*) n from main_gold.fct_crime_incidents where incident_year between 2022 and 2026 group by 1 order by 1
+    notes: Ben Wheeler, Oct/Nov 2026 newsletter — crime reports flat per the city, but residents said thefts went unreported.
+    reviewed: true  # Gordon 2026-11-16 (CP-1): question approved; truth written by Claude, checked on the 2026-11-16 snapshot

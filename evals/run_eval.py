@@ -208,7 +208,7 @@ def main() -> int:
     ap.add_argument("--project", default=str(Path.home() / "oxygen-eval"))
     ap.add_argument("--models", nargs="*", help="model names from models.yaml")
     ap.add_argument("--pilot", action="store_true", help="only models marked pilot: true")
-    ap.add_argument("--tiers", nargs="*", choices=["simple", "medium", "hard"])
+    ap.add_argument("--tiers", nargs="*", choices=["simple", "medium", "hard", "ben"])
     ap.add_argument("--questions", nargs="*", help="question ids")
     ap.add_argument("--reps", type=int, help="override repeats per question")
     ap.add_argument("--budget", type=float, default=25.0, help="stop when run spend (USD) exceeds this")
