@@ -103,6 +103,43 @@ models:
         data_type: DATE
         description: 'Most recent date_created among requests with this status.'
 
+  - name: fct_311_status_history
+    description: |
+      CP-12. Status history for Somerville 311 requests, kept as a slowly changing
+      dimension (Type 2): one row per request per status period. The city publishes
+      only each request's current status, so this table starts on the day the
+      snapshot (snapshots/snap_311_status.sql) first ran; there is no earlier history.
+      Use it to count reopens (Closed followed by a non-Closed status) and to find
+      the first time a request was closed.
+    data_tests:
+      - unique:
+          column_name: "request_id || '|' || cast(observed_from as varchar)"
+    columns:
+      - name: request_id
+        data_type: VARCHAR
+        description: '311 request id; joins to fct_311_requests.id.'
+        data_tests:
+          - not_null
+      - name: status
+        data_type: VARCHAR
+        description: 'Status in this period (Closed, Open, In Progress, On Hold).'
+      - name: status_date
+        data_type: DATE
+        description: "The city's most_recent_status_date while this status held."
+      - name: observed_from
+        data_type: TIMESTAMP
+        description: 'When our daily pull first saw this status (dbt snapshot time).'
+        data_tests:
+          - not_null
+      - name: observed_to
+        data_type: TIMESTAMP
+        description: 'When our pull first saw a different status; null while current.'
+      - name: is_current
+        data_type: BOOLEAN
+        description: 'True for the status the request has now.'
+        data_tests:
+          - not_null
+
   - name: fct_311_requests
     description: |
       One row per Somerville 311 request. Grain: one request.

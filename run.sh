@@ -12,6 +12,7 @@
 #   1. dlt ingest 311    — Somerville 311 SODA API → raw_311_requests_raw (merge on `id`)
 #   1b. dlt ingest crime — Somerville crime SODA API → raw_somerville_crime_raw (merge on `incnum`)
 #   1c. dlt ingest citations — SPD traffic citations SODA API → raw_somerville_traffic_citations_raw (merge on `citationnum`)
+#   1d. dbt snapshot     — snap_311_status: 311 status history (CP-12), captured, does not halt
 #   2. dbt run bronze gold
 #   3. dbt test bronze gold (capture exit; do NOT halt)
 #   4. dlt load_dbt_results — append run_results.json into raw_dbt_results_raw
@@ -131,6 +132,17 @@ python dlt/somerville_crime_pipeline.py "$RUN_ID"
 ERROR_STAGE="dlt_ingest_traffic_citations"
 echo "==> 1c/10 dlt ingest somerville traffic citations"
 python dlt/somerville_traffic_citations_pipeline.py "$RUN_ID"
+
+# Step 1d: dbt snapshot — CP-12 311 status history (SCD2). The city publishes only the
+# current status and step 1 merges on id, so this is the only place history is kept.
+# Captured, not halting: a missed day loses that day's changes, it doesn't break the run.
+ERROR_STAGE="dbt_snapshot"
+echo "==> 1d/10 dbt snapshot (311 status history)"
+SNAP_EXIT=0
+( cd dbt && dbt snapshot --select snap_311_status ) || SNAP_EXIT=$?
+if [ "$SNAP_EXIT" -ne 0 ]; then
+    FAILED_TESTS+="dbt snapshot snap_311_status failed (exit $SNAP_EXIT): today's status changes not kept"$'\n'
+fi
 
 # Step 2: dbt run bronze + gold
 ERROR_STAGE="dbt_run_bronze_gold"
@@ -293,7 +305,7 @@ fi
 
 # Step 10: record run end (success or partial depending on test exits)
 ERROR_STAGE="run_end"
-if [ "$DBT_TEST_EXIT" -ne 0 ] || [ "$DBT_ADMIN_TEST_EXIT" -ne 0 ]; then
+if [ "$DBT_TEST_EXIT" -ne 0 ] || [ "$DBT_ADMIN_TEST_EXIT" -ne 0 ] || [ "$SNAP_EXIT" -ne 0 ]; then
     FINAL_STATUS="partial"
 else
     FINAL_STATUS="success"
